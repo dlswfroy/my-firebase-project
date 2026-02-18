@@ -262,7 +262,15 @@ export default function ResultsPage() {
                 const resultsByGroupAndSubject = new Map<string, Map<string, { fullMarks: number, results: StudentResult[] }>>();
 
                 const markTypeMap: { [key: string]: keyof Marks } = { 'লিখিত': 'written', 'written': 'written', 'বহুনির্বাচনী': 'mcq', 'mcq': 'mcq', 'ব্যবহারিক': 'practical', 'practical': 'practical' };
-                const bengaliToGroup: { [key: string]: string } = { 'বিজ্ঞান': 'science', 'মানবিক': 'arts', 'ব্যবসায় শিক্ষা': 'commerce' };
+                
+                const groupNameToCode: { [key: string]: string } = {
+                    'বিজ্ঞান': 'science',
+                    'science': 'science',
+                    'মানবিক': 'arts',
+                    'arts': 'arts',
+                    'ব্যবসায় শিক্ষা': 'commerce',
+                    'commerce': 'commerce',
+                };
                 const groupToBengali: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
 
 
@@ -308,11 +316,11 @@ export default function ResultsPage() {
                         let studentGroup: string | undefined;
 
                         if (showGroupSelector) {
-                            const studentGroupBengali = row['শাখা'] ? String(row['শাখা']).trim() : undefined;
-                            if (studentGroupBengali) {
-                                studentGroup = bengaliToGroup[studentGroupBengali];
+                             const studentGroupInput = row['শাখা'] ? String(row['শাখা']).trim() : undefined;
+                            if (studentGroupInput) {
+                                studentGroup = groupNameToCode[studentGroupInput] || groupNameToCode[studentGroupInput.toLowerCase()];
                                 if (!studentGroup) {
-                                    processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এর জন্য অজানা শাখা '${studentGroupBengali}' পাওয়া গেছে।`);
+                                    processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এর জন্য অজানা শাখা '${studentGroupInput}' পাওয়া গেছে।`);
                                     return;
                                 }
                             } else {
@@ -357,7 +365,7 @@ export default function ResultsPage() {
 
                             if (!markType) return;
                             
-                            let finalSubjectName : string | undefined = subjectNameMap[subjectNamePart.toLowerCase()];
+                            let finalSubjectName : string | undefined = subjectNameMap[subjectNamePart] || subjectNameMap[subjectNamePart.toLowerCase()];
                             
                             if (!finalSubjectName && subjectNamePart.includes('/')) {
                                 const combinedName = Object.keys(combinedHeaderMap).find(k => k.toLowerCase().includes(subjectNamePart.split('/')[0].toLowerCase()) && k.toLowerCase().includes(subjectNamePart.split('/')[1].toLowerCase()));

@@ -211,14 +211,15 @@ export default function AddStudentPage() {
                                     return;
                                 }
 
-                                const valueStr = String(value).toLowerCase();
+                                const valueStr = String(value);
+                                const valueStrLower = valueStr.toLowerCase();
 
                                 if (studentKey === 'gender') {
-                                    (newStudentData as any)[studentKey] = genderMap[valueStr] || 'other';
+                                    (newStudentData as any)[studentKey] = genderMap[valueStr] || genderMap[valueStrLower] || 'other';
                                 } else if (studentKey === 'religion') {
-                                    (newStudentData as any)[studentKey] = religionMap[valueStr] || 'other';
+                                    (newStudentData as any)[studentKey] = religionMap[valueStr] || religionMap[valueStrLower] || 'other';
                                 } else if (studentKey === 'group') {
-                                    (newStudentData as any)[studentKey] = groupMap[valueStr] || undefined;
+                                    (newStudentData as any)[studentKey] = groupMap[valueStr] || groupMap[valueStrLower] || undefined;
                                 } else if (studentKey === 'dob') {
                                     let parsedDate: Date | undefined;
                                     if (value instanceof Date && !isNaN(value.getTime())) {
