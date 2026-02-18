@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -193,6 +194,15 @@ export default function AddStudentPage() {
                 };
 
 
+                const bengaliToEnglishDigit: { [key: string]: string } = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+                const convertToNumber = (value: any): number | undefined => {
+                  if (value === undefined || value === null || String(value).trim() === '') return undefined;
+                  let strValue = String(value).trim();
+                  strValue = strValue.replace(/[০-৯]/g, d => bengaliToEnglishDigit[d]);
+                  const num = parseInt(strValue, 10);
+                  return isNaN(num) ? undefined : num;
+                };
+
                 const allStudents = getStudents();
                 let addedCount = 0;
                 let updatedCount = 0;
@@ -210,7 +220,7 @@ export default function AddStudentPage() {
                                     value = value.trim();
                                 }
 
-                                if (!value) {
+                                if (value === undefined || value === null || value === '') {
                                     (newStudentData as any)[studentKey] = undefined;
                                     return;
                                 }
@@ -248,7 +258,7 @@ export default function AddStudentPage() {
                                     newStudentData.dob = parsedDate;
 
                                 } else if (studentKey === 'roll') {
-                                    newStudentData.roll = Number(value);
+                                    newStudentData.roll = convertToNumber(value);
                                 } else if (studentKey === 'className') {
                                     newStudentData.className = String(value);
                                 } else {
@@ -260,7 +270,7 @@ export default function AddStudentPage() {
                         newStudentData.academicYear = selectedYear;
 
                         const requiredFields: (keyof Student)[] = ['roll', 'className', 'studentNameBn', 'fatherNameBn', 'motherNameBn', 'academicYear'];
-                        const missingFields = requiredFields.filter(field => !newStudentData[field]);
+                        const missingFields = requiredFields.filter(field => newStudentData[field] === undefined || newStudentData[field] === null || newStudentData[field] === '');
 
                         if (missingFields.length > 0) {
                             const missingHeaders = missingFields.map(field => englishToBengaliHeaderMap[field as keyof typeof englishToBengaliHeaderMap]).join(', ');

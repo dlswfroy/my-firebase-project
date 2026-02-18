@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -312,14 +313,24 @@ export default function ResultsPage() {
                     'পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান': { science: 'জীব বিজ্ঞান', arts: 'পৌরনীতি ও নাগরিকতা' },
                 };
 
+                const bengaliToEnglishDigit: { [key: string]: string } = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+                const convertToNumber = (value: any): number | undefined => {
+                  if (value === undefined || value === null || String(value).trim() === '') return undefined;
+                  let strValue = String(value).trim();
+                  strValue = strValue.replace(/[০-৯]/g, d => bengaliToEnglishDigit[d]);
+                  const num = parseInt(strValue, 10);
+                  return isNaN(num) ? undefined : num;
+                };
+
                 const processingErrors: string[] = [];
 
                 json.forEach((row: any, rowIndex: number) => {
                     try {
                         const rollHeader = Object.keys(row).find(k => k.trim().toLowerCase() === 'রোল' || k.trim().toLowerCase() === 'roll');
-                        const roll = rollHeader ? row[rollHeader] : undefined;
+                        const rollValue = rollHeader ? row[rollHeader] : undefined;
+                        const roll = convertToNumber(rollValue);
 
-                        if (roll === undefined || roll === '') {
+                        if (roll === undefined || roll === null) {
                             processingErrors.push(`সারি ${rowIndex + 2}: রোল নম্বর অনুপস্থিত।`);
                             return;
                         }
@@ -329,12 +340,13 @@ export default function ResultsPage() {
 
                         if (showGroupSelector) {
                              const groupHeader = Object.keys(row).find(k => ['শাখা', 'group', 'বিভাগ'].includes(k.trim().toLowerCase()));
-                             studentGroupInput = groupHeader ? String(row[groupHeader] || '').trim() : undefined;
+                             const groupValue = groupHeader ? String(row[groupHeader] || '').trim() : undefined;
                             
-                            if (studentGroupInput) {
-                                studentGroup = groupNameToCode[studentGroupInput] || groupNameToCode[studentGroupInput.toLowerCase()];
+                             if (groupValue) {
+                                studentGroupInput = groupValue;
+                                studentGroup = groupNameToCode[groupValue] || groupNameToCode[groupValue.toLowerCase()];
                                 if (!studentGroup) {
-                                    processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এর জন্য অজানা শাখা '${studentGroupInput}' পাওয়া গেছে।`);
+                                    processingErrors.push(`সারি ${rowIndex + 2}: রোল ${rollValue} এর জন্য অজানা শাখা '${groupValue}' পাওয়া গেছে।`);
                                     return;
                                 }
                             } else {
@@ -342,13 +354,13 @@ export default function ResultsPage() {
                             }
                             
                             if (!studentGroup) {
-                                processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এর জন্য শাখা আবশ্যক। এক্সেল ফাইল বা UI থেকে একটি শাখা নির্বাচন করুন।`);
+                                processingErrors.push(`সারি ${rowIndex + 2}: রোল ${rollValue} এর জন্য শাখা আবশ্যক। এক্সেল ফাইল বা UI থেকে একটি শাখা নির্বাচন করুন।`);
                                 return;
                             }
                         }
                         
                         const student = allStudentsForYear.find(s => 
-                            s.roll === Number(roll) && 
+                            s.roll === roll && 
                             s.className === className && 
                             (!showGroupSelector || !s.group || s.group === studentGroup)
                         );
@@ -356,7 +368,7 @@ export default function ResultsPage() {
 
                         if (!student) {
                             const groupName = studentGroupInput || (studentGroup ? groupToBengali[studentGroup] : '') || 'N/A';
-                            processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এবং শাখা '${groupName}' এর শিক্ষার্থীকে পাওয়া যায়নি।`);
+                            processingErrors.push(`সারি ${rowIndex + 2}: রোল ${rollValue} এবং শাখা '${groupName}' এর শিক্ষার্থীকে পাওয়া যায়নি।`);
                             return;
                         }
                         
