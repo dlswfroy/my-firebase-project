@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -58,7 +57,6 @@ export default function ResultsPage() {
         if (className) {
             const newSubjects = getSubjects(className, group);
             setAvailableSubjects(newSubjects);
-            // Only reset subject if it's no longer in the list of available subjects
             if (subject && !newSubjects.some(s => s.name === subject)) {
                 setSubject('');
                 setSelectedSubjectInfo(null);
@@ -68,8 +66,7 @@ export default function ResultsPage() {
             setSubject('');
             setSelectedSubjectInfo(null);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [className, group]);
+    }, [className, group, subject]);
 
     useEffect(() => {
         if (subject) {
@@ -266,6 +263,8 @@ export default function ResultsPage() {
 
                 const markTypeMap: { [key: string]: keyof Marks } = { 'লিখিত': 'written', 'written': 'written', 'বহুনির্বাচনী': 'mcq', 'mcq': 'mcq', 'ব্যবহারিক': 'practical', 'practical': 'practical' };
                 const bengaliToGroup: { [key: string]: string } = { 'বিজ্ঞান': 'science', 'মানবিক': 'arts', 'ব্যবসায় শিক্ষা': 'commerce' };
+                const groupToBengali: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
+
 
                 const subjectNameMap: { [key: string]: string } = {
                     'বাংলা প্রথম': 'বাংলা প্রথম', 'bangla 1st': 'বাংলা প্রথম', 'bangla first': 'বাংলা প্রথম',
@@ -278,7 +277,7 @@ export default function ResultsPage() {
                     'সাধারণ বিজ্ঞান': 'সাধারণ বিজ্ঞান', 'general science': 'সাধারণ বিজ্ঞান',
                     'বাংলাদেশ ও বিশ্ব পরিচয়': 'বাংলাদেশ ও বিশ্ব পরিচয়', 'bangladesh and global studies': 'বাংলাদেশ ও বিশ্ব পরিচয়', 'bgs': 'বাংলাদেশ ও বিশ্ব পরিচয়',
                     'কৃষি শিক্ষা': 'কৃষি শিক্ষা', 'agriculture studies': 'কৃষি শিক্ষা', 'agriculture': 'কৃষি শিক্ষা',
-                    'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', 'history and world civilization': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', 'history': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা',
+                    'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', 'history and world civilization': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', 'history': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', 'ইতিহাস ও বিশ্ব সভ্যতা': 'ইতিহাস ও বিশ্ব সভ্যতা',
                     'ভূগোল ও পরিবেশ': 'ভূগোল ও পরিবেশ', 'geography and environment': 'ভূগোল ও পরিবেশ', 'geography': 'ভূগোল ও পরিবেশ',
                     'পৌরনীতি ও নাগরিকতা': 'পৌরনীতি ও নাগরিকতা', 'civics and citizenship': 'পৌরনীতি ও নাগরিকতা', 'civics': 'পৌরনীতি ও নাগরিকতা',
                     'পদার্থ': 'পদার্থ', 'physics': 'পদার্থ',
@@ -305,18 +304,37 @@ export default function ResultsPage() {
                             processingErrors.push(`সারি ${rowIndex + 2}: রোল নম্বর অনুপস্থিত।`);
                             return;
                         }
-                        
-                        const studentGroupBengali = row['শাখা'];
-                        const studentGroup = showGroupSelector ? (bengaliToGroup[studentGroupBengali] || group) : '';
 
+                        let studentGroup: string | undefined;
+
+                        if (showGroupSelector) {
+                            const studentGroupBengali = row['শাখা'] ? String(row['শাখা']).trim() : undefined;
+                            if (studentGroupBengali) {
+                                studentGroup = bengaliToGroup[studentGroupBengali];
+                                if (!studentGroup) {
+                                    processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এর জন্য অজানা শাখা '${studentGroupBengali}' পাওয়া গেছে।`);
+                                    return;
+                                }
+                            } else {
+                                studentGroup = group; // from UI state
+                            }
+                            
+                            if (!studentGroup) {
+                                processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এর জন্য শাখা আবশ্যক। এক্সেল ফাইল বা UI থেকে একটি শাখা নির্বাচন করুন।`);
+                                return;
+                            }
+                        }
+                        
                         const student = allStudentsForYear.find(s => 
                             s.roll === Number(roll) && 
                             s.className === className && 
                             (!showGroupSelector || s.group === studentGroup)
                         );
 
+
                         if (!student) {
-                            processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এবং শাখা '${studentGroupBengali || 'N/A'}' এর শিক্ষার্থীকে পাওয়া যায়নি।`);
+                            const groupName = groupToBengali[studentGroup!] || studentGroup || 'N/A';
+                            processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এবং শাখা '${groupName}' এর শিক্ষার্থীকে পাওয়া যায়নি।`);
                             return;
                         }
                         

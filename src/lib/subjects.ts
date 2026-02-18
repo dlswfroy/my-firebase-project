@@ -10,7 +10,7 @@ const subjectsFor6to8: Subject[] = [
     { name: 'ইংরেজি প্রথম', practical: false },
     { name: 'ইংরেজি দ্বিতীয়', practical: false },
     { name: 'গণিত', practical: false },
-    { name: 'ধর্ম শিক্ষা', practical: false },
+    { name: 'ধর্ম ও নৈতিক শিক্ষা', practical: false },
     { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', practical: false },
     { name: 'সাধারণ বিজ্ঞান', practical: false },
     { name: 'বাংলাদেশ ও বিশ্ব পরিচয়', practical: false },
@@ -23,7 +23,7 @@ const commonSubjectsFor9to10: Subject[] = [
     { name: 'ইংরেজি প্রথম', practical: false },
     { name: 'ইংরেজি দ্বিতীয়', practical: false },
     { name: 'গণিত', practical: false },
-    { name: 'ধর্ম শিক্ষা', practical: false },
+    { name: 'ধর্ম ও নৈতিক শিক্ষা', practical: false },
     { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', practical: false },
     { name: 'কৃষি শিক্ষা', practical: true },
 ];
@@ -37,7 +37,7 @@ const scienceSubjects: Subject[] = [
 
 const artsSubjects: Subject[] = [
     { name: 'সাধারণ বিজ্ঞান', practical: false },
-    { name: 'ইতিহাস ও বিশ্ব সভ্যতা', practical: false },
+    { name: 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', practical: false },
     { name: 'ভূগোল ও পরিবেশ', practical: false },
     { name: 'পৌরনীতি ও নাগরিকতা', practical: false },
 ];
@@ -61,6 +61,14 @@ export const getSubjects = (className: string, group?: string): Subject[] => {
             subjects = [...subjects, ...artsSubjects];
         } else if (group === 'commerce') {
             subjects = [...subjects, ...commerceSubjects];
+        } else if (!group) { // If no group is selected, return all possible subjects for 9-10
+            const allGroupSubjects = new Map<string, Subject>();
+            [...scienceSubjects, ...artsSubjects, ...commerceSubjects].forEach(s => {
+                if (!allGroupSubjects.has(s.name)) {
+                    allGroupSubjects.set(s.name, s);
+                }
+            });
+            subjects = [...subjects, ...Array.from(allGroupSubjects.values())];
         }
         return subjects;
     }
