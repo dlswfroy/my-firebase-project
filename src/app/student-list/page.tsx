@@ -79,7 +79,7 @@ export default function StudentListPage() {
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <CardTitle>শিক্ষার্থীদের তালিকা</CardTitle>
                 <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
@@ -102,85 +102,87 @@ export default function StudentListPage() {
                 <TabsContent key={className} value={className}>
                   <Card>
                     <CardContent className="p-0">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>ছবি</TableHead>
-                            <TableHead>রোল</TableHead>
-                            <TableHead>শিক্ষার্থীর নাম</TableHead>
-                            <TableHead>পিতার নাম</TableHead>
-                            <TableHead>মোবাইল নম্বর</TableHead>
-                            <TableHead className="text-right">কার্যক্রম</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {getStudentsByClass(className).length === 0 ? (
-                             <TableRow>
-                                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                                    এই শ্রেণিতে কোনো শিক্ষার্থী নেই।
-                                </TableCell>
-                             </TableRow>
-                          ) : (
-                            getStudentsByClass(className).map((student) => (
-                            <TableRow key={student.id}>
-                              <TableCell>
-                                <Image
-                                  src={student.photoUrl}
-                                  alt={student.studentNameBn}
-                                  width={40}
-                                  height={40}
-                                  className="rounded-full object-cover"
-                                />
-                              </TableCell>
-                              <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
-                              <TableCell>{student.studentNameBn}</TableCell>
-                              <TableCell>{student.fatherNameBn}</TableCell>
-                              <TableCell>
-                                <div className="flex flex-col">
-                                  {student.guardianMobile && <span>{student.guardianMobile}</span>}
-                                  {student.studentMobile && <span>{student.studentMobile}</span>}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="outline" size="icon" onClick={() => setStudentToView(student)}>
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                  <Link href={`/edit-student/${student.id}`}>
-                                    <Button variant="outline" size="icon" asChild>
-                                      <span className="cursor-pointer">
-                                        <FilePen className="h-4 w-4" />
-                                      </span>
-                                    </Button>
-                                  </Link>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="destructive" size="icon">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          এই কাজটি ফিরিয়ে আনা যাবে না। এটি তালিকা থেকে স্থায়ীভাবে শিক্ষার্থীকে মুছে ফেলবে।
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>
-                                          ডিলিট করুন
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>ছবি</TableHead>
+                              <TableHead>রোল</TableHead>
+                              <TableHead>শিক্ষার্থীর নাম</TableHead>
+                              <TableHead>পিতার নাম</TableHead>
+                              <TableHead>মোবাইল নম্বর</TableHead>
+                              <TableHead className="text-right">কার্যক্রম</TableHead>
                             </TableRow>
-                           ))
-                          )}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {getStudentsByClass(className).length === 0 ? (
+                               <TableRow>
+                                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                      এই শ্রেণিতে কোনো শিক্ষার্থী নেই।
+                                  </TableCell>
+                               </TableRow>
+                            ) : (
+                              getStudentsByClass(className).map((student) => (
+                              <TableRow key={student.id}>
+                                <TableCell>
+                                  <Image
+                                    src={student.photoUrl}
+                                    alt={student.studentNameBn}
+                                    width={40}
+                                    height={40}
+                                    className="rounded-full object-cover"
+                                  />
+                                </TableCell>
+                                <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
+                                <TableCell className="whitespace-nowrap">{student.studentNameBn}</TableCell>
+                                <TableCell className="whitespace-nowrap">{student.fatherNameBn}</TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col whitespace-nowrap">
+                                    {student.guardianMobile && <span>{student.guardianMobile}</span>}
+                                    {student.studentMobile && <span>{student.studentMobile}</span>}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-2">
+                                    <Button variant="outline" size="icon" onClick={() => setStudentToView(student)}>
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Link href={`/edit-student/${student.id}`}>
+                                      <Button variant="outline" size="icon" asChild>
+                                        <span className="cursor-pointer">
+                                          <FilePen className="h-4 w-4" />
+                                        </span>
+                                      </Button>
+                                    </Link>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="destructive" size="icon">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            এই কাজটি ফিরিয়ে আনা যাবে না। এটি তালিকা থেকে স্থায়ীভাবে শিক্ষার্থীকে মুছে ফেলবে।
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>
+                                            ডিলিট করুন
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                             ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
