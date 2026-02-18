@@ -179,7 +179,7 @@ export default function ViewResultsPage() {
             <TableHeader>
                 <TableRow>
                     <TableHead rowSpan={2} className="align-middle text-center bg-background sticky left-0 z-10">রোল</TableHead>
-                    <TableHead rowSpan={2} className="align-middle text-center min-w-[200px] bg-background sticky left-[50px] z-10">শিক্ষার্থীর নাম</TableHead>
+                    <TableHead rowSpan={2} className="align-middle text-center min-w-[200px] bg-background md:sticky md:left-[50px] md:z-10">শিক্ষার্থীর নাম</TableHead>
                     {subjects.map(subject => (
                         <TableHead key={subject.name} colSpan={3} className={cn("text-center border-x", optionalSubject === subject.name && "bg-blue-50")}>
                             {subject.name}
@@ -303,14 +303,14 @@ export default function ViewResultsPage() {
                                         {processedResults.map(res => (
                                             <TableRow key={res.student.id}>
                                                 <TableCell className="text-center bg-background sticky left-0 z-10">{res.student.roll.toLocaleString('bn-BD')}</TableCell>
-                                                <TableCell className="whitespace-nowrap bg-background sticky left-[50px] z-10">{res.student.studentNameBn}</TableCell>
+                                                <TableCell className="whitespace-nowrap bg-background md:sticky md:left-[50px] md:z-10">{res.student.studentNameBn}</TableCell>
                                                 {subjects.map(subject => {
                                                     const subjectRes = res.subjectResults.get(subject.name);
                                                     return (
                                                         <React.Fragment key={`${res.student.id}-${subject.name}`}>
-                                                            <TableCell className="text-center border-l font-semibold">{subjectRes?.marks.toLocaleString('bn-BD') ?? '-'}</TableCell>
+                                                            <TableCell className="text-center border-l font-semibold">{subjectRes?.marks?.toLocaleString('bn-BD') ?? '-'}</TableCell>
                                                             <TableCell className={cn("text-center border-l", {"text-destructive font-bold": subjectRes && !subjectRes.isPass})}>{subjectRes?.grade ?? '-'}</TableCell>
-                                                            <TableCell className="text-center border-l border-r">{subjectRes?.point.toFixed(2).toLocaleString('bn-BD') ?? '-'}</TableCell>
+                                                            <TableCell className="text-center border-l border-r">{subjectRes?.point?.toFixed(2).toLocaleString('bn-BD') ?? '-'}</TableCell>
                                                         </React.Fragment>
                                                     )
                                                 })}
