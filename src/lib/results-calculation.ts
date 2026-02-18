@@ -8,6 +8,16 @@ export interface GradeInfo {
   point: number;
 }
 
+export interface StudentSubjectResult {
+    written?: number;
+    mcq?: number;
+    practical?: number;
+    marks: number;
+    grade: string;
+    point: number;
+    isPass: boolean;
+}
+
 export interface StudentProcessedResult {
     student: Student;
     totalMarks: number;
@@ -17,7 +27,7 @@ export interface StudentProcessedResult {
     isPass: boolean;
     failedSubjectsCount: number;
     meritPosition?: number;
-    subjectResults: Map<string, { marks: number; grade: string; point: number; isPass: boolean }>;
+    subjectResults: Map<string, StudentSubjectResult>;
 }
 
 const PASS_PERCENTAGE = 33;
@@ -53,17 +63,17 @@ export function processStudentResults(
         let totalPossibleMarks = 0;
         let totalPoints = 0;
         let failedSubjectsCount = 0;
-        const subjectResults = new Map<string, { marks: number; grade: string; point: number; isPass: boolean }>();
+        const subjectResults = new Map<string, StudentSubjectResult>();
 
         subjects.forEach(subjectInfo => {
             const classResult = resultsBySubject.find(r => r.subject === subjectInfo.name);
             const studentResult = classResult?.results.find(r => r.studentId === student.id);
             const fullMarks = classResult?.fullMarks || 100;
 
-            const written = studentResult?.written || 0;
-            const mcq = studentResult?.mcq || 0;
-            const practical = studentResult?.practical || 0;
-            const obtainedMarks = written + mcq + practical;
+            const written = studentResult?.written;
+            const mcq = studentResult?.mcq;
+            const practical = studentResult?.practical;
+            const obtainedMarks = (written || 0) + (mcq || 0) + (practical || 0);
 
             totalMarks += obtainedMarks;
             totalPossibleMarks += fullMarks;
@@ -79,6 +89,9 @@ export function processStudentResults(
             totalPoints += point;
 
             subjectResults.set(subjectInfo.name, {
+                written,
+                mcq,
+                practical,
                 marks: obtainedMarks,
                 grade,
                 point,

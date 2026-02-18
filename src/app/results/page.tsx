@@ -248,8 +248,30 @@ export default function ResultsPage() {
                 
                 const resultsByGroupAndSubject = new Map<string, Map<string, { fullMarks: number, results: StudentResult[] }>>();
 
-                const markTypeMap: { [key: string]: keyof Marks } = { 'লিখিত': 'written', 'বহুনির্বাচনী': 'mcq', 'ব্যবহারিক': 'practical' };
+                const markTypeMap: { [key: string]: keyof Marks } = { 'লিখিত': 'written', 'written': 'written', 'বহুনির্বাচনী': 'mcq', 'mcq': 'mcq', 'ব্যবহারিক': 'practical', 'practical': 'practical' };
                 const bengaliToGroup: { [key: string]: string } = { 'বিজ্ঞান': 'science', 'মানবিক': 'arts', 'ব্যবসায় শিক্ষা': 'commerce' };
+
+                const subjectNameMap: { [key: string]: string } = {
+                    'বাংলা প্রথম': 'বাংলা প্রথম', 'bangla 1st': 'বাংলা প্রথম', 'bangla first': 'বাংলা প্রথম',
+                    'বাংলা দ্বিতীয়': 'বাংলা দ্বিতীয়', 'bangla 2nd': 'বাংলা দ্বিতীয়', 'bangla second': 'বাংলা দ্বিতীয়',
+                    'ইংরেজি প্রথম': 'ইংরেজি প্রথম', 'english 1st': 'ইংরেজি প্রথম', 'english first': 'ইংরেজি প্রথম',
+                    'ইংরেজি দ্বিতীয়': 'ইংরেজি দ্বিতীয়', 'english 2nd': 'ইংরেজি দ্বিতীয়', 'english second': 'ইংরেজি দ্বিতীয়',
+                    'গণিত': 'গণিত', 'math': 'গণিত', 'mathematics': 'গণিত',
+                    'ধর্ম ও নৈতিক শিক্ষা': 'ধর্ম ও নৈতিক শিক্ষা', 'religion': 'ধর্ম ও নৈতিক শিক্ষা', 'ধর্ম শিক্ষা': 'ধর্ম ও নৈতিক শিক্ষা',
+                    'তথ্য ও যোগাযোগ প্রযুক্তি': 'তথ্য ও যোগাযোগ প্রযুক্তি', 'ict': 'তথ্য ও যোগাযোগ প্রযুক্তি',
+                    'সাধারণ বিজ্ঞান': 'সাধারণ বিজ্ঞান', 'general science': 'সাধারণ বিজ্ঞান',
+                    'বাংলাদেশ ও বিশ্ব পরিচয়': 'বাংলাদেশ ও বিশ্ব পরিচয়', 'bangladesh and global studies': 'বাংলাদেশ ও বিশ্ব পরিচয়', 'bgs': 'বাংলাদেশ ও বিশ্ব পরিচয়',
+                    'কৃষি শিক্ষা': 'কৃষি শিক্ষা', 'agriculture studies': 'কৃষি শিক্ষা', 'agriculture': 'কৃষি শিক্ষা',
+                    'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', 'history and world civilization': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', 'history': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা',
+                    'ভূগোল ও পরিবেশ': 'ভূগোল ও পরিবেশ', 'geography and environment': 'ভূগোল ও পরিবেশ', 'geography': 'ভূগোল ও পরিবেশ',
+                    'পৌরনীতি ও নাগরিকতা': 'পৌরনীতি ও নাগরিকতা', 'civics and citizenship': 'পৌরনীতি ও নাগরিকতা', 'civics': 'পৌরনীতি ও নাগরিকতা',
+                    'পদার্থ': 'পদার্থ', 'physics': 'পদার্থ',
+                    'রসায়ন': 'রসায়ন', 'chemistry': 'রসায়ন',
+                    'জীব বিজ্ঞান': 'জীব বিজ্ঞান', 'biology': 'জীব বিজ্ঞান',
+                    'হিসাব বিজ্ঞান': 'হিসাব বিজ্ঞান', 'accounting': 'হিসাব বিজ্ঞান',
+                    'ফিন্যান্স ও ব্যাংকিং': 'ফিন্যান্স ও ব্যাংকিং', 'finance and banking': 'ফিন্যান্স ও ব্যাংকিং',
+                    'ব্যবসায় উদ্যোগ': 'ব্যবসায় উদ্যোগ', 'business entrepreneurship': 'ব্যবসায় উদ্যোগ',
+                };
                 
                 const combinedHeaderMap: { [key: string]: { [key: string]: string } } = {
                     'সাধারণ বিজ্ঞান/বাংলাদেশ ও বিশ্ব পরিচয়': { science: 'বাংলাদেশ ও বিশ্ব পরিচয়', arts: 'সাধারণ বিজ্ঞান', commerce: 'সাধারণ বিজ্ঞান' },
@@ -296,19 +318,22 @@ export default function ResultsPage() {
                             if (!match) return;
 
                             let subjectNamePart = match[1].trim();
-                            const markTypeBengali = match[2].trim();
-                            const markType = markTypeMap[markTypeBengali];
+                            const markTypeRaw = match[2].trim();
+                            const markType = markTypeMap[markTypeRaw.toLowerCase()];
 
                             if (!markType) return;
                             
-                            let finalSubjectName = subjectNamePart;
+                            let finalSubjectName : string | undefined = subjectNameMap[subjectNamePart.toLowerCase()];
                             
-                            if (showGroupSelector && subjectNamePart.includes('/')) {
-                                const mapping = combinedHeaderMap[subjectNamePart];
-                                if (mapping && student.group && mapping[student.group]) {
-                                    finalSubjectName = mapping[student.group];
-                                } else {
-                                    return;
+                            if (!finalSubjectName && subjectNamePart.includes('/')) {
+                                const combinedName = Object.keys(combinedHeaderMap).find(k => k.toLowerCase().includes(subjectNamePart.split('/')[0].toLowerCase()) && k.toLowerCase().includes(subjectNamePart.split('/')[1].toLowerCase()));
+                                if(combinedName) {
+                                    const mapping = combinedHeaderMap[combinedName];
+                                    if (mapping && student.group && mapping[student.group]) {
+                                        finalSubjectName = mapping[student.group];
+                                    } else {
+                                        return;
+                                    }
                                 }
                             }
 

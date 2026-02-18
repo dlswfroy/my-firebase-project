@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import React from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from "@/hooks/use-toast";
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { getStudents } from '@/lib/student-data';
-import { getSubjects } from '@/lib/subjects';
+import { getSubjects, Subject } from '@/lib/subjects';
 import { getResultsForClass, ClassResult } from '@/lib/results-data';
 import { processStudentResults, StudentProcessedResult } from '@/lib/results-calculation';
 import Link from 'next/link';
@@ -23,6 +24,7 @@ export default function ViewResultsPage() {
     const [group, setGroup] = useState('');
     
     const [processedResults, setProcessedResults] = useState<StudentProcessedResult[]>([]);
+    const [subjects, setSubjects] = useState<Subject[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     const handleViewResults = () => {
@@ -47,11 +49,13 @@ export default function ViewResultsPage() {
         if (studentsInClass.length === 0) {
             toast({ title: 'এই শ্রেণিতে কোনো শিক্ষার্থী নেই।'});
             setProcessedResults([]);
+            setSubjects([]);
             setIsLoading(false);
             return;
         }
 
         const subjectsForClass = getSubjects(className, group);
+        setSubjects(subjectsForClass);
         
         const resultsBySubject: ClassResult[] = subjectsForClass.map(subject => {
             return getResultsForClass(selectedYear, className, subject.name, group);
@@ -93,6 +97,41 @@ export default function ViewResultsPage() {
         }
         return `${bnPosition}তম`;
     }
+
+    const tableHeaders = useMemo(() => {
+        if (subjects.length === 0) return null;
+
+        return (
+            <TableHeader>
+                <TableRow>
+                    <TableHead rowSpan={2} className="align-middle text-center sticky left-0 bg-background z-10">রোল</TableHead>
+                    <TableHead rowSpan={2} className="align-middle text-center sticky left-16 bg-background z-10 min-w-[200px]">শিক্ষার্থীর নাম</TableHead>
+                    {subjects.map(subject => (
+                        <TableHead key={subject.name} colSpan={subject.practical ? 6 : 5} className="text-center border-x">
+                            {subject.name}
+                        </TableHead>
+                    ))}
+                    <TableHead rowSpan={2} className="align-middle text-center">মোট নম্বর</TableHead>
+                    <TableHead rowSpan={2} className="align-middle text-center">জি.পি.এ</TableHead>
+                    <TableHead rowSpan={2} className="align-middle text-center">গ্রেড</TableHead>
+                    <TableHead rowSpan={2} className="align-middle text-center">মেধাস্থান</TableHead>
+                </TableRow>
+                <TableRow>
+                    {subjects.map(subject => (
+                        <React.Fragment key={`${subject.name}-cols`}>
+                            <TableHead className="text-center border-l">লিখিত</TableHead>
+                            <TableHead className="text-center border-l">বহুনি.</TableHead>
+                            {subject.practical && <TableHead className="text-center border-l">ব্যবহারিক</TableHead>}
+                            <TableHead className="text-center border-l">মোট</TableHead>
+                            <TableHead className="text-center border-l">গ্রেড</TableHead>
+                            <TableHead className="text-center border-l border-r">পয়েন্ট</TableHead>
+                        </React.Fragment>
+                    ))}
+                </TableRow>
+            </TableHeader>
+        );
+    }, [subjects]);
+
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background">
@@ -145,36 +184,32 @@ export default function ViewResultsPage() {
                             </Button>
                         </div>
                         
-                        {processedResults.length > 0 && (
-                            <div className="border rounded-md">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>রোল</TableHead>
-                                            <TableHead>শিক্ষার্থীর নাম</TableHead>
-                                            <TableHead>মোট নম্বর</TableHead>
-                                            <TableHead>জি.পি.এ</TableHead>
-                                            <TableHead>গ্রেড</TableHead>
-                                            <TableHead>ফলাফল</TableHead>
-                                            <TableHead>মেধাস্থান</TableHead>
-                                            <TableHead>অকৃতকার্য বিষয়</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
+                        {processedResults.length > 0 && subjects.length > 0 && (
+                            <div className="border rounded-md overflow-x-auto">
+                                <Table className="min-w-max">
+                                    {tableHeaders}
                                     <TableBody>
                                         {processedResults.map(res => (
                                             <TableRow key={res.student.id}>
-                                                <TableCell>{res.student.roll.toLocaleString('bn-BD')}</TableCell>
-                                                <TableCell>{res.student.studentNameBn}</TableCell>
-                                                <TableCell>{res.totalMarks.toLocaleString('bn-BD')}</TableCell>
-                                                <TableCell>{res.gpa.toFixed(2).toLocaleString('bn-BD')}</TableCell>
-                                                <TableCell>{res.finalGrade}</TableCell>
-                                                <TableCell>
-                                                    <span className={res.isPass ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-                                                        {res.isPass ? 'পাশ' : 'ফেল'}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>{res.isPass ? renderMeritPosition(res.meritPosition) : '-'}</TableCell>
-                                                <TableCell>{res.failedSubjectsCount > 0 ? res.failedSubjectsCount.toLocaleString('bn-BD') : '-'}</TableCell>
+                                                <TableCell className="text-center sticky left-0 bg-background z-10">{res.student.roll.toLocaleString('bn-BD')}</TableCell>
+                                                <TableCell className="sticky left-16 bg-background z-10 whitespace-nowrap">{res.student.studentNameBn}</TableCell>
+                                                {subjects.map(subject => {
+                                                    const subjectRes = res.subjectResults.get(subject.name);
+                                                    return (
+                                                        <React.Fragment key={`${res.student.id}-${subject.name}`}>
+                                                            <TableCell className="text-center border-l">{(subjectRes?.written?.toLocaleString('bn-BD')) ?? '-'}</TableCell>
+                                                            <TableCell className="text-center border-l">{(subjectRes?.mcq?.toLocaleString('bn-BD')) ?? '-'}</TableCell>
+                                                            {subject.practical && <TableCell className="text-center border-l">{(subjectRes?.practical?.toLocaleString('bn-BD')) ?? '-'}</TableCell>}
+                                                            <TableCell className="text-center border-l font-semibold">{subjectRes?.marks.toLocaleString('bn-BD') ?? '-'}</TableCell>
+                                                            <TableCell className="text-center border-l">{subjectRes?.grade ?? '-'}</TableCell>
+                                                            <TableCell className="text-center border-l border-r">{subjectRes?.point.toFixed(2).toLocaleString('bn-BD') ?? '-'}</TableCell>
+                                                        </React.Fragment>
+                                                    )
+                                                })}
+                                                <TableCell className="text-center font-bold">{res.totalMarks.toLocaleString('bn-BD')}</TableCell>
+                                                <TableCell className="text-center font-bold">{res.gpa.toFixed(2).toLocaleString('bn-BD')}</TableCell>
+                                                <TableCell className="text-center font-bold">{res.finalGrade}</TableCell>
+                                                <TableCell className="text-center font-bold">{res.isPass ? renderMeritPosition(res.meritPosition) : 'ফেল'}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
