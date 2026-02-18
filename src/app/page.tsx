@@ -3,6 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, UserCheck, UserX, GraduationCap } from 'lucide-react';
 
 export default function Home() {
+  const totalStudents = 0;
+  const presentStudents = 0;
+  const absentStudents = 0;
+  const totalTeachers = 0;
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
@@ -16,9 +21,9 @@ export default function Home() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1,250</div>
+              <div className="text-2xl font-bold">{totalStudents.toLocaleString('bn-BD')}</div>
               <p className="text-xs text-muted-foreground">
-                +2.5% from last month
+                &nbsp;
               </p>
             </CardContent>
           </Card>
@@ -30,7 +35,7 @@ export default function Home() {
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1,190</div>
+              <div className="text-2xl font-bold">{presentStudents.toLocaleString('bn-BD')}</div>
               <p className="text-xs text-muted-foreground">
                 আজকে উপস্থিত
               </p>
@@ -42,7 +47,7 @@ export default function Home() {
               <UserX className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">60</div>
+              <div className="text-2xl font-bold">{absentStudents.toLocaleString('bn-BD')}</div>
               <p className="text-xs text-muted-foreground">
                 আজকে অনুপস্থিত
               </p>
@@ -56,9 +61,9 @@ export default function Home() {
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">82</div>
+              <div className="text-2xl font-bold">{totalTeachers.toLocaleString('bn-BD')}</div>
               <p className="text-xs text-muted-foreground">
-                +1 from last month
+                &nbsp;
               </p>
             </CardContent>
           </Card>
