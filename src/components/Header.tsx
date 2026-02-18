@@ -14,14 +14,22 @@ import {
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useEffect, useState } from 'react';
 
 export function Header() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const profilePhoto = PlaceHolderImages.find(p => p.id === 'profile-photo');
   const schoolLogo = PlaceHolderImages.find(p => p.id === 'school-logo');
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-primary px-4 text-primary-foreground shadow-sm sm:px-6 md:px-8">
       <div className="flex items-center gap-4">
+        {isClient ? (
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="shrink-0 rounded-lg bg-white text-primary hover:bg-gray-100">
@@ -91,6 +99,12 @@ export function Header() {
             </nav>
           </SheetContent>
         </Sheet>
+        ) : (
+          <Button variant="ghost" size="icon" className="shrink-0 rounded-lg bg-white text-primary hover:bg-gray-100" disabled>
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Toggle navigation menu</span>
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
