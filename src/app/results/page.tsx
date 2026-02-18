@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,7 +16,9 @@ import { getSubjects, Subject as SubjectType } from '@/lib/subjects';
 import { saveClassResults, getResultsForClass, getAllResults, deleteClassResult, ClassResult, StudentResult } from '@/lib/results-data';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2 } from 'lucide-react';
+import { Trash2, FileUp, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
+
 
 type Marks = {
     written?: number;
@@ -40,6 +42,7 @@ export default function ResultsPage() {
     const [marks, setMarks] = useState<Map<number, Marks>>(new Map());
 
     const [savedResults, setSavedResults] = useState<ClassResult[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const updateSavedResults = () => {
         const allResults = getAllResults().filter(r => r.academicYear === selectedYear);
@@ -48,6 +51,7 @@ export default function ResultsPage() {
     
     useEffect(() => {
         updateSavedResults();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedYear]);
 
     useEffect(() => {
@@ -161,6 +165,232 @@ export default function ResultsPage() {
         });
     }
 
+    const handleDownloadSample = () => {
+        if (!className) {
+            toast({
+                variant: 'destructive',
+                title: 'শ্রেণি নির্বাচন করুন',
+                description: 'নমুনা ফাইল ডাউনলোড করার জন্য অনুগ্রহ করে একটি শ্রেণি নির্বাচন করুন।',
+            });
+            return;
+        }
+
+        const isJunior = ['6', '7', '8'].includes(className);
+        let headers: string[] = [];
+
+        if (isJunior) {
+            headers = ['রোল', 'নাম'];
+            const subjects = getSubjects(className);
+            subjects.forEach(sub => {
+                headers.push(`${sub.name} (লিখিত)`);
+                headers.push(`${sub.name} (বহুনির্বাচনী)`);
+                if (sub.practical) {
+                    headers.push(`${sub.name} (ব্যবহারিক)`);
+                }
+            });
+        } else { // Class 9-10
+            headers = [
+                'রোল', 'নাম', 'শাখা',
+                'বাংলা প্রথম (লিখিত)', 'বাংলা প্রথম (বহুনির্বাচনী)',
+                'বাংলা দ্বিতীয় (লিখিত)', 'বাংলা দ্বিতীয় (বহুনির্বাচনী)',
+                'ইংরেজি প্রথম (লিখিত)', 'ইংরেজি প্রথম (বহুনির্বাচনী)',
+                'ইংরেজি দ্বিতীয় (লিখিত)', 'ইংরেজি দ্বিতীয় (বহুনির্বাচনী)',
+                'গণিত (লিখিত)', 'গণিত (বহুনির্বাচনী)',
+                'ধর্ম ও নৈতিক শিক্ষা (লিখিত)', 'ধর্ম ও নৈতিক শিক্ষা (বহুনির্বাচনী)',
+                'তথ্য ও যোগাযোগ প্রযুক্তি (লিখিত)', 'তথ্য ও যোগাযোগ প্রযুক্তি (বহুনির্বাচনী)',
+                'কৃষি শিক্ষা (লিখিত)', 'কৃষি শিক্ষা (বহুনির্বাচনী)', 'কৃষি শিক্ষা (ব্যবহারিক)',
+                'সাধারণ বিজ্ঞান/বাংলাদেশ ও বিশ্ব পরিচয় (লিখিত)', 'সাধারণ বিজ্ঞান/বাংলাদেশ ও বিশ্ব পরিচয় (বহুনির্বাচনী)',
+                'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা/পদার্থ (লিখিত)', 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা/পদার্থ (বহুনির্বাচনী)', 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা/পদার্থ (ব্যবহারিক)',
+                'ভূগোল ও পরিবেশ/রসায়ন (লিখিত)', 'ভূগোল ও পরিবেশ/রসায়ন (বহুনির্বাচনী)', 'ভূগোল ও পরিবেশ/রসায়ন (ব্যবহারিক)',
+                'পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান (লিখিত)', 'পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান (বহুনির্বাচনী)', 'পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান (ব্যবহারিক)',
+                'হিসাব বিজ্ঞান (লিখিত)', 'হিসাব বিজ্ঞান (বহুনির্বাচনী)',
+                'ফিন্যান্স ও ব্যাংকিং (লিখিত)', 'ফিন্যান্স ও ব্যাংকিং (বহুনির্বাচনী)',
+                'ব্যবসায় উদ্যোগ (লিখিত)', 'ব্যবসায় উদ্যোগ (বহুনির্বাচনী)',
+            ];
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet([headers]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'ফলাফল');
+        XLSX.writeFile(wb, `results_sample_class_${className}.xlsx`);
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (!className) {
+            toast({
+                variant: "destructive",
+                title: "প্রথমে শ্রেণি নির্বাচন করুন",
+                description: "ফাইল আপলোড করার আগে একটি শ্রেণি নির্বাচন করতে হবে।",
+            });
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = e.target?.result;
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+
+                if (json.length === 0) {
+                    toast({ variant: "destructive", title: "ফাইল খালি" });
+                    return;
+                }
+
+                const allStudentsForYear = getStudents().filter(s => s.academicYear === selectedYear);
+                const showGroupSelector = ['9', '10'].includes(className);
+                
+                const resultsByGroupAndSubject = new Map<string, Map<string, { fullMarks: number, results: StudentResult[] }>>();
+
+                const markTypeMap: { [key: string]: keyof Marks } = { 'লিখিত': 'written', 'বহুনির্বাচনী': 'mcq', 'ব্যবহারিক': 'practical' };
+                const bengaliToGroup: { [key: string]: string } = { 'বিজ্ঞান': 'science', 'মানবিক': 'arts', 'ব্যবসায় শিক্ষা': 'commerce' };
+                
+                const combinedHeaderMap: { [key: string]: { [key: string]: string } } = {
+                    'সাধারণ বিজ্ঞান/বাংলাদেশ ও বিশ্ব পরিচয়': { science: 'বাংলাদেশ ও বিশ্ব পরিচয়', arts: 'সাধারণ বিজ্ঞান', commerce: 'সাধারণ বিজ্ঞান' },
+                    'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা/পদার্থ': { science: 'পদার্থ', arts: 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা' },
+                    'ভূগোল ও পরিবেশ/রসায়ন': { science: 'রসায়ন', arts: 'ভূগোল ও পরিবেশ' },
+                    'পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান': { science: 'জীব বিজ্ঞান', arts: 'পৌরনীতি ও নাগরিকতা' },
+                };
+
+                const processingErrors: string[] = [];
+
+                json.forEach((row: any, rowIndex: number) => {
+                    try {
+                        const roll = row['রোল'];
+                        if (roll === undefined) {
+                            processingErrors.push(`সারি ${rowIndex + 2}: রোল নম্বর অনুপস্থিত।`);
+                            return;
+                        }
+                        
+                        const studentGroupBengali = row['শাখা'];
+                        const studentGroup = showGroupSelector ? (bengaliToGroup[studentGroupBengali] || group) : '';
+
+                        const student = allStudentsForYear.find(s => 
+                            s.roll === Number(roll) && 
+                            s.className === className && 
+                            (!showGroupSelector || s.group === studentGroup)
+                        );
+
+                        if (!student) {
+                            processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এবং শাখা '${studentGroupBengali || 'N/A'}' এর শিক্ষার্থীকে পাওয়া যায়নি।`);
+                            return;
+                        }
+                        
+                        const studentActualGroup = student.group || '';
+                        let resultsBySubject = resultsByGroupAndSubject.get(studentActualGroup);
+                        if (!resultsBySubject) {
+                            resultsBySubject = new Map();
+                            resultsByGroupAndSubject.set(studentActualGroup, resultsBySubject);
+                        }
+
+                        Object.entries(row).forEach(([header, value]) => {
+                            if (header === 'রোল' || header === 'নাম' || header === 'শাখা') return;
+                            
+                            const match = header.match(/(.+) \((.+)\)/);
+                            if (!match) return;
+
+                            let subjectNamePart = match[1].trim();
+                            const markTypeBengali = match[2].trim();
+                            const markType = markTypeMap[markTypeBengali];
+
+                            if (!markType) return;
+                            
+                            let finalSubjectName = subjectNamePart;
+                            
+                            if (showGroupSelector && subjectNamePart.includes('/')) {
+                                const mapping = combinedHeaderMap[subjectNamePart];
+                                if (mapping && student.group && mapping[student.group]) {
+                                    finalSubjectName = mapping[student.group];
+                                } else {
+                                    return;
+                                }
+                            }
+
+                            if (!finalSubjectName) return;
+
+                            const markValue = value === '' || value === undefined || isNaN(Number(value)) ? undefined : Number(value);
+
+                            let subjectData = resultsBySubject.get(finalSubjectName);
+                            if (!subjectData) {
+                                subjectData = { fullMarks: fullMarks || 100, results: [] };
+                                resultsBySubject.set(finalSubjectName, subjectData);
+                            }
+
+                            let studentResult = subjectData.results.find(r => r.studentId === student.id);
+                            if (!studentResult) {
+                                studentResult = { studentId: student.id };
+                                subjectData.results.push(studentResult);
+                            }
+                            
+                            studentResult[markType] = markValue;
+                        });
+                    } catch(rowError: any) {
+                        processingErrors.push(`সারি ${rowIndex + 2} প্রক্রিয়াকরণে সমস্যা: ${rowError.message}`);
+                    }
+                });
+
+                if (processingErrors.length > 0) {
+                    throw new Error(processingErrors.join('\n'));
+                }
+                
+                let updatedSubjectsCount = 0;
+                resultsByGroupAndSubject.forEach((subjectDataMap, studentGroup) => {
+                    subjectDataMap.forEach((data, subjectName) => {
+                        const existingData = getResultsForClass(selectedYear, className, subjectName, studentGroup || undefined);
+                        const mergedResults = new Map<number, StudentResult>();
+
+                        if (existingData) {
+                            existingData.results.forEach(res => mergedResults.set(res.studentId, res));
+                        }
+                        
+                        data.results.forEach(res => {
+                            const existingRes = mergedResults.get(res.studentId) || { studentId: res.studentId };
+                            mergedResults.set(res.studentId, {...existingRes, ...res});
+                        });
+                        
+                        saveClassResults({
+                            academicYear: selectedYear,
+                            className,
+                            group: studentGroup || undefined,
+                            subject: subjectName,
+                            fullMarks: data.fullMarks,
+                            results: Array.from(mergedResults.values()),
+                        });
+                        updatedSubjectsCount++;
+                    });
+                });
+                
+                toast({
+                    title: "ফলাফল আপলোড সম্পন্ন",
+                    description: `${updatedSubjectsCount}টি বিষয়ের ফলাফল সফলভাবে আপলোড/আপডেট করা হয়েছে।`
+                });
+
+                updateSavedResults();
+
+            } catch (error: any) {
+                console.error("File upload error:", error);
+                toast({
+                    variant: "destructive",
+                    title: "ফাইল আপলোড ব্যর্থ হয়েছে",
+                    description: error.message || "ফাইল ফরম্যাট পরীক্ষা করুন।",
+                    duration: 10000,
+                });
+            } finally {
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    };
+
+
     const showGroupSelector = className === '9' || className === '10';
     
     const classNamesMap: { [key: string]: string } = { '6': '৬ষ্ঠ', '7': '৭ম', '8': '৮ম', '9': '৯ম', '10': '১০ম' };
@@ -172,14 +402,25 @@ export default function ResultsPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
                 <Card>
                     <CardHeader>
-                        <div className="flex justify-between items-center">
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                             <div>
                                 <CardTitle>ফলাফল ও নম্বর ব্যবস্থাপনা</CardTitle>
                                 <CardDescription>শ্রেণি, বিষয় ও শাখা অনুযায়ী শিক্ষার্থীদের পরীক্ষার নম্বর ইনপুট করুন।</CardDescription>
                             </div>
-                            <Link href="/view-results">
-                                <Button variant="outline">ফলাফল শিট দেখুন</Button>
-                            </Link>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" onClick={handleDownloadSample}>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    নমুনা ফাইল
+                                </Button>
+                                <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                                    <FileUp className="mr-2 h-4 w-4" />
+                                    Excel আপলোড
+                                </Button>
+                                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
+                                <Link href="/view-results">
+                                    <Button variant="outline">ফলাফল শিট দেখুন</Button>
+                                </Link>
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-8">
