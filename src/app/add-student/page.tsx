@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
@@ -18,11 +18,14 @@ import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { addStudent, Student } from '@/lib/student-data';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAcademicYear } from '@/context/AcademicYearContext';
 
 
 export default function AddStudentPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const { selectedYear, availableYears } = useAcademicYear();
+
     const [date, setDate] = useState<Date>()
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [academicYear, setAcademicYear] = useState<string>('');
@@ -31,6 +34,12 @@ export default function AddStudentPage() {
     const [religion, setReligion] = useState<string>('');
     const [group, setGroup] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (selectedYear) {
+            setAcademicYear(selectedYear);
+        }
+    }, [selectedYear]);
 
     const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -258,12 +267,12 @@ export default function AddStudentPage() {
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="academic-year">শিক্ষাবর্ষ</Label>
-                          <Select required onValueChange={setAcademicYear}>
+                          <Select required value={academicYear} onValueChange={setAcademicYear}>
                               <SelectTrigger id="academic-year" name="academic-year">
                                   <SelectValue placeholder="শিক্ষাবর্ষ নির্বাচন করুন" />
                               </SelectTrigger>
                               <SelectContent>
-                                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                  {availableYears.map(year => (
                                       <SelectItem key={year} value={String(year)}>{String(year).toLocaleString('bn-BD')}</SelectItem>
                                   ))}
                               </SelectContent>

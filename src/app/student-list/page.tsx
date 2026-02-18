@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getStudents, deleteStudent, Student } from '@/lib/student-data';
 import { Eye, FilePen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,14 +22,20 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { useAcademicYear } from '@/context/AcademicYearContext';
 
 export default function StudentListPage() {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const { toast } = useToast();
+  const { selectedYear } = useAcademicYear();
 
   useEffect(() => {
     setAllStudents(getStudents());
   }, []);
+
+  const studentsForYear = useMemo(() => {
+    return allStudents.filter(student => student.academicYear === selectedYear);
+  }, [allStudents, selectedYear]);
 
   const handleDeleteStudent = (studentId: number) => {
     deleteStudent(studentId);
@@ -50,7 +56,7 @@ export default function StudentListPage() {
   };
 
   const getStudentsByClass = (className: string): Student[] => {
-    return allStudents.filter((student) => student.className === className);
+    return studentsForYear.filter((student) => student.className === className);
   };
 
   return (
@@ -60,7 +66,10 @@ export default function StudentListPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>শিক্ষার্থীদের তালিকা</CardTitle>
+              <div>
+                <CardTitle>শিক্ষার্থীদের তালিকা</CardTitle>
+                <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
+              </div>
               <Link href="/add-student">
                 <Button>নতুন শিক্ষার্থী যোগ করুন</Button>
               </Link>

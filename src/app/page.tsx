@@ -5,9 +5,11 @@ import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, UserX, GraduationCap } from 'lucide-react';
 import { getStudents } from '@/lib/student-data';
+import { useAcademicYear } from '@/context/AcademicYearContext';
 
 export default function Home() {
   const [totalStudents, setTotalStudents] = useState(0);
+  const { selectedYear } = useAcademicYear();
   
   // For now, let's keep these as static until attendance is implemented
   const presentStudents = 0;
@@ -16,8 +18,9 @@ export default function Home() {
 
   useEffect(() => {
       // getStudents now reads from localStorage, so it must be called on the client.
-      setTotalStudents(getStudents().length);
-  });
+      const studentsForYear = getStudents().filter(s => s.academicYear === selectedYear);
+      setTotalStudents(studentsForYear.length);
+  }, [selectedYear]);
 
 
   return (
@@ -35,7 +38,7 @@ export default function Home() {
             <CardContent>
               <div className="text-2xl font-bold">{totalStudents.toLocaleString('bn-BD')}</div>
               <p className="text-xs text-muted-foreground">
-                &nbsp;
+                শিক্ষাবর্ষ {selectedYear.toLocaleString('bn-BD')}
               </p>
             </CardContent>
           </Card>

@@ -28,12 +28,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useAcademicYear } from '@/context/AcademicYearContext';
 
 
 export default function EditStudentPage() {
     const router = useRouter();
     const params = useParams();
     const { toast } = useToast();
+    const { availableYears } = useAcademicYear();
     
     const studentId = parseInt(params.id as string, 10);
 
@@ -248,7 +250,7 @@ export default function EditStudentPage() {
                                   <SelectValue placeholder="শিক্ষাবর্ষ নির্বাচন করুন" />
                               </SelectTrigger>
                               <SelectContent>
-                                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                                  {availableYears.map(year => (
                                       <SelectItem key={year} value={String(year)}>{String(year).toLocaleString('bn-BD')}</SelectItem>
                                   ))}
                               </SelectContent>

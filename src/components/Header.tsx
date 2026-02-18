@@ -15,9 +15,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useEffect, useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAcademicYear } from '@/context/AcademicYearContext';
 
 export function Header() {
   const [isClient, setIsClient] = useState(false);
+  const { selectedYear, setSelectedYear, availableYears } = useAcademicYear();
 
   useEffect(() => {
     setIsClient(true);
@@ -107,13 +110,29 @@ export function Header() {
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        {schoolLogo && (
-          <Image src={schoolLogo.imageUrl} alt="School Logo" width={40} height={40} className="rounded-full" data-ai-hint={schoolLogo.imageHint}/>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+            {schoolLogo && (
+              <Image src={schoolLogo.imageUrl} alt="School Logo" width={40} height={40} className="rounded-full hidden sm:block" data-ai-hint={schoolLogo.imageHint}/>
+            )}
+            <h1 className="text-xl font-bold whitespace-nowrap drop-shadow-md">
+              বীরগঞ্জ পৌর উচ্চ বিদ্যালয়
+            </h1>
+        </div>
+        {isClient && availableYears.length > 0 && (
+            <div className="w-40">
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="bg-primary-foreground text-primary">
+                        <SelectValue placeholder="শিক্ষাবর্ষ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableYears.map(year => (
+                            <SelectItem key={year} value={year}>{year.toLocaleString('bn-BD')}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
         )}
-        <h1 className="text-xl font-bold whitespace-nowrap drop-shadow-md">
-          বীরগঞ্জ পৌর উচ্চ বিদ্যালয়
-        </h1>
       </div>
 
       <div className="flex items-center gap-4">
