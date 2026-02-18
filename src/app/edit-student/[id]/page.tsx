@@ -220,7 +220,7 @@ export default function EditStudentPage() {
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
                 <div>
                     <CardTitle>শিক্ষার্থীর তথ্য এডিট করুন</CardTitle>
                     <CardDescription>শিক্ষার্থীর তথ্য পরিবর্তন করুন।</CardDescription>
