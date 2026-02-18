@@ -186,7 +186,11 @@ export default function AddStudentPage() {
                 
                 const genderMap: { [key: string]: string } = { 'পুরুষ': 'male', 'male': 'male', 'মহিলা': 'female', 'female': 'female', 'অন্যান্য': 'other', 'other': 'other' };
                 const religionMap: { [key: string]: string } = { 'ইসলাম': 'islam', 'islam': 'islam', 'হিন্দু': 'hinduism', 'hinduism': 'hinduism', 'বৌদ্ধ': 'buddhism', 'buddhism': 'buddhism', 'খ্রিস্টান': 'christianity', 'christianity': 'christianity', 'অন্যান্য': 'other', 'other': 'other' };
-                const groupMap: { [key:string]: string } = { 'বিজ্ঞান': 'science', 'science': 'science', 'মানবিক': 'arts', 'arts': 'arts', 'ব্যবসায় শিক্ষা': 'commerce', 'commerce': 'commerce' };
+                const groupMap: { [key:string]: string } = { 
+                    'বিজ্ঞান': 'science', 'science': 'science', 
+                    'মানবিক': 'arts', 'arts': 'arts', 'humanities': 'arts',
+                    'ব্যবসায় শিক্ষা': 'commerce', 'commerce': 'commerce', 'business studies': 'commerce', 'business': 'commerce'
+                };
 
 
                 const allStudents = getStudents();
@@ -322,7 +326,7 @@ export default function AddStudentPage() {
                     <CardTitle>নতুন শিক্ষার্থী যোগ করুন</CardTitle>
                     <CardDescription>নতুন শিক্ষার্থীর তথ্য পূরণ করুন।</CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center flex-wrap gap-2 justify-start sm:justify-end">
                     <Button variant="outline" onClick={handleDownloadSample}>
                         <Download className="mr-2 h-4 w-4" />
                         নমুনা ফাইল

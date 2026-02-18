@@ -264,12 +264,9 @@ export default function ResultsPage() {
                 const markTypeMap: { [key: string]: keyof Marks } = { 'লিখিত': 'written', 'written': 'written', 'বহুনির্বাচনী': 'mcq', 'mcq': 'mcq', 'ব্যবহারিক': 'practical', 'practical': 'practical' };
                 
                 const groupNameToCode: { [key: string]: string } = {
-                    'বিজ্ঞান': 'science',
-                    'science': 'science',
-                    'মানবিক': 'arts',
-                    'arts': 'arts',
-                    'ব্যবসায় শিক্ষা': 'commerce',
-                    'commerce': 'commerce',
+                    'বিজ্ঞান': 'science', 'science': 'science',
+                    'মানবিক': 'arts', 'arts': 'arts', 'humanities': 'arts',
+                    'ব্যবসায় শিক্ষা': 'commerce', 'commerce': 'commerce', 'business studies': 'commerce', 'business': 'commerce'
                 };
                 const groupToBengali: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
 
@@ -474,7 +471,7 @@ export default function ResultsPage() {
                                 <CardTitle>ফলাফল ও নম্বর ব্যবস্থাপনা</CardTitle>
                                 <CardDescription>শ্রেণি, বিষয় ও শাখা অনুযায়ী শিক্ষার্থীদের পরীক্ষার নম্বর ইনপুট করুন।</CardDescription>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
                                 <Button variant="outline" onClick={handleDownloadSample}>
                                     <Download className="mr-2 h-4 w-4" />
                                     নমুনা ফাইল
@@ -545,7 +542,7 @@ export default function ResultsPage() {
                         </div>
                         
                         {students.length > 0 && (
-                            <div className="border rounded-md">
+                            <div className="overflow-x-auto border rounded-md">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -602,7 +599,7 @@ export default function ResultsPage() {
 
                         <div className="space-y-4">
                             <h3 className="font-semibold text-lg border-b pb-2">সংরক্ষিত ফলাফল (শিক্ষাবর্ষ {selectedYear.toLocaleString('bn-BD')})</h3>
-                            <div className="border rounded-md">
+                            <div className="border rounded-md overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>

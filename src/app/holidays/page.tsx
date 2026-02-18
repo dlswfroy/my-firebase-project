@@ -118,7 +118,7 @@ export default function HolidaysPage() {
 
                         <div>
                             <h3 className="font-semibold text-lg mb-4">ছুটির তালিকা</h3>
-                            <div className="border rounded-md">
+                            <div className="border rounded-md overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>

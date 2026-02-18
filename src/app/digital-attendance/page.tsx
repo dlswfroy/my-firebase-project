@@ -104,12 +104,43 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
                     <p className="text-green-600">উপস্থিত: {presentCount.toLocaleString('bn-BD')}</p>
                     <p className="text-red-600">অনুপস্থিত: {absentCount.toLocaleString('bn-BD')}</p>
                 </div>
-                 <Table>
+                 <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>রোল</TableHead>
+                                <TableHead>নাম</TableHead>
+                                <TableHead>অবস্থা</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {students.map(student => (
+                                <TableRow key={student.id}>
+                                    <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
+                                    <TableCell>{student.studentNameBn}</TableCell>
+                                    <TableCell>
+                                         <span className={savedMap.get(student.id) === 'present' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                                            {savedMap.get(student.id) === 'present' ? 'উপস্থিত' : 'অনুপস্থিত'}
+                                        </span>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                 </div>
+            </div>
+        );
+    }
+    
+    return (
+        <div>
+            <div className="overflow-x-auto">
+                <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>রোল</TableHead>
                             <TableHead>নাম</TableHead>
-                            <TableHead>অবস্থা</TableHead>
+                            <TableHead className="text-right">হাজিরা</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -117,54 +148,27 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
                             <TableRow key={student.id}>
                                 <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
                                 <TableCell>{student.studentNameBn}</TableCell>
-                                <TableCell>
-                                     <span className={savedMap.get(student.id) === 'present' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-                                        {savedMap.get(student.id) === 'present' ? 'উপস্থিত' : 'অনুপস্থিত'}
-                                    </span>
+                                <TableCell className="text-right">
+                                    <RadioGroup
+                                        defaultValue="present"
+                                        onValueChange={(value) => handleStatusChange(student.id, value as AttendanceStatus)}
+                                        className="flex justify-end gap-4"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="present" id={`present-${classId}-${student.id}`} className="text-green-600 border-green-600" />
+                                            <Label htmlFor={`present-${classId}-${student.id}`}>উপস্থিত</Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="absent" id={`absent-${classId}-${student.id}`} className="text-red-600 border-red-600" />
+                                            <Label htmlFor={`absent-${classId}-${student.id}`}>অনুপস্থিত</Label>
+                                        </div>
+                                    </RadioGroup>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </div>
-        );
-    }
-    
-    return (
-        <div>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>রোল</TableHead>
-                        <TableHead>নাম</TableHead>
-                        <TableHead className="text-right">হাজিরা</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {students.map(student => (
-                        <TableRow key={student.id}>
-                            <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
-                            <TableCell>{student.studentNameBn}</TableCell>
-                            <TableCell className="text-right">
-                                <RadioGroup
-                                    defaultValue="present"
-                                    onValueChange={(value) => handleStatusChange(student.id, value as AttendanceStatus)}
-                                    className="flex justify-end gap-4"
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="present" id={`present-${classId}-${student.id}`} className="text-green-600 border-green-600" />
-                                        <Label htmlFor={`present-${classId}-${student.id}`}>উপস্থিত</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="absent" id={`absent-${classId}-${student.id}`} className="text-red-600 border-red-600" />
-                                        <Label htmlFor={`absent-${classId}-${student.id}`}>অনুপস্থিত</Label>
-                                    </div>
-                                </RadioGroup>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
             <div className="flex justify-end p-4 mt-4 border-t">
                 <Button onClick={handleSaveAttendance}>হাজিরা সেভ করুন</Button>
             </div>

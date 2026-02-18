@@ -68,35 +68,37 @@ const ReportSheet = ({ classId, students }: { classId: string, students: Student
 
 
     return (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>রোল</TableHead>
-                    <TableHead>নাম</TableHead>
-                    <TableHead>মোট কার্যদিবস</TableHead>
-                    <TableHead>উপস্থিত</TableHead>
-                    <TableHead>অনুপস্থিত</TableHead>
-                    <TableHead>উপস্থিতির হার (%)</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {reportData.map(report => (
-                    <TableRow key={report.student.id}>
-                        <TableCell>{report.student.roll.toLocaleString('bn-BD')}</TableCell>
-                        <TableCell>{report.student.studentNameBn}</TableCell>
-                        <TableCell>{report.totalDays.toLocaleString('bn-BD')}</TableCell>
-                        <TableCell>{report.presentDays.toLocaleString('bn-BD')}</TableCell>
-                        <TableCell>{report.absentDays.toLocaleString('bn-BD')}</TableCell>
-                        <TableCell>
-                            {report.totalDays > 0 ? 
-                                ((report.presentDays / report.totalDays) * 100).toFixed(2).toLocaleString('bn-BD') + '%' 
-                                : 'N/A'
-                            }
-                        </TableCell>
+        <div className="overflow-x-auto">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>রোল</TableHead>
+                        <TableHead>নাম</TableHead>
+                        <TableHead>মোট কার্যদিবস</TableHead>
+                        <TableHead>উপস্থিত</TableHead>
+                        <TableHead>অনুপস্থিত</TableHead>
+                        <TableHead>উপস্থিতির হার (%)</TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {reportData.map(report => (
+                        <TableRow key={report.student.id}>
+                            <TableCell>{report.student.roll.toLocaleString('bn-BD')}</TableCell>
+                            <TableCell>{report.student.studentNameBn}</TableCell>
+                            <TableCell>{report.totalDays.toLocaleString('bn-BD')}</TableCell>
+                            <TableCell>{report.presentDays.toLocaleString('bn-BD')}</TableCell>
+                            <TableCell>{report.absentDays.toLocaleString('bn-BD')}</TableCell>
+                            <TableCell>
+                                {report.totalDays > 0 ? 
+                                    ((report.presentDays / report.totalDays) * 100).toFixed(2).toLocaleString('bn-BD') + '%' 
+                                    : 'N/A'
+                                }
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
     );
 };
 
