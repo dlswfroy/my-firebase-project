@@ -174,7 +174,7 @@ export default function MarksheetPage() {
                             <tbody>
                                 {sortedSubjects.map((subject, index) => {
                                     const result = processedResult.subjectResults.get(subject.name);
-                                    const fullMarks = getResultsForClass(academicYear!, student.className, subject.name, student.group)?.fullMarks || 100;
+                                    const fullMarks = subject.fullMarks;
                                     return (
                                         <tr key={subject.code} className="border-b border-black">
                                             <td className="border-r border-black p-1 text-center">{index + 1}</td>

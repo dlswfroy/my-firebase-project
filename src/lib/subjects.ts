@@ -4,54 +4,55 @@ export interface Subject {
     englishName: string;
     code: string;
     practical: boolean;
+    fullMarks: number;
 }
 
 const subjectsFor6to8: Subject[] = [
-    { name: 'বাংলা প্রথম', englishName: 'Bangla 1st Paper', code: '101', practical: false },
-    { name: 'বাংলা দ্বিতীয়', englishName: 'Bangla 2nd Paper', code: '102', practical: false },
-    { name: 'ইংরেজি প্রথম', englishName: 'English 1st Paper', code: '107', practical: false },
-    { name: 'ইংরেজি দ্বিতীয়', englishName: 'English 2nd Paper', code: '108', practical: false },
-    { name: 'গণিত', englishName: 'Mathematics', code: '109', practical: false },
-    { name: 'ধর্ম ও নৈতিক শিক্ষা', englishName: 'Religion & Moral Education', code: '111', practical: false },
-    { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', englishName: 'ICT', code: '154', practical: false },
-    { name: 'সাধারণ বিজ্ঞান', englishName: 'General Science', code: '127', practical: false },
-    { name: 'বাংলাদেশ ও বিশ্ব পরিচয়', englishName: 'Bangladesh & Global Studies', code: '150', practical: false },
-    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: false },
+    { name: 'বাংলা প্রথম', englishName: 'Bangla 1st Paper', code: '101', practical: false, fullMarks: 100 },
+    { name: 'বাংলা দ্বিতীয়', englishName: 'Bangla 2nd Paper', code: '102', practical: false, fullMarks: 100 },
+    { name: 'ইংরেজি প্রথম', englishName: 'English 1st Paper', code: '107', practical: false, fullMarks: 100 },
+    { name: 'ইংরেজি দ্বিতীয়', englishName: 'English 2nd Paper', code: '108', practical: false, fullMarks: 100 },
+    { name: 'গণিত', englishName: 'Mathematics', code: '109', practical: false, fullMarks: 100 },
+    { name: 'ধর্ম ও নৈতিক শিক্ষা', englishName: 'Religion & Moral Education', code: '111', practical: false, fullMarks: 100 },
+    { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', englishName: 'ICT', code: '154', practical: false, fullMarks: 50 },
+    { name: 'সাধারণ বিজ্ঞান', englishName: 'General Science', code: '127', practical: false, fullMarks: 100 },
+    { name: 'বাংলাদেশ ও বিশ্ব পরিচয়', englishName: 'Bangladesh & Global Studies', code: '150', practical: false, fullMarks: 100 },
+    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: false, fullMarks: 100 },
 ];
 
 const commonSubjectsFor9to10: Subject[] = [
-    { name: 'বাংলা প্রথম', englishName: 'Bangla 1st Paper', code: '101', practical: false },
-    { name: 'বাংলা দ্বিতীয়', englishName: 'Bangla 2nd Paper', code: '102', practical: false },
-    { name: 'ইংরেজি প্রথম', englishName: 'English 1st Paper', code: '107', practical: false },
-    { name: 'ইংরেজি দ্বিতীয়', englishName: 'English 2nd Paper', code: '108', practical: false },
-    { name: 'গণিত', englishName: 'Mathematics', code: '109', practical: false },
-    { name: 'ধর্ম ও নৈতিক শিক্ষা', englishName: 'Religion & Moral Education', code: '111', practical: false },
-    { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', englishName: 'ICT', code: '154', practical: false },
+    { name: 'বাংলা প্রথম', englishName: 'Bangla 1st Paper', code: '101', practical: false, fullMarks: 100 },
+    { name: 'বাংলা দ্বিতীয়', englishName: 'Bangla 2nd Paper', code: '102', practical: false, fullMarks: 100 },
+    { name: 'ইংরেজি প্রথম', englishName: 'English 1st Paper', code: '107', practical: false, fullMarks: 100 },
+    { name: 'ইংরেজি দ্বিতীয়', englishName: 'English 2nd Paper', code: '108', practical: false, fullMarks: 100 },
+    { name: 'গণিত', englishName: 'Mathematics', code: '109', practical: false, fullMarks: 100 },
+    { name: 'ধর্ম ও নৈতিক শিক্ষা', englishName: 'Religion & Moral Education', code: '111', practical: false, fullMarks: 100 },
+    { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', englishName: 'ICT', code: '154', practical: false, fullMarks: 50 },
 ];
 
 const scienceSubjects: Subject[] = [
-    { name: 'বাংলাদেশ ও বিশ্ব পরিচয়', englishName: 'Bangladesh & Global Studies', code: '150', practical: false },
-    { name: 'পদার্থ', englishName: 'Physics', code: '136', practical: true },
-    { name: 'রসায়ন', englishName: 'Chemistry', code: '137', practical: true },
-    { name: 'জীব বিজ্ঞান', englishName: 'Biology', code: '138', practical: true },
-    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: true },
-    { name: 'উচ্চতর গণিত', englishName: 'Higher Mathematics', code: '126', practical: true },
+    { name: 'বাংলাদেশ ও বিশ্ব পরিচয়', englishName: 'Bangladesh & Global Studies', code: '150', practical: false, fullMarks: 100 },
+    { name: 'পদার্থ', englishName: 'Physics', code: '136', practical: true, fullMarks: 100 },
+    { name: 'রসায়ন', englishName: 'Chemistry', code: '137', practical: true, fullMarks: 100 },
+    { name: 'জীব বিজ্ঞান', englishName: 'Biology', code: '138', practical: true, fullMarks: 100 },
+    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: true, fullMarks: 100 },
+    { name: 'উচ্চতর গণিত', englishName: 'Higher Mathematics', code: '126', practical: true, fullMarks: 100 },
 ];
 
 const artsSubjects: Subject[] = [
-    { name: 'সাধারণ বিজ্ঞান', englishName: 'General Science', code: '127', practical: false },
-    { name: 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', englishName: 'Bangladesh History & World Civilization', code: '153', practical: false },
-    { name: 'ভূগোল ও পরিবেশ', englishName: 'Geography & Environment', code: '110', practical: false },
-    { name: 'পৌরনীতি ও নাগরিকতা', englishName: 'Civics & Citizenship', code: '140', practical: false },
-    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: true },
+    { name: 'সাধারণ বিজ্ঞান', englishName: 'General Science', code: '127', practical: false, fullMarks: 100 },
+    { name: 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা', englishName: 'Bangladesh History & World Civilization', code: '153', practical: false, fullMarks: 100 },
+    { name: 'ভূগোল ও পরিবেশ', englishName: 'Geography & Environment', code: '110', practical: false, fullMarks: 100 },
+    { name: 'পৌরনীতি ও নাগরিকতা', englishName: 'Civics & Citizenship', code: '140', practical: false, fullMarks: 100 },
+    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: true, fullMarks: 100 },
 ];
 
 const commerceSubjects: Subject[] = [
-    { name: 'সাধারণ বিজ্ঞান', englishName: 'General Science', code: '127', practical: false },
-    { name: 'হিসাব বিজ্ঞান', englishName: 'Accounting', code: '146', practical: false },
-    { name: 'ফিন্যান্স ও ব্যাংকিং', englishName: 'Finance & Banking', code: '152', practical: false },
-    { name: 'ব্যবসায় উদ্যোগ', englishName: 'Business Entrepreneurship', code: '143', practical: false },
-    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: true },
+    { name: 'সাধারণ বিজ্ঞান', englishName: 'General Science', code: '127', practical: false, fullMarks: 100 },
+    { name: 'হিসাব বিজ্ঞান', englishName: 'Accounting', code: '146', practical: false, fullMarks: 100 },
+    { name: 'ফিন্যান্স ও ব্যাংকিং', englishName: 'Finance & Banking', code: '152', practical: false, fullMarks: 100 },
+    { name: 'ব্যবসায় উদ্যোগ', englishName: 'Business Entrepreneurship', code: '143', practical: false, fullMarks: 100 },
+    { name: 'কৃষি শিক্ষা', englishName: 'Agriculture Studies', code: '134', practical: true, fullMarks: 100 },
 ];
 
 export const getSubjects = (className: string, group?: string): Subject[] => {

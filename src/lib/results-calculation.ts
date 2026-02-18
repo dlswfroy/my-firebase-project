@@ -63,12 +63,13 @@ export function processStudentResults(
         const optionalSubjectName = student.optionalSubject;
 
         const subjectsForStudent = allSubjectsForGroup.filter(subjectInfo => {
-            if (student.group === 'science' && optionalSubjectName) {
-                if (optionalSubjectName === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
-                if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
+            if (student.group === 'science') {
+                 if (optionalSubjectName === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
+                 if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
             }
-             if (student.group === 'arts' && optionalSubjectName) {
-                if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'সাধারণ বিজ্ঞান') return false;
+             if (student.group === 'arts') {
+                 // Example rule, can be expanded
+                 // if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'সাধারণ বিজ্ঞান') return false;
             }
             return true;
         });
@@ -80,7 +81,7 @@ export function processStudentResults(
         subjectsForStudent.forEach(subjectInfo => {
             const classResult = resultsBySubject.find(r => r.subject === subjectInfo.name && r.group === (student.group || undefined) && r.className === student.className);
             const studentResult = classResult?.results.find(r => r.studentId === student.id);
-            const fullMarks = classResult?.fullMarks || (subjectInfo.name === 'তথ্য ও যোগাযোগ প্রযুক্তি' ? 50 : 100);
+            const fullMarks = classResult?.fullMarks || subjectInfo.fullMarks;
 
             const written = studentResult?.written;
             const mcq = studentResult?.mcq;

@@ -74,10 +74,16 @@ export default function ResultsPage() {
         if (subject) {
             const subInfo = availableSubjects.find(s => s.name === subject);
             setSelectedSubjectInfo(subInfo || null);
+            if (subInfo) {
+                // Set default full marks from subject info if no results are loaded yet
+                if (students.length === 0) {
+                    setFullMarks(subInfo.fullMarks);
+                }
+            }
         } else {
             setSelectedSubjectInfo(null);
         }
-    }, [subject, availableSubjects]);
+    }, [subject, availableSubjects, students.length]);
     
     const handleLoadStudents = () => {
         if (!className || !subject) {
@@ -110,7 +116,8 @@ export default function ResultsPage() {
                 });
             });
         } else {
-            setFullMarks(100);
+            const subInfo = availableSubjects.find(s => s.name === subject);
+            setFullMarks(subInfo?.fullMarks || 100);
         }
         
         filteredStudents.forEach(student => {
@@ -151,7 +158,7 @@ export default function ResultsPage() {
             className,
             group: group || undefined,
             subject,
-            fullMarks: fullMarks || 100,
+            fullMarks: fullMarks || selectedSubjectInfo?.fullMarks || 100,
             results: resultsData
         });
         
@@ -217,7 +224,7 @@ export default function ResultsPage() {
                 'ইংরেজি দ্বিতীয় (লিখিত)', 'ইংরেজি দ্বিতীয় (বহুনির্বাচনী)',
                 'গণিত (লিখিত)', 'গণিত (বহুনির্বাচনী)',
                 'ধর্ম ও নৈতিক শিক্ষা (লিখিত)', 'ধর্ম ও নৈতিক শিক্ষা (বহুনির্বাচনী)',
-                'তথ্য ও যোগাযোগ প্রযুক্তি (লিখিত)', 'তথ্য ও যোগাযোগ প্রযুক্তি (ব্যবহারিক)',
+                'তথ্য ও যোগাযোগ প্রযুক্তি (লিখিত)', 'তথ্য ও যোগাযোগ প্রযুক্তি (বহুনির্বাচনী)',
                 'কৃষি শিক্ষা (লিখিত)', 'কৃষি শিক্ষা (বহুনির্বাচনী)', 'কৃষি শিক্ষা (ব্যবহারিক)',
                 'উচ্চতর গণিত (লিখিত)', 'উচ্চতর গণিত (বহুনির্বাচনী)', 'উচ্চতর গণিত (ব্যবহারিক)',
                 'সাধারণ বিজ্ঞান (লিখিত)', 'সাধারণ বিজ্ঞান (বহুনির্বাচনী)',
@@ -421,7 +428,8 @@ export default function ResultsPage() {
 
                             let subjectData = resultsBySubject.get(finalSubjectName);
                             if (!subjectData) {
-                                subjectData = { fullMarks: 100, results: [] };
+                                const subInfo = getSubjects(className, studentActualGroup).find(s => s.name === finalSubjectName);
+                                subjectData = { fullMarks: subInfo?.fullMarks || 100, results: [] };
                                 resultsBySubject.set(finalSubjectName, subjectData);
                             }
 
