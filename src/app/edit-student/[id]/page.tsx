@@ -88,7 +88,7 @@ export default function EditStudentPage() {
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         
-        if (!student || !photoPreview) {
+        if (!student) {
             toast({
                 variant: "destructive",
                 title: "ত্রুটি",
@@ -97,7 +97,7 @@ export default function EditStudentPage() {
             return;
         }
 
-        if (!photoPreview) {
+        if (!student.photoUrl) {
             toast({
                 variant: "destructive",
                 title: "ছবি আবশ্যক",
@@ -130,17 +130,23 @@ export default function EditStudentPage() {
     const handleSameAddress = (checked: boolean | string) => {
         if (!student) return;
         if (checked) {
-            handleInputChange('permanentVillage', student.presentVillage);
-            handleInputChange('permanentUnion', student.presentUnion);
-            handleInputChange('permanentPostOffice', student.presentPostOffice);
-            handleInputChange('permanentUpazila', student.presentUpazila);
-            handleInputChange('permanentDistrict', student.presentDistrict);
+            setStudent(prev => ({
+                ...prev!,
+                permanentVillage: prev!.presentVillage,
+                permanentUnion: prev!.presentUnion,
+                permanentPostOffice: prev!.presentPostOffice,
+                permanentUpazila: prev!.presentUpazila,
+                permanentDistrict: prev!.presentDistrict,
+            }));
         } else {
-            handleInputChange('permanentVillage', '');
-            handleInputChange('permanentUnion', '');
-            handleInputChange('permanentPostOffice', '');
-            handleInputChange('permanentUpazila', '');
-            handleInputChange('permanentDistrict', '');
+             setStudent(prev => ({
+                ...prev!,
+                permanentVillage: '',
+                permanentUnion: '',
+                permanentPostOffice: '',
+                permanentUpazila: '',
+                permanentDistrict: '',
+            }));
         }
     }
 
@@ -240,11 +246,11 @@ export default function EditStudentPage() {
                               <PopoverTrigger asChild>
                                   <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !student.dob && "text-muted-foreground")}>
                                       <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {student.dob ? format(student.dob, "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
+                                      {student.dob ? format(new Date(student.dob), "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
                                   </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0">
-                                  <Calendar mode="single" selected={student.dob} onSelect={date => handleInputChange('dob', date)} initialFocus />
+                                  <Calendar mode="single" selected={student.dob ? new Date(student.dob) : undefined} onSelect={date => handleInputChange('dob', date)} initialFocus />
                               </PopoverContent>
                           </Popover>
                       </div>
@@ -344,7 +350,7 @@ export default function EditStudentPage() {
 
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">বর্তমান ঠিকানা</h3>
-                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="present-village">গ্রাম</Label>
                             <Input id="present-village" name="present-village" placeholder="গ্রাম" value={student.presentVillage || ''} onChange={e => handleInputChange('presentVillage', e.target.value)} />
@@ -353,17 +359,19 @@ export default function EditStudentPage() {
                             <Label htmlFor="present-union">ইউনিয়ন</Label>
                             <Input id="present-union" name="present-union" placeholder="ইউনিয়ন" value={student.presentUnion || ''} onChange={e => handleInputChange('presentUnion', e.target.value)} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="present-post-office">ডাকঘর</Label>
-                            <Input id="present-post-office" name="present-post-office" placeholder="ডাকঘর" value={student.presentPostOffice || ''} onChange={e => handleInputChange('presentPostOffice', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="present-upazila">উপজেলা</Label>
-                            <Input id="present-upazila" name="present-upazila" placeholder="উপজেলা" value={student.presentUpazila || ''} onChange={e => handleInputChange('presentUpazila', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="present-district">জেলা</Label>
-                            <Input id="present-district" name="present-district" placeholder="জেলা" value={student.presentDistrict || ''} onChange={e => handleInputChange('presentDistrict', e.target.value)} />
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="present-post-office">ডাকঘর</Label>
+                                <Input id="present-post-office" name="present-post-office" placeholder="ডাকঘর" value={student.presentPostOffice || ''} onChange={e => handleInputChange('presentPostOffice', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="present-upazila">উপজেলা</Label>
+                                <Input id="present-upazila" name="present-upazila" placeholder="উপজেলা" value={student.presentUpazila || ''} onChange={e => handleInputChange('presentUpazila', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="present-district">জেলা</Label>
+                                <Input id="present-district" name="present-district" placeholder="জেলা" value={student.presentDistrict || ''} onChange={e => handleInputChange('presentDistrict', e.target.value)} />
+                            </div>
                         </div>
                    </div>
                </div>
@@ -381,7 +389,7 @@ export default function EditStudentPage() {
                             </label>
                         </div>
                     </div>
-                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="permanent-village">গ্রাম</Label>
                             <Input id="permanent-village" name="permanent-village" placeholder="গ্রাম" value={student.permanentVillage || ''} onChange={e => handleInputChange('permanentVillage', e.target.value)} />
@@ -390,17 +398,19 @@ export default function EditStudentPage() {
                             <Label htmlFor="permanent-union">ইউনিয়ন</Label>
                             <Input id="permanent-union" name="permanent-union" placeholder="ইউনিয়ন" value={student.permanentUnion || ''} onChange={e => handleInputChange('permanentUnion', e.target.value)} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="permanent-post-office">ডাকঘর</Label>
-                            <Input id="permanent-post-office" name="permanent-post-office" placeholder="ডাকঘর" value={student.permanentPostOffice || ''} onChange={e => handleInputChange('permanentPostOffice', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="permanent-upazila">উপজেলা</Label>
-                            <Input id="permanent-upazila" name="permanent-upazila" placeholder="উপজেলা" value={student.permanentUpazila || ''} onChange={e => handleInputChange('permanentUpazila', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="permanent-district">জেলা</Label>
-                            <Input id="permanent-district" name="permanent-district" placeholder="জেলা" value={student.permanentDistrict || ''} onChange={e => handleInputChange('permanentDistrict', e.target.value)} />
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="permanent-post-office">ডাকঘর</Label>
+                                <Input id="permanent-post-office" name="permanent-post-office" placeholder="ডাকঘর" value={student.permanentPostOffice || ''} onChange={e => handleInputChange('permanentPostOffice', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="permanent-upazila">উপজেলা</Label>
+                                <Input id="permanent-upazila" name="permanent-upazila" placeholder="উপজেলা" value={student.permanentUpazila || ''} onChange={e => handleInputChange('permanentUpazila', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="permanent-district">জেলা</Label>
+                                <Input id="permanent-district" name="permanent-district" placeholder="জেলা" value={student.permanentDistrict || ''} onChange={e => handleInputChange('permanentDistrict', e.target.value)} />
+                            </div>
                         </div>
                    </div>
                </div>

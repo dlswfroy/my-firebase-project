@@ -183,13 +183,34 @@ export default function AddStudentPage() {
                 };
                 
                 const englishToBengaliHeaderMap = Object.fromEntries(Object.entries(headerMapping).map(([k, v]) => [v, k]));
+                
+                const genderMap: { [key: string]: string } = { 'পুরুষ': 'male', 'মহিলা': 'female', 'অন্যান্য': 'other' };
+                const religionMap: { [key: string]: string } = { 'ইসলাম': 'islam', 'হিন্দু': 'hinduism', 'বৌদ্ধ': 'buddhism', 'খ্রিস্টান': 'christianity', 'অন্যান্য': 'other' };
+                const groupMap: { [key:string]: string } = { 'বিজ্ঞান': 'science', 'মানবিক': 'arts', 'ব্যবসায় শিক্ষা': 'commerce' };
+
 
                 const studentsToAdd = json.map((row: any) => {
                     const newStudent: Partial<Student> = {};
                     Object.keys(row).forEach(excelHeader => {
                         const studentKey = headerMapping[excelHeader.trim()];
                         if (studentKey) {
-                            (newStudent as any)[studentKey] = row[excelHeader];
+                            let value = row[excelHeader];
+                            
+                            if (value && typeof value === 'string') {
+                                value = value.trim();
+                            } else if (typeof value === 'number') {
+                                value = String(value);
+                            }
+
+                            if (studentKey === 'gender' && value) {
+                                (newStudent as any)[studentKey] = genderMap[value] || value;
+                            } else if (studentKey === 'religion' && value) {
+                                (newStudent as any)[studentKey] = religionMap[value] || value;
+                            } else if (studentKey === 'group' && value) {
+                                (newStudent as any)[studentKey] = groupMap[value] || value;
+                            } else {
+                                (newStudent as any)[studentKey] = value;
+                            }
                         }
                     });
 
@@ -331,7 +352,7 @@ export default function AddStudentPage() {
                               <PopoverTrigger asChild>
                                   <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !student.dob && "text-muted-foreground")}>
                                       <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {student.dob ? format(student.dob, "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
+                                      {student.dob ? format(new Date(student.dob), "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
                                   </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0">
@@ -435,7 +456,7 @@ export default function AddStudentPage() {
 
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg border-b pb-2">বর্তমান ঠিকানা</h3>
-                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="present-village">গ্রাম</Label>
                             <Input id="present-village" name="present-village" placeholder="গ্রাম" value={student.presentVillage} onChange={e => handleInputChange('presentVillage', e.target.value)} />
@@ -444,17 +465,19 @@ export default function AddStudentPage() {
                             <Label htmlFor="present-union">ইউনিয়ন</Label>
                             <Input id="present-union" name="present-union" placeholder="ইউনিয়ন" value={student.presentUnion} onChange={e => handleInputChange('presentUnion', e.target.value)} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="present-post-office">ডাকঘর</Label>
-                            <Input id="present-post-office" name="present-post-office" placeholder="ডাকঘর" value={student.presentPostOffice} onChange={e => handleInputChange('presentPostOffice', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="present-upazila">উপজেলা</Label>
-                            <Input id="present-upazila" name="present-upazila" placeholder="উপজেলা" value={student.presentUpazila} onChange={e => handleInputChange('presentUpazila', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="present-district">জেলা</Label>
-                            <Input id="present-district" name="present-district" placeholder="জেলা" value={student.presentDistrict} onChange={e => handleInputChange('presentDistrict', e.target.value)} />
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="present-post-office">ডাকঘর</Label>
+                                <Input id="present-post-office" name="present-post-office" placeholder="ডাকঘর" value={student.presentPostOffice} onChange={e => handleInputChange('presentPostOffice', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="present-upazila">উপজেলা</Label>
+                                <Input id="present-upazila" name="present-upazila" placeholder="উপজেলা" value={student.presentUpazila} onChange={e => handleInputChange('presentUpazila', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="present-district">জেলা</Label>
+                                <Input id="present-district" name="present-district" placeholder="জেলা" value={student.presentDistrict} onChange={e => handleInputChange('presentDistrict', e.target.value)} />
+                            </div>
                         </div>
                    </div>
                </div>
@@ -472,7 +495,7 @@ export default function AddStudentPage() {
                             </label>
                         </div>
                     </div>
-                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label htmlFor="permanent-village">গ্রাম</Label>
                             <Input id="permanent-village" name="permanent-village" placeholder="গ্রাম" value={student.permanentVillage} onChange={e => handleInputChange('permanentVillage', e.target.value)} />
@@ -481,17 +504,19 @@ export default function AddStudentPage() {
                             <Label htmlFor="permanent-union">ইউনিয়ন</Label>
                             <Input id="permanent-union" name="permanent-union" placeholder="ইউনিয়ন" value={student.permanentUnion} onChange={e => handleInputChange('permanentUnion', e.target.value)} />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="permanent-post-office">ডাকঘর</Label>
-                            <Input id="permanent-post-office" name="permanent-post-office" placeholder="ডাকঘর" value={student.permanentPostOffice} onChange={e => handleInputChange('permanentPostOffice', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="permanent-upazila">উপজেলা</Label>
-                            <Input id="permanent-upazila" name="permanent-upazila" placeholder="উপজেলা" value={student.permanentUpazila} onChange={e => handleInputChange('permanentUpazila', e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="permanent-district">জেলা</Label>
-                            <Input id="permanent-district" name="permanent-district" placeholder="জেলা" value={student.permanentDistrict} onChange={e => handleInputChange('permanentDistrict', e.target.value)} />
+                         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="permanent-post-office">ডাকঘর</Label>
+                                <Input id="permanent-post-office" name="permanent-post-office" placeholder="ডাকঘর" value={student.permanentPostOffice} onChange={e => handleInputChange('permanentPostOffice', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="permanent-upazila">উপজেলা</Label>
+                                <Input id="permanent-upazila" name="permanent-upazila" placeholder="উপজেলা" value={student.permanentUpazila} onChange={e => handleInputChange('permanentUpazila', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="permanent-district">জেলা</Label>
+                                <Input id="permanent-district" name="permanent-district" placeholder="জেলা" value={student.permanentDistrict} onChange={e => handleInputChange('permanentDistrict', e.target.value)} />
+                            </div>
                         </div>
                    </div>
                </div>

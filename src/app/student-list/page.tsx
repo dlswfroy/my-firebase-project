@@ -21,13 +21,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAcademicYear } from '@/context/AcademicYearContext';
+import { Separator } from '@/components/ui/separator';
 
 export default function StudentListPage() {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const { toast } = useToast();
   const { selectedYear } = useAcademicYear();
+  const [studentToView, setStudentToView] = useState<Student | null>(null);
 
   useEffect(() => {
     setAllStudents(getStudents());
@@ -54,12 +63,17 @@ export default function StudentListPage() {
     '9': '৯ম',
     '10': '১০ম',
   };
+  const genderMap: { [key: string]: string } = { 'male': 'পুরুষ', 'female': 'মহিলা', 'other': 'অন্যান্য' };
+  const religionMap: { [key: string]: string } = { 'islam': 'ইসলাম', 'hinduism': 'হিন্দু', 'buddhism': 'বৌদ্ধ', 'christianity': 'খ্রিস্টান', 'other': 'অন্যান্য' };
+  const groupMap: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
+
 
   const getStudentsByClass = (className: string): Student[] => {
     return studentsForYear.filter((student) => student.className === className);
   };
 
   return (
+    <>
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
@@ -124,7 +138,7 @@ export default function StudentListPage() {
                               <TableCell>{student.guardianMobile}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">
-                                  <Button variant="outline" size="icon">
+                                  <Button variant="outline" size="icon" onClick={() => setStudentToView(student)}>
                                     <Eye className="h-4 w-4" />
                                   </Button>
                                   <Link href={`/edit-student/${student.id}`}>
@@ -171,5 +185,89 @@ export default function StudentListPage() {
         </Card>
       </main>
     </div>
+    <Dialog open={!!studentToView} onOpenChange={(isOpen) => !isOpen && setStudentToView(null)}>
+        <DialogContent className="max-w-3xl">
+             {studentToView && (
+                <>
+                    <DialogHeader className="flex-row items-center gap-4">
+                        <Image src={studentToView.photoUrl} alt={studentToView.studentNameBn} width={80} height={80} className="rounded-lg object-cover" />
+                        <div>
+                            <DialogTitle className="text-2xl mb-1">{studentToView.studentNameBn}</DialogTitle>
+                            <DialogDescription>
+                                রোল: {studentToView.roll.toLocaleString('bn-BD')} | শ্রেণি: {classNamesMap[studentToView.className] || studentToView.className} | শিক্ষাবর্ষ: {studentToView.academicYear.toLocaleString('bn-BD')}
+                            </DialogDescription>
+                        </div>
+                    </DialogHeader>
+                    <div className="max-h-[60vh] overflow-y-auto pr-4">
+                        <div className="space-y-4 py-4">
+                            
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2 border-b pb-1">ব্যক্তিগত তথ্য</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                                    <p><span className="font-medium text-muted-foreground">নাম (ইংরেজি):</span> {studentToView.studentNameEn || 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">জন্ম তারিখ:</span> {studentToView.dob ? new Date(studentToView.dob).toLocaleDateString('bn-BD') : 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">জন্ম নিবন্ধন:</span> {studentToView.birthRegNo || 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">লিঙ্গ:</span> {studentToView.gender ? genderMap[studentToView.gender] : 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">ধর্ম:</span> {studentToView.religion ? religionMap[studentToView.religion] : 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">গ্রুপ:</span> {studentToView.group ? groupMap[studentToView.group] : 'N/A'}</p>
+                                </div>
+                            </div>
+                            
+                            <Separator />
+
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2 border-b pb-1">অভিভাবকের তথ্য</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <p><span className="font-medium text-muted-foreground">পিতার নাম (বাংলা):</span> {studentToView.fatherNameBn}</p>
+                                    <p><span className="font-medium text-muted-foreground">পিতার নাম (ইংরেজি):</span> {studentToView.fatherNameEn || 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">পিতার NID:</span> {studentToView.fatherNid || 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">মাতার নাম (বাংলা):</span> {studentToView.motherNameBn}</p>
+                                    <p><span className="font-medium text-muted-foreground">মাতার নাম (ইংরেজি):</span> {studentToView.motherNameEn || 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">মাতার NID:</span> {studentToView.motherNid || 'N/A'}</p>
+                                </div>
+                            </div>
+                            
+                            <Separator />
+
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2 border-b pb-1">যোগাযোগ</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <p><span className="font-medium text-muted-foreground">অভিভাবকের মোবাইল:</span> {studentToView.guardianMobile || 'N/A'}</p>
+                                    <p><span className="font-medium text-muted-foreground">শিক্ষার্থীর মোবাইল:</span> {studentToView.studentMobile || 'N/A'}</p>
+                                </div>
+                            </div>
+                            
+                             <Separator />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2 border-b pb-1">বর্তমান ঠিকানা</h3>
+                                    <div className="space-y-1 text-sm">
+                                      <p><span className="font-medium text-muted-foreground">গ্রাম:</span> {studentToView.presentVillage || 'N/A'}</p>
+                                      <p><span className="font-medium text-muted-foreground">ইউনিয়ন:</span> {studentToView.presentUnion || 'N/A'}</p>
+                                      <p><span className="font-medium text-muted-foreground">ডাকঘর:</span> {studentToView.presentPostOffice || 'N/A'}</p>
+                                      <p><span className="font-medium text-muted-foreground">উপজেলা:</span> {studentToView.presentUpazila || 'N/A'}</p>
+                                      <p><span className="font-medium text-muted-foreground">জেলা:</span> {studentToView.presentDistrict || 'N/A'}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-lg mb-2 border-b pb-1">স্থায়ী ঠিকানা</h3>
+                                    <div className="space-y-1 text-sm">
+                                        <p><span className="font-medium text-muted-foreground">গ্রাম:</span> {studentToView.permanentVillage || 'N/A'}</p>
+                                        <p><span className="font-medium text-muted-foreground">ইউনিয়ন:</span> {studentToView.permanentUnion || 'N/A'}</p>
+                                        <p><span className="font-medium text-muted-foreground">ডাকঘর:</span> {studentToView.permanentPostOffice || 'N/A'}</p>
+                                        <p><span className="font-medium text-muted-foreground">উপজেলা:</span> {studentToView.permanentUpazila || 'N/A'}</p>
+                                        <p><span className="font-medium text-muted-foreground">জেলা:</span> {studentToView.permanentDistrict || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </>
+             )}
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
