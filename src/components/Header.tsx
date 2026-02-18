@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,19 +13,19 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Logo } from '@/components/Logo';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export function Header() {
   const profilePhoto = PlaceHolderImages.find(p => p.id === 'profile-photo');
+  const schoolLogo = PlaceHolderImages.find(p => p.id === 'school-logo');
 
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-background px-4 shadow-sm sm:px-6 md:px-8">
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-[#00B2EE] px-4 text-white shadow-sm sm:px-6 md:px-8">
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="shrink-0">
-              <Menu className="h-6 w-6" />
+            <Button variant="ghost" size="icon" className="shrink-0 rounded-lg bg-white hover:bg-gray-100">
+              <Menu className="h-6 w-6 text-gray-500" />
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
@@ -38,10 +39,12 @@ export function Header() {
             <nav className="grid gap-4 py-6 text-lg font-medium">
               <Link
                 href="#"
-                className="flex items-center gap-2 text-lg font-semibold"
+                className="flex items-center gap-2 text-lg font-semibold text-foreground"
               >
-                <Logo className="h-6 w-6 text-primary" />
-                <span className="">School Navigator</span>
+                {schoolLogo && (
+                   <Image src={schoolLogo.imageUrl} alt="School Logo" width={32} height={32} className="rounded-full" />
+                )}
+                <span className="">বীরগঞ্জ পৌর উচ্চ বিদ্যালয়</span>
               </Link>
               <Link
                 href="#"
@@ -82,16 +85,19 @@ export function Header() {
             </nav>
           </SheetContent>
         </Sheet>
-        <Link href="#" className="flex items-center gap-2">
-          <Logo className="h-7 w-7 text-primary" />
-          <h1 className="hidden text-xl font-bold text-foreground sm:inline-block font-headline">
-            School Navigator
-          </h1>
-        </Link>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {schoolLogo && (
+          <Image src={schoolLogo.imageUrl} alt="School Logo" width={40} height={40} className="rounded-full" data-ai-hint={schoolLogo.imageHint}/>
+        )}
+        <h1 className="text-xl font-bold whitespace-nowrap drop-shadow-md">
+          বীরগঞ্জ পৌর উচ্চ বিদ্যালয়
+        </h1>
       </div>
 
       <div className="flex items-center gap-4">
-        <Avatar className="h-9 w-9">
+        <Avatar className="h-10 w-10">
           {profilePhoto && (
             <AvatarImage
               src={profilePhoto.imageUrl}
