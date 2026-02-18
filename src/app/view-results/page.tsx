@@ -32,7 +32,7 @@ import { BookOpen } from 'lucide-react';
 
 export default function ViewResultsPage() {
     const { toast } = useToast();
-    const { selectedYear } = useAcademicYear();
+    const { selectedYear, availableYears } = useAcademicYear();
     
     const [className, setClassName] = useState('');
     const [group, setGroup] = useState('');
@@ -175,7 +175,7 @@ export default function ViewResultsPage() {
                     <TableHead rowSpan={2} className="align-middle text-center sticky left-0 bg-background z-10">রোল</TableHead>
                     <TableHead rowSpan={2} className="align-middle text-center min-w-[200px] sticky left-[50px] bg-background z-10">শিক্ষার্থীর নাম</TableHead>
                     {subjects.map(subject => (
-                        <TableHead key={subject.name} colSpan={subject.practical ? 4 : 3} className={cn("text-center border-x", optionalSubject === subject.name && "bg-blue-50")}>
+                        <TableHead key={subject.name} colSpan={3} className={cn("text-center border-x", optionalSubject === subject.name && "bg-blue-50")}>
                             {subject.name}
                         </TableHead>
                     ))}
@@ -188,9 +188,6 @@ export default function ViewResultsPage() {
                 <TableRow>
                     {subjects.map(subject => (
                         <React.Fragment key={`${subject.name}-cols`}>
-                            {/* <TableHead className="text-center border-l">লিখিত</TableHead>
-                            <TableHead className="text-center border-l">বহুনি.</TableHead>
-                            {subject.practical && <TableHead className="text-center border-l">ব্যবহারিক</TableHead>} */}
                             <TableHead className="text-center border-l">মোট</TableHead>
                             <TableHead className="text-center border-l">গ্রেড</TableHead>
                             <TableHead className="text-center border-l border-r">পয়েন্ট</TableHead>
@@ -272,10 +269,10 @@ export default function ViewResultsPage() {
                             {showGroupSelector && (
                                 <div className="space-y-2">
                                     <Label htmlFor="optional-subject">ঐচ্ছিক বিষয় (৪র্থ)</Label>
-                                    <Select value={optionalSubject} onValueChange={setOptionalSubject} disabled={!group}>
+                                    <Select value={optionalSubject} onValueChange={value => setOptionalSubject(value === 'none' ? '' : value)} disabled={!group}>
                                         <SelectTrigger id="optional-subject"><SelectValue placeholder="ঐচ্ছিক বিষয় নির্বাচন" /></SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">None</SelectItem>
+                                            <SelectItem value="none">None</SelectItem>
                                             {subjects.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
@@ -300,9 +297,6 @@ export default function ViewResultsPage() {
                                                     const subjectRes = res.subjectResults.get(subject.name);
                                                     return (
                                                         <React.Fragment key={`${res.student.id}-${subject.name}`}>
-                                                            {/* <TableCell className="text-center border-l">{(subjectRes?.written?.toLocaleString('bn-BD')) ?? '-'}</TableCell>
-                                                            <TableCell className="text-center border-l">{(subjectRes?.mcq?.toLocaleString('bn-BD')) ?? '-'}</TableCell>
-                                                            {subject.practical && <TableCell className="text-center border-l">{(subjectRes?.practical?.toLocaleString('bn-BD')) ?? '-'}</TableCell>} */}
                                                             <TableCell className="text-center border-l font-semibold">{subjectRes?.marks.toLocaleString('bn-BD') ?? '-'}</TableCell>
                                                             <TableCell className={cn("text-center border-l", {"text-destructive font-bold": subjectRes && !subjectRes.isPass})}>{subjectRes?.grade ?? '-'}</TableCell>
                                                             <TableCell className="text-center border-l border-r">{subjectRes?.point.toFixed(2).toLocaleString('bn-BD') ?? '-'}</TableCell>
