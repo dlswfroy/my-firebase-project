@@ -17,7 +17,7 @@ export default function Home() {
   useEffect(() => {
       // getStudents now reads from localStorage, so it must be called on the client.
       setTotalStudents(getStudents().length);
-  }, []);
+  });
 
 
   return (
