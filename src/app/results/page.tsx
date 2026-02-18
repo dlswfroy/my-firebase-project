@@ -174,10 +174,10 @@ export default function ResultsPage() {
     const handleEditClick = (resultToEdit: ClassResult) => {
         setClassName(resultToEdit.className);
         setGroup(resultToEdit.group || '');
+        setFullMarks(resultToEdit.fullMarks);
         // This needs a little delay to allow availableSubjects to update
         setTimeout(() => {
             setSubject(resultToEdit.subject);
-            setFullMarks(resultToEdit.fullMarks);
             setStudents([]);
             setMarks(new Map());
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -319,16 +319,17 @@ export default function ResultsPage() {
                         const rollHeader = Object.keys(row).find(k => k.trim().toLowerCase() === 'রোল' || k.trim().toLowerCase() === 'roll');
                         const roll = rollHeader ? row[rollHeader] : undefined;
 
-                        if (roll === undefined) {
+                        if (roll === undefined || roll === '') {
                             processingErrors.push(`সারি ${rowIndex + 2}: রোল নম্বর অনুপস্থিত।`);
                             return;
                         }
 
                         let studentGroup: string | undefined;
+                        let studentGroupInput: string | undefined;
 
                         if (showGroupSelector) {
-                             const groupHeader = Object.keys(row).find(k => k.trim().toLowerCase() === 'শাখা' || k.trim().toLowerCase() === 'group' || k.trim().toLowerCase() === 'বিভাগ');
-                             const studentGroupInput = groupHeader ? String(row[groupHeader]).trim() : undefined;
+                             const groupHeader = Object.keys(row).find(k => ['শাখা', 'group', 'বিভাগ'].includes(k.trim().toLowerCase()));
+                             studentGroupInput = groupHeader ? String(row[groupHeader] || '').trim() : undefined;
                             
                             if (studentGroupInput) {
                                 studentGroup = groupNameToCode[studentGroupInput] || groupNameToCode[studentGroupInput.toLowerCase()];
@@ -349,12 +350,12 @@ export default function ResultsPage() {
                         const student = allStudentsForYear.find(s => 
                             s.roll === Number(roll) && 
                             s.className === className && 
-                            (!showGroupSelector || s.group === studentGroup)
+                            (!showGroupSelector || !s.group || s.group === studentGroup)
                         );
 
 
                         if (!student) {
-                            const groupName = groupToBengali[studentGroup!] || studentGroup || 'N/A';
+                            const groupName = studentGroupInput || (studentGroup ? groupToBengali[studentGroup] : '') || 'N/A';
                             processingErrors.push(`সারি ${rowIndex + 2}: রোল ${roll} এবং শাখা '${groupName}' এর শিক্ষার্থীকে পাওয়া যায়নি।`);
                             return;
                         }

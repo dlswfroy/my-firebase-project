@@ -69,29 +69,35 @@ export default function ViewResultsPage() {
             return;
         }
 
-        const subjectsForClass = getSubjects(className, group);
-        setSubjects(subjectsForClass);
-        
-        const resultsBySubject: ClassResult[] = subjectsForClass.map(subject => {
-            return getResultsForClass(selectedYear, className, subject.name, group);
-        }).filter((result): result is ClassResult => !!result);
-
-        const subjectsWithResults = new Set(resultsBySubject.map(r => r.subject));
-        const missingSubjects = subjectsForClass.filter(s => !subjectsWithResults.has(s.name));
-
-        if (missingSubjects.length > 0) {
-            toast({ 
-                variant: 'destructive',
-                title: 'ফলাফল অসম্পূর্ণ',
-                description: `এই শ্রেণির সকল বিষয়ের নম্বর এখনও ইনপুট করা হয়নি। অনুপস্থিত বিষয়: ${missingSubjects.map(s => s.name).join(', ')}`,
-                duration: 8000,
-            });
-            setProcessedResults([]);
-            setIsLoading(false);
-            return;
+        let subjectsForCalculation = getSubjects(className, group);
+        if (group === 'science' && optionalSubject) {
+            if (optionalSubject === 'কৃষি শিক্ষা') {
+                subjectsForCalculation = subjectsForCalculation.filter(s => s.name !== 'উচ্চতর গণিত');
+            } else if (optionalSubject === 'উচ্চতর গণিত') {
+                subjectsForCalculation = subjectsForCalculation.filter(s => s.name !== 'কৃষি শিক্ষা');
+            }
         }
+        setSubjects(subjectsForCalculation);
+        
+        const resultsBySubject: ClassResult[] = subjectsForCalculation.map(subject => {
+            let subjectNameToFetch = subject.name;
+            // For science group, if the subject is the designated optional subject, always fetch marks from 'কৃষি শিক্ষা'
+            if (group === 'science' && subject.name === optionalSubject) {
+                subjectNameToFetch = 'কৃষি শিক্ষা';
+            }
+            
+            const result = getResultsForClass(selectedYear, className, subjectNameToFetch, group);
 
-        const finalResults = processStudentResults(studentsInClass, resultsBySubject, subjectsForClass, optionalSubject);
+            // If we fetched a result for a different subject name, we need to remap it
+            // so it looks like it's for the original subject.
+            if (result && result.subject !== subject.name) {
+                return { ...result, subject: subject.name };
+            }
+            
+            return result;
+        }).filter((result): result is ClassResult => result !== undefined);
+
+        const finalResults = processStudentResults(studentsInClass, resultsBySubject, subjectsForCalculation, optionalSubject);
         setProcessedResults(finalResults);
 
         setIsLoading(false);
@@ -172,8 +178,8 @@ export default function ViewResultsPage() {
         return (
             <TableHeader>
                 <TableRow>
-                    <TableHead rowSpan={2} className="align-middle text-center bg-background">রোল</TableHead>
-                    <TableHead rowSpan={2} className="align-middle text-center min-w-[200px]">শিক্ষার্থীর নাম</TableHead>
+                    <TableHead rowSpan={2} className="align-middle text-center bg-background sticky left-0 z-10">রোল</TableHead>
+                    <TableHead rowSpan={2} className="align-middle text-center min-w-[200px] bg-background sticky left-[50px] z-10">শিক্ষার্থীর নাম</TableHead>
                     {subjects.map(subject => (
                         <TableHead key={subject.name} colSpan={3} className={cn("text-center border-x", optionalSubject === subject.name && "bg-blue-50")}>
                             {subject.name}
@@ -273,7 +279,12 @@ export default function ViewResultsPage() {
                                         <SelectTrigger id="optional-subject"><SelectValue placeholder="ঐচ্ছিক বিষয় নির্বাচন" /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="none">ঐচ্ছিক বিষয় নেই</SelectItem>
-                                            {getSubjects(className, group).map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
+                                            {getSubjects(className, group).map(s => {
+                                                if (s.name === 'কৃষি শিক্ষা' || (group === 'science' && s.name === 'উচ্চতর গণিত')) {
+                                                    return <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
+                                                }
+                                                return null;
+                                            })}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -291,8 +302,8 @@ export default function ViewResultsPage() {
                                     <TableBody>
                                         {processedResults.map(res => (
                                             <TableRow key={res.student.id}>
-                                                <TableCell className="text-center bg-background">{res.student.roll.toLocaleString('bn-BD')}</TableCell>
-                                                <TableCell className="whitespace-nowrap">{res.student.studentNameBn}</TableCell>
+                                                <TableCell className="text-center bg-background sticky left-0 z-10">{res.student.roll.toLocaleString('bn-BD')}</TableCell>
+                                                <TableCell className="whitespace-nowrap bg-background sticky left-[50px] z-10">{res.student.studentNameBn}</TableCell>
                                                 {subjects.map(subject => {
                                                     const subjectRes = res.subjectResults.get(subject.name);
                                                     return (
