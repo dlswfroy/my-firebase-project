@@ -80,7 +80,7 @@ export default function StudentListPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex flex-wrap items-baseline gap-x-2">
                 <CardTitle>শিক্ষার্থীদের তালিকা</CardTitle>
                 <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
               </div>
@@ -135,7 +135,12 @@ export default function StudentListPage() {
                               <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
                               <TableCell>{student.studentNameBn}</TableCell>
                               <TableCell>{student.fatherNameBn}</TableCell>
-                              <TableCell>{student.guardianMobile}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  {student.guardianMobile && <span>{student.guardianMobile}</span>}
+                                  {student.studentMobile && <span>{student.studentMobile}</span>}
+                                </div>
+                              </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">
                                   <Button variant="outline" size="icon" onClick={() => setStudentToView(student)}>
