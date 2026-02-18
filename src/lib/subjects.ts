@@ -26,7 +26,7 @@ const commonSubjectsFor9to10: Subject[] = [
     { name: 'ইংরেজি দ্বিতীয়', englishName: 'English 2nd Paper', code: '108', practical: false },
     { name: 'গণিত', englishName: 'Mathematics', code: '109', practical: false },
     { name: 'ধর্ম ও নৈতিক শিক্ষা', englishName: 'Religion & Moral Education', code: '111', practical: false },
-    { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', englishName: 'ICT', code: '154', practical: true },
+    { name: 'তথ্য ও যোগাযোগ প্রযুক্তি', englishName: 'ICT', code: '154', practical: false },
 ];
 
 const scienceSubjects: Subject[] = [

@@ -62,16 +62,14 @@ export function processStudentResults(
     const studentResults: StudentProcessedResult[] = students.map(student => {
         const optionalSubjectName = student.optionalSubject;
 
-        // Determine the actual list of subjects for this specific student
         const subjectsForStudent = allSubjectsForGroup.filter(subjectInfo => {
-            // For science group, if optional subject is selected, filter out the other one.
             if (student.group === 'science' && optionalSubjectName) {
                 if (optionalSubjectName === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
                 if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
             }
-            // For arts and commerce, any subject can be optional, but we only explicitly handle Agri for now.
-            // This logic assumes we don't need to filter out a compulsory subject if an optional one is chosen,
-            // which is correct for arts/commerce.
+             if (student.group === 'arts' && optionalSubjectName) {
+                if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'সাধারণ বিজ্ঞান') return false;
+            }
             return true;
         });
 
@@ -94,32 +92,8 @@ export function processStudentResults(
             if (written === undefined && mcq === undefined && practical === undefined) {
                 isPassSubject = false;
             } else {
-                if (subjectInfo.practical) {
-                    let theoreticalFull: number, practicalFull: number;
-                    
-                    if (subjectInfo.name === 'তথ্য ও যোগাযোগ প্রযুক্তি') {
-                        // ICT is 50 marks: 25 theoretical (MCQ), 25 practical
-                        theoreticalFull = 25;
-                        practicalFull = 25;
-                    } else {
-                        // Default for other 100-mark practical subjects
-                        theoreticalFull = 75;
-                        practicalFull = 25;
-                    }
-
-                    const theoreticalMarks = (written || 0) + (mcq || 0);
-                    const practicalMarks = practical || 0;
-
-                    // Pass marks are 33% (e.g., 8.25 -> 9 out of 25, 24.75 -> 25 out of 75)
-                    const passedTheoretical = theoreticalMarks >= Math.ceil(theoreticalFull * (PASS_PERCENTAGE / 100));
-                    const passedPractical = practicalMarks >= Math.ceil(practicalFull * (PASS_PERCENTAGE / 100));
-                    
-                    isPassSubject = passedTheoretical && passedPractical;
-                } else {
-                    // For non-practical subjects, total marks must be >= 33% of full marks
-                    const percentage = (obtainedMarks / fullMarks) * 100;
-                    isPassSubject = percentage >= PASS_PERCENTAGE;
-                }
+                const percentage = (obtainedMarks / fullMarks) * 100;
+                isPassSubject = percentage >= PASS_PERCENTAGE;
             }
             
             const percentageForGrade = (obtainedMarks / fullMarks) * 100;
@@ -149,8 +123,6 @@ export function processStudentResults(
             if (!result) return;
     
             if (subjectInfo.name === optionalSubjectName) {
-                // Optional subject pass/fail doesn't affect the final result
-                // It only contributes points if the student passes in it
                 if (result.isPass && result.point > 2.0) {
                     bonusPoints = result.point - 2.0;
                 }
@@ -188,24 +160,20 @@ export function processStudentResults(
         };
     });
 
-    // Assign merit position to passed students
     const passedStudents = studentResults
         .filter(s => s.isPass)
         .sort((a, b) => {
              if (b.totalMarks !== a.totalMarks) {
                 return b.totalMarks - a.totalMarks;
             }
-            // If total marks are same, sort by student roll
             return a.student.roll - b.student.roll;
         });
 
     let rank = 1;
     for (let i = 0; i < passedStudents.length; i++) {
-        // Assign rank. If the previous student has the same marks, they get the same rank.
         if (i > 0 && passedStudents[i].totalMarks < passedStudents[i - 1].totalMarks) {
             rank = i + 1;
         }
-        // Find the student in the original array to update their merit position
         const studentToUpdate = studentResults.find(s => s.student.id === passedStudents[i].student.id);
         if (studentToUpdate) {
             studentToUpdate.meritPosition = rank;
