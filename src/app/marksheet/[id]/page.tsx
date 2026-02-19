@@ -161,26 +161,27 @@ export default function MarksheetPage() {
                 )}
                 <div className="relative z-10 border-4 border-black p-4 h-full flex flex-col">
                     <header className="mb-4">
-                        <div className="relative">
-                            <div className="absolute left-0 top-0">
-                                {schoolLogo && <Image src={schoolLogo.imageUrl} alt="School Logo" width={60} height={60} />}
+                         <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-4">
+                                {schoolLogo && <Image src={schoolLogo.imageUrl} alt="School Logo" width={80} height={80} />}
+                                <div className="text-left">
+                                    <h1 className="text-3xl font-bold">BIRGANJ POURO HIGH SCHOOL</h1>
+                                    <p className="text-sm">Upazila: Birganj, Post: Birganj, Zila: Dinajpur</p>
+                                    <p className="mt-1"><b>Academic Session:</b> {academicYear}</p>
+                                </div>
                             </div>
-                            <div className="text-center">
-                                <h1 className="text-3xl font-bold">BIRGANJ POURO HIGH SCHOOL</h1>
-                                <p className="text-sm">Upazila: Birganj, Post: Birganj, Zila: Dinajpur</p>
-                            </div>
-                            <div className="absolute right-0 top-0 w-32 text-xs">
+                            <div className="text-xs w-28">
                                 <table className="w-full border-collapse border-2 border-black text-center">
                                     <thead className="bg-gray-200">
                                         <tr className="border-b-2 border-black">
-                                            <th className="p-1 border-r border-black">Interval</th>
-                                            <th className="p-1 border-r border-black">Point</th>
-                                            <th className="p-1">Grade</th>
+                                            <th className="p-0.5 border-r border-black">Interval</th>
+                                            <th className="p-0.5 border-r border-black">Point</th>
+                                            <th className="p-0.5">Grade</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {gradingScale.map(g => (
-                                            <tr key={g.grade} className="border-b border-black">
+                                            <tr key={g.grade} className="border-b border-black last:border-b-0">
                                                 <td className="p-0.5 border-r border-black">{g.interval}</td>
                                                 <td className="p-0.5 border-r border-black">{g.point}</td>
                                                 <td className="p-0.5">{g.grade}</td>
@@ -190,9 +191,8 @@ export default function MarksheetPage() {
                                 </table>
                             </div>
                         </div>
-                        <div className="text-center">
-                            <p className="mt-2"><b>Academic Session:</b> {academicYear}</p>
-                            <h2 className="text-xl font-semibold underline mt-2">Annual Exam Results</h2>
+                        <div className="text-center mt-2">
+                            <h2 className="text-xl font-semibold underline">Annual Exam Results</h2>
                         </div>
                     </header>
 
