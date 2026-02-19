@@ -135,15 +135,6 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-headline text-3xl">Welcome to School Navigator</CardTitle>
-            <CardDescription>Your central hub for school management. Navigate through your daily tasks with ease and efficiency.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>This is a placeholder for the main content of the dashboard. You can add charts, tables, and other components here to build out your application. The top bar provides consistent navigation across the site, with subtle animations on interaction, and the overall design uses a serene and professional color palette.</p>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
