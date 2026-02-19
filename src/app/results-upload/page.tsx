@@ -55,34 +55,48 @@ export default function ResultsBulkUploadPage() {
         }
     
         const headers: string[] = ['রোল', 'নাম'];
-        const allPossibleSubjects = getSubjects(className, group || undefined);
     
-        const addHeader = (header: string, sub: SubjectType) => {
+        const addHeader = (header: string, hasPractical: boolean) => {
             headers.push(`${header} (লিখিত)`);
             headers.push(`${header} (বহুনির্বাচনী)`);
-            if (sub.practical) {
+            if (hasPractical) {
                 headers.push(`${header} (ব্যবহারিক)`);
             }
         };
     
         if (className === '9' || className === '10') {
             if (!group) { // Master template for all groups
-                 const allGroupSubjects = getSubjects(className);
-                 const addedHeaders = new Set<string>();
-                 allGroupSubjects.forEach(sub => {
-                    if(!addedHeaders.has(sub.name)){
-                        addHeader(sub.name, sub);
-                        addedHeaders.add(sub.name);
-                    }
-                });
+                // Common subjects
+                addHeader('বাংলা প্রথম', false);
+                addHeader('বাংলা দ্বিতীয়', false);
+                addHeader('ইংরেজি প্রথম', false);
+                addHeader('ইংরেজি দ্বিতীয়', false);
+                addHeader('গণিত', false);
+                addHeader('ধর্ম ও নৈতিক শিক্ষা', false);
+                addHeader('তথ্য ও যোগাযোগ প্রযুক্তি', false);
+    
+                // Group specific combined headers
+                addHeader('সাধারণ বিজ্ঞান/বাংলাদেশ ও বিশ্ব পরিচয়', false);
+                addHeader('বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা/পদার্থ', true);
+                addHeader('ভূগোল ও পরিবেশ/রসায়ন', true);
+                addHeader('পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান', true);
+                
+                // Commerce specific
+                addHeader('হিসাব বিজ্ঞান', false);
+                addHeader('ফিন্যান্স ও ব্যাংকিং', false);
+                addHeader('ব্যবসায় উদ্যোগ', false);
+    
+                // Optional
+                addHeader('কৃষি শিক্ষা/উচ্চতর গণিত', true);
+    
             } else { // Template for a specific group
                 const groupSubjects = getSubjects(className, group);
-                groupSubjects.forEach(sub => addHeader(sub.name, sub));
+                groupSubjects.forEach(sub => addHeader(sub.name, sub.practical));
             }
         } else { // For class 6-8
             const subjectsForTemplate = getSubjects(className);
             subjectsForTemplate.forEach(subject => {
-                addHeader(subject.name, subject);
+                addHeader(subject.name, subject.practical);
             });
         }
     
@@ -155,11 +169,34 @@ export default function ResultsBulkUploadPage() {
                                 const trimmed = p.trim();
                                 return subjectNameNormalization[trimmed] || trimmed;
                             });
-                            const applicableSubject = subjectParts.find(p => studentSubjects.map(s => s.name).includes(p));
-                            if (applicableSubject) {
-                                subjectName = applicableSubject;
+                    
+                            const studentGroup = student.group;
+                            if (subjectName === 'সাধারণ বিজ্ঞান/বাংলাদেশ ও বিশ্ব পরিচয়') {
+                                subjectName = studentGroup === 'science' ? 'বাংলাদেশ ও বিশ্ব পরিচয়' : 'সাধারণ বিজ্ঞান';
+                            } else if (subjectName === 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা/পদার্থ') {
+                                subjectName = studentGroup === 'science' ? 'পদার্থ' : 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা';
+                            } else if (subjectName === 'ভূগোল ও পরিবেশ/রসায়ন') {
+                                subjectName = studentGroup === 'science' ? 'রসায়ন' : 'ভূগোল ও পরিবেশ';
+                            } else if (subjectName === 'পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান') {
+                                subjectName = studentGroup === 'science' ? 'জীব বিজ্ঞান' : 'পৌরনীতি ও নাগরিকতা';
+                            } else if (subjectName === 'কৃষি শিক্ষা/উচ্চতর গণিত') {
+                                if (student.optionalSubject && subjectParts.includes(student.optionalSubject)) {
+                                    subjectName = student.optionalSubject;
+                                } else {
+                                    const applicableSubject = subjectParts.find(p => studentSubjects.map(s => s.name).includes(p));
+                                    if (applicableSubject) {
+                                        subjectName = applicableSubject;
+                                    } else {
+                                        continue;
+                                    }
+                                }
                             } else {
-                                continue;
+                                const applicableSubject = subjectParts.find(p => studentSubjects.map(s => s.name).includes(p));
+                                if (applicableSubject) {
+                                    subjectName = applicableSubject;
+                                } else {
+                                    continue;
+                                }
                             }
                         }
 
@@ -170,14 +207,14 @@ export default function ResultsBulkUploadPage() {
                             academicYear: selectedYear,
                             className: student.className,
                             subject: subjectName,
-                            group: student.group || undefined
+                            group: student.group
                         });
 
                         if (!resultsToSave.has(docId)) {
                             resultsToSave.set(docId, {
                                 academicYear: selectedYear,
                                 className: student.className,
-                                group: student.group || undefined,
+                                group: student.group,
                                 subject: subjectName,
                                 fullMarks: subjectInfo.fullMarks,
                                 results: []
@@ -298,7 +335,7 @@ export default function ResultsBulkUploadPage() {
                                 
                                 <div className="hidden lg:block"></div>
 
-                                <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+                                <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:col-span-2">
                                     <Button variant="outline" onClick={handleDownloadSample} className="w-full">
                                         <Download className="mr-2 h-4 w-4" />
                                         নমুনা ফাইল
