@@ -4,7 +4,7 @@ import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Student } from '@/lib/student-data';
-import { getAttendanceFromStorage } from '@/lib/attendance-data';
+import { getAttendanceFromStorage, DailyAttendance } from '@/lib/attendance-data';
 import { useEffect, useState, useMemo } from 'react';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,42 +21,48 @@ interface StudentReport {
 
 const ReportSheet = ({ classId, students }: { classId: string, students: Student[] }) => {
     const { selectedYear } = useAcademicYear();
+    const db = useFirestore();
     const [reportData, setReportData] = useState<StudentReport[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Note: Attendance data still comes from localStorage
-        const allAttendance = getAttendanceFromStorage().filter(
-            att => att.academicYear === selectedYear && att.className === classId
-        );
-        
-        const studentReports = students.map(student => {
-            let presentDays = 0;
-            let absentDays = 0;
+        if (!db) return;
 
-            allAttendance.forEach(dailyRecord => {
-                const studentAttendance = dailyRecord.attendance.find(a => a.studentId === student.id);
-                if (studentAttendance) {
-                    if (studentAttendance.status === 'present') {
-                        presentDays++;
-                    } else {
-                        absentDays++;
+        const fetchAttendance = async () => {
+            const allAttendance = (await getAttendanceFromStorage(db)).filter(
+                att => att.academicYear === selectedYear && att.className === classId
+            );
+            
+            const studentReports = students.map(student => {
+                let presentDays = 0;
+                let absentDays = 0;
+
+                allAttendance.forEach(dailyRecord => {
+                    const studentAttendance = dailyRecord.attendance.find(a => a.studentId === student.id);
+                    if (studentAttendance) {
+                        if (studentAttendance.status === 'present') {
+                            presentDays++;
+                        } else {
+                            absentDays++;
+                        }
                     }
-                }
+                });
+
+                return {
+                    student: student,
+                    presentDays,
+                    absentDays,
+                    totalDays: allAttendance.length,
+                };
             });
 
-            return {
-                student: student,
-                presentDays,
-                absentDays,
-                totalDays: allAttendance.length,
-            };
-        });
+            setReportData(studentReports);
+            setIsLoading(false);
+        }
 
-        setReportData(studentReports);
-        setIsLoading(false);
+        fetchAttendance();
 
-    }, [classId, students, selectedYear]);
+    }, [classId, students, selectedYear, db]);
 
      if (isLoading) {
         return <p className="text-center p-8">লোড হচ্ছে...</p>

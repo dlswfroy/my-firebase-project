@@ -1,4 +1,16 @@
 'use client';
+import {
+  collection,
+  doc,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  Firestore,
+  setDoc,
+} from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export type AttendanceStatus = 'present' | 'absent';
 
@@ -8,68 +20,95 @@ export interface StudentAttendance {
 }
 
 export interface DailyAttendance {
+  id?: string;
   date: string; // YYYY-MM-DD
   academicYear: string;
   className: string;
   attendance: StudentAttendance[];
 }
 
-const ATTENDANCE_STORAGE_KEY = 'attendanceData';
+const ATTENDANCE_COLLECTION = 'attendance';
 
-export const getAttendanceFromStorage = (): DailyAttendance[] => {
-  if (typeof window === 'undefined') {
-    return [];
-  }
+export const getAttendanceFromStorage = async (db: Firestore): Promise<DailyAttendance[]> => {
+  const q = query(collection(db, ATTENDANCE_COLLECTION));
   try {
-    const data = window.localStorage.getItem(ATTENDANCE_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch (error) {
-    console.error("Error reading attendance from localStorage", error);
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyAttendance));
+  } catch (e) {
+    console.error("Error getting attendance:", e);
     return [];
   }
 };
 
-const saveAttendanceToStorage = (records: DailyAttendance[]) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  try {
-    window.localStorage.setItem(ATTENDANCE_STORAGE_KEY, JSON.stringify(records));
-  } catch (error) {
-    console.error("Error saving attendance to localStorage", error);
-  }
-};
-
-export const saveDailyAttendance = (record: DailyAttendance) => {
-  const allAttendance = getAttendanceFromStorage();
-  const existingIndex = allAttendance.findIndex(
-    r =>
-      r.date === record.date &&
-      r.academicYear === record.academicYear &&
-      r.className === record.className
+export const saveDailyAttendance = async (db: Firestore, record: DailyAttendance) => {
+  const q = query(
+    collection(db, ATTENDANCE_COLLECTION),
+    where("date", "==", record.date),
+    where("academicYear", "==", record.academicYear),
+    where("className", "==", record.className)
   );
 
-  if (existingIndex !== -1) {
-    // This case prevents re-taking attendance, but we'll enforce it in the UI.
-    // If somehow it gets here, we update it.
-    allAttendance[existingIndex] = record;
+  const existing = await getDocs(q);
+  
+  if (!existing.empty) {
+    const docId = existing.docs[0].id;
+    const docRef = doc(db, ATTENDANCE_COLLECTION, docId);
+    return setDoc(docRef, record, { merge: true }).catch(async (serverError) => {
+      console.error("Error updating attendance:", serverError);
+      const permissionError = new FirestorePermissionError({
+        path: docRef.path,
+        operation: 'write',
+        requestResourceData: record,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      throw serverError;
+    });
   } else {
-    allAttendance.push(record);
+    const collectionRef = collection(db, ATTENDANCE_COLLECTION);
+    return addDoc(collectionRef, record).catch(async (serverError) => {
+      console.error("Error saving attendance:", serverError);
+      const permissionError = new FirestorePermissionError({
+        path: ATTENDANCE_COLLECTION,
+        operation: 'create',
+        requestResourceData: record,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      throw serverError;
+    });
   }
-  saveAttendanceToStorage(allAttendance);
 };
 
-export const getAttendanceForDate = (date: string, academicYear: string): DailyAttendance[] => {
-    const allAttendance = getAttendanceFromStorage();
-    return allAttendance.filter(r => r.date === date && r.academicYear === academicYear);
+export const getAttendanceForDate = async (db: Firestore, date: string, academicYear: string): Promise<DailyAttendance[]> => {
+    const q = query(
+        collection(db, ATTENDANCE_COLLECTION),
+        where("date", "==", date),
+        where("academicYear", "==", academicYear)
+    );
+    try {
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DailyAttendance));
+    } catch (e) {
+        console.error("Error getting attendance for date:", e);
+        return [];
+    }
 }
 
-export const getAttendanceForClassAndDate = (date: string, className: string, academicYear: string): DailyAttendance | undefined => {
-    const allAttendance = getAttendanceFromStorage();
-    return allAttendance.find(
-      r =>
-        r.date === date &&
-        r.className === className &&
-        r.academicYear === academicYear
+export const getAttendanceForClassAndDate = async (db: Firestore, date: string, className: string, academicYear: string): Promise<DailyAttendance | undefined> => {
+    const q = query(
+        collection(db, ATTENDANCE_COLLECTION),
+        where("date", "==", date),
+        where("className", "==", className),
+        where("academicYear", "==", academicYear)
     );
+    try {
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const doc = querySnapshot.docs[0];
+            return { id: doc.id, ...doc.data() } as DailyAttendance;
+        }
+        return undefined;
+    } catch(e) {
+        console.error("Error getting attendance for class and date:", e);
+        return undefined;
+    }
 };

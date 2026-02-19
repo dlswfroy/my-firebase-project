@@ -23,6 +23,7 @@ import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestor
 const AttendanceSheet = ({ classId, students }: { classId: string, students: Student[] }) => {
     const { toast } = useToast();
     const { selectedYear } = useAcademicYear();
+    const db = useFirestore();
     const today = new Date();
     const todayStr = format(today, 'yyyy-MM-dd');
     const dayOfWeek = today.getDay(); // 0 for Sunday, 5 for Friday, 6 for Saturday
@@ -35,29 +36,34 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
     const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
 
     useEffect(() => {
+        if (!db) return;
+        
         const initialAttendance = new Map<string, AttendanceStatus>();
         students.forEach(student => {
             initialAttendance.set(student.id, 'present');
         });
         setAttendance(initialAttendance);
 
-        // Note: This data is from localStorage
-        const existingAttendance = getAttendanceForClassAndDate(todayStr, classId, selectedYear);
-        setSavedAttendance(existingAttendance);
+        const checkExistingData = async () => {
+            const existingAttendance = await getAttendanceForClassAndDate(db, todayStr, classId, selectedYear);
+            setSavedAttendance(existingAttendance);
+            
+            const holidayToday = await isHoliday(db, todayStr);
+            setActiveHoliday(holidayToday);
+            
+            setIsLoading(false);
+        }
 
-        // Note: This data is from localStorage
-        const holidayToday = isHoliday(todayStr);
-        setActiveHoliday(holidayToday);
-        
-        setIsLoading(false);
+        checkExistingData();
 
-    }, [students, todayStr, classId, selectedYear]);
+    }, [students, todayStr, classId, selectedYear, db]);
 
     const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
         setAttendance(prev => new Map(prev).set(studentId, status));
     };
 
-    const handleSaveAttendance = () => {
+    const handleSaveAttendance = async () => {
+        if (!db) return;
         if (isWeekend) {
             toast({ variant: "destructive", title: "আজ সাপ্তাহিক ছুটি।" });
             return;
@@ -79,8 +85,7 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
             attendance: attendanceData,
         };
 
-        // Note: This saves to localStorage
-        saveDailyAttendance(dailyAttendance);
+        await saveDailyAttendance(db, dailyAttendance);
         setSavedAttendance(dailyAttendance);
         toast({ title: "হাজিরা সেভ হয়েছে।", description: `শ্রেণি ${classId.toLocaleString('bn-BD')} এর জন্য আজকের হাজিরা সফলভাবে সেভ হয়েছে।` });
     };

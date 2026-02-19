@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -20,12 +19,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useSchoolInfo } from '@/context/SchoolInfoContext';
 import { Label } from "@/components/ui/label";
+import { Skeleton } from './ui/skeleton';
 
 
 export function Header() {
   const [isClient, setIsClient] = useState(false);
   const { selectedYear, setSelectedYear, availableYears } = useAcademicYear();
-  const { schoolInfo } = useSchoolInfo();
+  const { schoolInfo, isLoading: isSchoolInfoLoading } = useSchoolInfo();
 
   useEffect(() => {
     setIsClient(true);
@@ -54,10 +54,10 @@ export function Header() {
                 href="/"
                 className="flex items-center gap-2 text-lg font-semibold text-foreground"
               >
-                {schoolInfo.logoUrl && (
+                {isSchoolInfoLoading ? <Skeleton className="h-8 w-8 rounded-full" /> : (schoolInfo.logoUrl && (
                    <Image src={schoolInfo.logoUrl} alt="School Logo" width={32} height={32} className="rounded-full" />
-                )}
-                <span className="">{schoolInfo.name}</span>
+                ))}
+                <span className="">{isSchoolInfoLoading ? <Skeleton className="h-6 w-32" /> : schoolInfo.name}</span>
               </Link>
             </SheetHeader>
             <div className="p-4 border-b">
@@ -152,11 +152,11 @@ export function Header() {
       </div>
 
       <Link href="/" className="flex items-center gap-2">
-          {schoolInfo.logoUrl && (
+          {isSchoolInfoLoading ? <Skeleton className="h-10 w-10 rounded-full hidden sm:block" /> : (schoolInfo.logoUrl && (
             <Image src={schoolInfo.logoUrl} alt="School Logo" width={40} height={40} className="rounded-full hidden sm:block" />
-          )}
+          ))}
           <h1 className="text-xl font-bold whitespace-nowrap drop-shadow-md">
-            {schoolInfo.name}
+            {isSchoolInfoLoading ? <Skeleton className="h-7 w-48" /> : schoolInfo.name}
           </h1>
       </Link>
       

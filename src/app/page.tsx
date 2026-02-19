@@ -31,29 +31,34 @@ export default function Home() {
         setTotalStudents(studentsForYear.length);
         
         const todayStr = format(new Date(), 'yyyy-MM-dd');
-        // Note: attendance data is still from localStorage. This should be migrated next.
-        const todaysAttendance = getAttendanceForDate(todayStr, selectedYear);
-        
-        let present = 0;
-        let absent = 0;
-        
-        if (todaysAttendance.length > 0) {
-          const studentIdsForYear = new Set(studentsForYear.map(s => s.id));
-          todaysAttendance.forEach(classAttendance => {
-              classAttendance.attendance.forEach(studentAttendance => {
-                  if (studentIdsForYear.has(studentAttendance.studentId)) {
-                    if (studentAttendance.status === 'present') {
-                        present++;
-                    } else {
-                        absent++;
-                    }
-                  }
+
+        const fetchAttendance = async () => {
+            if (!db) return;
+            const todaysAttendance = await getAttendanceForDate(db, todayStr, selectedYear);
+            
+            let present = 0;
+            let absent = 0;
+            
+            if (todaysAttendance.length > 0) {
+              const studentIdsForYear = new Set(studentsForYear.map(s => s.id));
+              todaysAttendance.forEach(classAttendance => {
+                  classAttendance.attendance.forEach(studentAttendance => {
+                      if (studentIdsForYear.has(studentAttendance.studentId)) {
+                        if (studentAttendance.status === 'present') {
+                            present++;
+                        } else {
+                            absent++;
+                        }
+                      }
+                  });
               });
-          });
+            }
+
+            setPresentStudents(present);
+            setAbsentStudents(absent);
         }
 
-        setPresentStudents(present);
-        setAbsentStudents(absent);
+        fetchAttendance();
       });
 
       return () => unsubscribe();

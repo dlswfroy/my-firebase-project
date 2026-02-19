@@ -2,39 +2,58 @@
 
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
 import { getSchoolInfo, saveSchoolInfo, SchoolInfo, defaultSchoolInfo } from '@/lib/school-info';
+import { useFirestore } from '@/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 type SchoolInfoContextType = {
   schoolInfo: SchoolInfo;
-  updateSchoolInfo: (newInfo: SchoolInfo) => void;
+  updateSchoolInfo: (newInfo: Partial<SchoolInfo>) => Promise<void>;
+  isLoading: boolean;
 };
 
 const SchoolInfoContext = createContext<SchoolInfoContextType | undefined>(undefined);
 
 export function SchoolInfoProvider({ children }: { children: ReactNode }) {
+  const db = useFirestore();
   const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(defaultSchoolInfo);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // This effect ensures that the state is updated if localStorage changes in another tab.
-    const handleStorageChange = () => {
-      setSchoolInfo(getSchoolInfo());
+    if (!db) {
+        setIsLoading(false);
+        return;
     };
-    window.addEventListener('storage', handleStorageChange);
-    
-    // On mount, read from localStorage. This runs only on the client.
-    setSchoolInfo(getSchoolInfo());
 
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+    const docRef = doc(db, 'school', 'info');
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+            setSchoolInfo({ ...defaultSchoolInfo, ...docSnap.data() } as SchoolInfo);
+        } else {
+            // If the document doesn't exist, we can create it with default values
+            saveSchoolInfo(db, defaultSchoolInfo).catch(console.error);
+            setSchoolInfo(defaultSchoolInfo);
+        }
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching school info:", error);
+        setIsLoading(false);
+    });
 
-  const updateSchoolInfo = useCallback((newInfo: SchoolInfo) => {
-    saveSchoolInfo(newInfo);
-    setSchoolInfo(newInfo);
-  }, []);
+    return () => unsubscribe();
+  }, [db]);
+
+  const updateSchoolInfo = useCallback(async (newInfo: Partial<SchoolInfo>) => {
+    if (!db) return;
+    const updatedInfo = { ...schoolInfo, ...newInfo };
+    await saveSchoolInfo(db, updatedInfo);
+    // The onSnapshot listener will update the state automatically
+  }, [db, schoolInfo]);
 
   const value = useMemo(() => ({
     schoolInfo,
     updateSchoolInfo,
-  }), [schoolInfo, updateSchoolInfo]);
+    isLoading
+  }), [schoolInfo, updateSchoolInfo, isLoading]);
 
   return (
     <SchoolInfoContext.Provider value={value}>

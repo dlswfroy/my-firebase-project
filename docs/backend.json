@@ -58,6 +58,51 @@
         "staffType": { "type": "string", "enum": ["teacher", "staff"] }
       },
       "required": ["employeeId", "nameBn", "designation", "mobile", "joinDate", "photoUrl", "staffType", "isActive"]
+    },
+    "schoolInfo": {
+      "title": "School Information",
+      "description": "General information about the school.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "eiin": { "type": "string" },
+        "code": { "type": "string" },
+        "address": { "type": "string" },
+        "logoUrl": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "holiday": {
+      "title": "Holiday",
+      "description": "A holiday record.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" }
+      },
+      "required": ["date", "description"]
+    },
+    "attendanceRecord": {
+      "title": "Attendance Record",
+      "description": "Daily attendance record for a class.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "academicYear": { "type": "string" },
+        "className": { "type": "string" },
+        "attendance": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "studentId": { "type": "string" },
+              "status": { "type": "string", "enum": ["present", "absent"] }
+            },
+            "required": ["studentId", "status"]
+          }
+        }
+      },
+      "required": ["date", "academicYear", "className", "attendance"]
     }
   },
   "auth": {
@@ -71,6 +116,18 @@
     "/staff/{staffId}": {
       "schema": { "$ref": "#/entities/staff" },
       "description": "Stores individual teacher and staff records."
+    },
+    "/school/info": {
+      "schema": { "$ref": "#/entities/schoolInfo" },
+      "description": "Stores general school information. This is a single document."
+    },
+    "/holidays/{holidayId}": {
+      "schema": { "$ref": "#/entities/holiday" },
+      "description": "Stores holiday records."
+    },
+    "/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/attendanceRecord" },
+      "description": "Stores daily attendance records."
     }
   }
 }
