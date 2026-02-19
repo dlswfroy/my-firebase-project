@@ -120,8 +120,8 @@
         "tuitionFine": { "type": "number" },
         "examFeeHalfYearly": { "type": "number" },
         "examFeeAnnual": { "type": "number" },
-        "examFeePre নির্বাচনী": { "type": "number" },
-        "examFee নির্বাচনী": { "type": "number" },
+        "examFeePreNirbachoni": { "type": "number" },
+        "examFeeNirbachoni": { "type": "number" },
         "sessionFee": { "type": "number" },
         "admissionFee": { "type": "number" },
         "scoutFee": { "type": "number" },
@@ -130,6 +130,69 @@
         "tiffinFee": { "type": "number" }
       },
       "required": ["studentId", "academicYear", "month"]
+    },
+    "result": {
+      "title": "Result",
+      "description": "Results for a class in a particular subject.",
+      "type": "object",
+      "properties": {
+        "academicYear": { "type": "string" },
+        "className": { "type": "string" },
+        "group": { "type": "string" },
+        "subject": { "type": "string" },
+        "fullMarks": { "type": "number" },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "studentId": { "type": "string" },
+              "written": { "type": "number" },
+              "mcq": { "type": "number" },
+              "practical": { "type": "number" }
+            },
+            "required": ["studentId"]
+          }
+        }
+      },
+      "required": ["academicYear", "className", "subject", "fullMarks", "results"]
+    },
+    "transaction": {
+      "title": "Transaction",
+      "description": "An income or expense transaction record.",
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "income",
+            "expense"
+          ]
+        },
+        "accountHead": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "academicYear": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "date",
+        "type",
+        "accountHead",
+        "amount",
+        "academicYear"
+      ]
     }
   },
   "auth": {
@@ -163,6 +226,12 @@
      "/feeCollections/{collectionId}": {
       "schema": { "$ref": "#/entities/feeCollection" },
       "description": "Stores fee collection records for students."
+    },
+    "/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/transaction"
+      },
+      "description": "Stores income and expense transaction records."
     }
   }
 }
