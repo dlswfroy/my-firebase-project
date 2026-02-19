@@ -80,11 +80,6 @@ export default function ResultsBulkUploadPage() {
                 addHeader('বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা/পদার্থ', true);
                 addHeader('ভূগোল ও পরিবেশ/রসায়ন', true);
                 addHeader('পৌরনীতি ও নাগরিকতা/জীব বিজ্ঞান', true);
-                
-                // Commerce specific
-                addHeader('হিসাব বিজ্ঞান', false);
-                addHeader('ফিন্যান্স ও ব্যাংকিং', false);
-                addHeader('ব্যবসায় উদ্যোগ', false);
     
                 // Optional
                 addHeader('কৃষি শিক্ষা/উচ্চতর গণিত', true);
