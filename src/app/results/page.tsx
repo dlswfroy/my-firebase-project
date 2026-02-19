@@ -392,15 +392,7 @@ export default function ResultsPage() {
                     </CardHeader>
                     <CardContent className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end p-4 border rounded-lg">
-                             {!isClient ? (
-                                <>
-                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
-                                    {showGroupSelector && <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>}
-                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
-                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
-                                    <Skeleton className="h-10 w-full" />
-                                </>
-                            ) : (
+                             {isClient ? (
                                 <>
                                     <div className="space-y-2">
                                         <Label htmlFor="class">শ্রেণি</Label>
@@ -416,7 +408,7 @@ export default function ResultsPage() {
                                         </Select>
                                     </div>
 
-                                    {showGroupSelector && (
+                                    {showGroupSelector ? (
                                         <div className="space-y-2">
                                             <Label htmlFor="group">শাখা/গ্রুপ</Label>
                                             <Select value={group} onValueChange={setGroup}>
@@ -428,6 +420,8 @@ export default function ResultsPage() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
+                                    ) : (
+                                        <div className="hidden lg:block" />
                                     )}
                                     
                                     <div className="space-y-2">
@@ -454,6 +448,14 @@ export default function ResultsPage() {
                                     <Button onClick={handleLoadStudents} disabled={isLoadingStudents} className="w-full">
                                         {isLoadingStudents ? 'লোড হচ্ছে...' : 'শিক্ষার্থী লোড করুন'}
                                     </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <Skeleton className="h-10 w-full" />
                                 </>
                             )}
                         </div>
@@ -588,5 +590,3 @@ export default function ResultsPage() {
         </div>
     );
 }
-
-    

@@ -1,3 +1,4 @@
+
 'use client';
 import type { Student } from './student-data';
 import type { ClassResult } from './results-data';
@@ -60,11 +61,12 @@ export function processStudentResults(
         const optionalSubjectName = student.optionalSubject;
 
         const subjectsForStudent = allSubjectsForGroup.filter(subjectInfo => {
+            if (student.className < '9') return true;
+
             const group = student.group;
-            if (group === 'science' || group === 'arts') {
-                 if (optionalSubjectName === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
-                 if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
-            }
+            if (optionalSubjectName === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
+            if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
+            
             return true;
         });
 
@@ -73,7 +75,7 @@ export function processStudentResults(
         const subjectResults = new Map<string, StudentSubjectResult>();
 
         subjectsForStudent.forEach(subjectInfo => {
-            const classResult = resultsBySubject.find(r => r.subject === subjectInfo.name && r.group === (student.group || undefined) && r.className === student.className);
+            const classResult = resultsBySubject.find(r => r.subject === subjectInfo.name && (student.className < '9' || r.group === student.group) && r.className === student.className);
             const studentResult = classResult?.results.find(r => r.studentId === student.id);
             const fullMarks = classResult?.fullMarks || subjectInfo.fullMarks;
 
