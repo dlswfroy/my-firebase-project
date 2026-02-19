@@ -21,6 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 function SchoolInfoSettings() {
@@ -124,10 +125,17 @@ export default function SettingsPage() {
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [newHolidayDate, setNewHolidayDate] = useState<Date | undefined>(undefined);
     const [newHolidayDescription, setNewHolidayDescription] = useState('');
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
-        setHolidays(getHolidays());
+        setIsClient(true);
     }, []);
+
+    useEffect(() => {
+        if (isClient) {
+            setHolidays(getHolidays());
+        }
+    }, [isClient]);
 
     const handleAddHoliday = () => {
         if (!newHolidayDate || !newHolidayDescription) {
@@ -182,114 +190,149 @@ export default function SettingsPage() {
                         <CardDescription>অ্যাপ্লিকেশনের বিভিন্ন সেটিংস এখানে পরিচালনা করুন।</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Tabs defaultValue="school-info">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="school-info">প্রতিষ্ঠানের তথ্য</TabsTrigger>
-                                <TabsTrigger value="holidays">অতিরিক্ত ছুটি</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="school-info" className="pt-4">
-                                <SchoolInfoSettings />
-                            </TabsContent>
-                            <TabsContent value="holidays" className="pt-4">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>অতিরিক্ত ছুটির দিন</CardTitle>
-                                        <CardDescription>বিশেষ কারণে স্কুল বন্ধ থাকলে সেই দিনগুলো এখানে যোগ করুন।</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-8">
-                                        <div className="flex flex-col sm:flex-row items-end gap-4 p-4 border rounded-lg">
-                                            <div className="w-full space-y-2">
-                                                <Label htmlFor="holiday-date">তারিখ</Label>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            id="holiday-date"
-                                                            variant={"outline"}
-                                                            className={cn("w-full justify-start text-left font-normal", !newHolidayDate && "text-muted-foreground")}
-                                                        >
-                                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                                            {newHolidayDate ? format(newHolidayDate, "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0">
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={newHolidayDate}
-                                                            onSelect={setNewHolidayDate}
-                                                            initialFocus
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
+                        {isClient ? (
+                            <Tabs defaultValue="school-info">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="school-info">প্রতিষ্ঠানের তথ্য</TabsTrigger>
+                                    <TabsTrigger value="holidays">অতিরিক্ত ছুটি</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="school-info" className="pt-4">
+                                    <SchoolInfoSettings />
+                                </TabsContent>
+                                <TabsContent value="holidays" className="pt-4">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>অতিরিক্ত ছুটির দিন</CardTitle>
+                                            <CardDescription>বিশেষ কারণে স্কুল বন্ধ থাকলে সেই দিনগুলো এখানে যোগ করুন।</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-8">
+                                            <div className="flex flex-col sm:flex-row items-end gap-4 p-4 border rounded-lg">
+                                                <div className="w-full space-y-2">
+                                                    <Label htmlFor="holiday-date">তারিখ</Label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                id="holiday-date"
+                                                                variant={"outline"}
+                                                                className={cn("w-full justify-start text-left font-normal", !newHolidayDate && "text-muted-foreground")}
+                                                            >
+                                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                {newHolidayDate ? format(newHolidayDate, "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0">
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={newHolidayDate}
+                                                                onSelect={setNewHolidayDate}
+                                                                initialFocus
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                                <div className="w-full space-y-2">
+                                                    <Label htmlFor="holiday-description">ছুটির কারণ</Label>
+                                                    <Input
+                                                        id="holiday-description"
+                                                        placeholder="যেমন: বিশেষ উৎসব"
+                                                        value={newHolidayDescription}
+                                                        onChange={(e) => setNewHolidayDescription(e.target.value)}
+                                                    />
+                                                </div>
+                                                <Button onClick={handleAddHoliday} className="w-full sm:w-auto">যোগ করুন</Button>
                                             </div>
-                                            <div className="w-full space-y-2">
-                                                <Label htmlFor="holiday-description">ছুটির কারণ</Label>
-                                                <Input
-                                                    id="holiday-description"
-                                                    placeholder="যেমন: বিশেষ উৎসব"
-                                                    value={newHolidayDescription}
-                                                    onChange={(e) => setNewHolidayDescription(e.target.value)}
-                                                />
-                                            </div>
-                                            <Button onClick={handleAddHoliday} className="w-full sm:w-auto">যোগ করুন</Button>
-                                        </div>
 
-                                        <div>
-                                            <h3 className="font-semibold text-lg mb-4">ছুটির তালিকা</h3>
-                                            <div className="border rounded-md overflow-x-auto">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>তারিখ</TableHead>
-                                                            <TableHead>কারণ</TableHead>
-                                                            <TableHead className="text-right">কার্যক্রম</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {holidays.length === 0 ? (
+                                            <div>
+                                                <h3 className="font-semibold text-lg mb-4">ছুটির তালিকা</h3>
+                                                <div className="border rounded-md overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
                                                             <TableRow>
-                                                                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                                                                    কোনো অতিরিক্ত ছুটি যোগ করা হয়নি।
-                                                                </TableCell>
+                                                                <TableHead>তারিখ</TableHead>
+                                                                <TableHead>কারণ</TableHead>
+                                                                <TableHead className="text-right">কার্যক্রম</TableHead>
                                                             </TableRow>
-                                                        ) : (
-                                                            holidays.map((holiday) => (
-                                                                <TableRow key={holiday.id}>
-                                                                    <TableCell>{format(new Date(holiday.date), "d MMMM yyyy", { locale: bn })}</TableCell>
-                                                                    <TableCell>{holiday.description}</TableCell>
-                                                                    <TableCell className="text-right">
-                                                                        <AlertDialog>
-                                                                            <AlertDialogTrigger asChild>
-                                                                                <Button variant="destructive" size="icon">
-                                                                                    <Trash2 className="h-4 w-4" />
-                                                                                </Button>
-                                                                            </AlertDialogTrigger>
-                                                                            <AlertDialogContent>
-                                                                                <AlertDialogHeader>
-                                                                                    <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                                                                    <AlertDialogDescription>
-                                                                                        এই ছুটিটি তালিকা থেকে স্থায়ীভাবে মুছে যাবে।
-                                                                                    </AlertDialogDescription>
-                                                                                </AlertDialogHeader>
-                                                                                <AlertDialogFooter>
-                                                                                    <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                                                                    <AlertDialogAction onClick={() => handleDeleteHoliday(holiday.id)}>
-                                                                                        মুছে ফেলুন
-                                                                                    </AlertDialogAction>
-                                                                                </AlertDialogFooter>
-                                                                            </AlertDialogContent>
-                                                                        </AlertDialog>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {holidays.length === 0 ? (
+                                                                <TableRow>
+                                                                    <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                                                                        কোনো অতিরিক্ত ছুটি যোগ করা হয়নি।
                                                                     </TableCell>
                                                                 </TableRow>
-                                                            ))
-                                                        )}
-                                                    </TableBody>
-                                                </Table>
+                                                            ) : (
+                                                                holidays.map((holiday) => (
+                                                                    <TableRow key={holiday.id}>
+                                                                        <TableCell>{format(new Date(holiday.date), "d MMMM yyyy", { locale: bn })}</TableCell>
+                                                                        <TableCell>{holiday.description}</TableCell>
+                                                                        <TableCell className="text-right">
+                                                                            <AlertDialog>
+                                                                                <AlertDialogTrigger asChild>
+                                                                                    <Button variant="destructive" size="icon">
+                                                                                        <Trash2 className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                </AlertDialogTrigger>
+                                                                                <AlertDialogContent>
+                                                                                    <AlertDialogHeader>
+                                                                                        <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                                                        <AlertDialogDescription>
+                                                                                            এই ছুটিটি তালিকা থেকে স্থায়ীভাবে মুছে যাবে।
+                                                                                        </AlertDialogDescription>
+                                                                                    </AlertDialogHeader>
+                                                                                    <AlertDialogFooter>
+                                                                                        <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                                                        <AlertDialogAction onClick={() => handleDeleteHoliday(holiday.id)}>
+                                                                                            মুছে ফেলুন
+                                                                                        </AlertDialogAction>
+                                                                                    </AlertDialogFooter>
+                                                                                </AlertDialogContent>
+                                                                            </AlertDialog>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ))
+                                                            )}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
                                             </div>
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            </Tabs>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="grid w-full grid-cols-2 h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                                    <div className="inline-flex items-center justify-center rounded-sm bg-background shadow-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                    <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                </div>
+                                <Card>
+                                    <CardHeader>
+                                        <Skeleton className="h-6 w-1/3" />
+                                        <Skeleton className="h-4 w-2/3" />
+                                    </CardHeader>
+                                    <CardContent className="space-y-8">
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="space-y-2"><Skeleton className="h-4 w-20" /><Skeleton className="h-10" /></div>
+                                                <div className="space-y-2"><Skeleton className="h-4 w-20" /><Skeleton className="h-10" /></div>
+                                                <div className="space-y-2"><Skeleton className="h-4 w-20" /><Skeleton className="h-10" /></div>
+                                                <div className="space-y-2"><Skeleton className="h-4 w-20" /><Skeleton className="h-10" /></div>
+                                            </div>
+                                        </div>
+                                         <div className="space-y-4">
+                                            <Skeleton className="h-5 w-16" />
+                                            <div className="flex items-center gap-4">
+                                                <Skeleton className="w-24 h-24 rounded-md" />
+                                                <Skeleton className="h-10 w-32" />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end pt-4 border-t mt-4">
+                                            <Skeleton className="h-10 w-36" />
                                         </div>
                                     </CardContent>
                                 </Card>
-                            </TabsContent>
-                        </Tabs>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>
