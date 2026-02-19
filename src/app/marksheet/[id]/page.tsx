@@ -199,7 +199,7 @@ export default function MarksheetPage() {
                         </div>
                     </section>
 
-                    <section className="flex-grow text-sm">
+                    <section className="flex-grow text-sm relative">
                         <table className="w-full border-collapse border-2 border-black">
                             <thead>
                                 <tr className="border-2 border-black">
@@ -249,28 +249,27 @@ export default function MarksheetPage() {
                                 </tr>
                             </tbody>
                         </table>
-                    </section>
-                    
-                    <div className="absolute top-36 right-8 w-24">
-                         <table className="w-full border-collapse border-2 border-black text-xs text-center">
-                            <thead className="bg-gray-200">
-                                <tr className="border-b-2 border-black">
-                                    <th className="p-1 border-r border-black">Interval</th>
-                                    <th className="p-1 border-r border-black">Point</th>
-                                    <th className="p-1">Grade</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {gradingScale.map(g => (
-                                    <tr key={g.grade} className="border-b border-black">
-                                        <td className="p-1 border-r border-black">{g.interval}</td>
-                                        <td className="p-1 border-r border-black">{g.point}</td>
-                                        <td className="p-1">{g.grade}</td>
+                        <div className="absolute top-0 right-0 w-24">
+                             <table className="w-full border-collapse border-2 border-black text-xs text-center">
+                                <thead className="bg-gray-200">
+                                    <tr className="border-b-2 border-black">
+                                        <th className="p-1 border-r border-black">Interval</th>
+                                        <th className="p-1 border-r border-black">Point</th>
+                                        <th className="p-1">Grade</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {gradingScale.map(g => (
+                                        <tr key={g.grade} className="border-b border-black">
+                                            <td className="p-1 border-r border-black">{g.interval}</td>
+                                            <td className="p-1 border-r border-black">{g.point}</td>
+                                            <td className="p-1">{g.grade}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
 
                     <footer className="mt-auto pt-16 text-sm">
                         <div className="flex justify-between">
