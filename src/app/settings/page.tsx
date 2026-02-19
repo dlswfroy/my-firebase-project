@@ -7,12 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Calendar as CalendarIcon, Trash2, Upload } from 'lucide-react';
 import { format } from "date-fns";
 import { bn } from 'date-fns/locale';
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { addHoliday, getHolidays, deleteHoliday, Holiday, NewHolidayData } from '@/lib/holiday-data';
 import { useSchoolInfo } from '@/context/SchoolInfoContext';
@@ -26,6 +23,7 @@ import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, query, orderBy, FirestoreError } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { DatePicker } from '@/components/ui/date-picker';
 
 
 function SchoolInfoSettings() {
@@ -246,26 +244,7 @@ function HolidaySettings() {
                 <div className="flex flex-col sm:flex-row items-end gap-4 p-4 border rounded-lg">
                     <div className="w-full space-y-2">
                         <Label htmlFor="holiday-date">তারিখ</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    id="holiday-date"
-                                    variant={"outline"}
-                                    className={cn("w-full justify-start text-left font-normal", !newHolidayDate && "text-muted-foreground")}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {newHolidayDate ? format(newHolidayDate, "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={newHolidayDate}
-                                    onSelect={setNewHolidayDate}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
+                        <DatePicker value={newHolidayDate} onChange={setNewHolidayDate} />
                     </div>
                     <div className="w-full space-y-2">
                         <Label htmlFor="holiday-description">ছুটির কারণ</Label>

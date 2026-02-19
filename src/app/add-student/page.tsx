@@ -11,11 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { Calendar as CalendarIcon, Upload, FileUp, Download } from 'lucide-react';
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+import { Upload, FileUp, Download } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"
 import { addStudent, updateStudent, NewStudentData } from '@/lib/student-data';
 import { getSubjects, Subject } from '@/lib/subjects';
@@ -24,6 +20,7 @@ import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useFirestore } from '@/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const initialStudentState: NewStudentData = {
   roll: undefined,
@@ -519,17 +516,7 @@ export default function AddStudentPage() {
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="dob">জন্ম তারিখ</Label>
-                          <Popover>
-                              <PopoverTrigger asChild>
-                                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !student.dob && "text-muted-foreground")}>
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {student.dob ? format(new Date(student.dob), "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
-                                  </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0">
-                                  <Calendar mode="single" selected={student.dob} onSelect={date => handleInputChange('dob', date)} initialFocus />
-                              </PopoverContent>
-                          </Popover>
+                          <DatePicker value={student.dob} onChange={date => handleInputChange('dob', date)} />
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="birth-reg-no">জন্ম নিবন্ধন নম্বর</Label>

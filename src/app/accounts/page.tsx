@@ -29,6 +29,7 @@ import { Transaction, NewTransactionData, addTransaction, getTransactions, delet
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { StudentFeeDialog } from '@/components/StudentFeeDialog';
+import { DatePicker } from '@/components/ui/date-picker';
 
 
 // Fee Collection Component
@@ -199,15 +200,7 @@ const NewTransactionTab = ({ onTransactionAdded }: { onTransactionAdded: () => v
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="date">তারিখ</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}>
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {date ? format(date, "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={date} onSelect={setDate} initialFocus /></PopoverContent>
-                            </Popover>
+                            <DatePicker value={date} onChange={setDate} />
                         </div>
                         <div className="space-y-2">
                              <Label>লেনদেনের ধরণ</Label>

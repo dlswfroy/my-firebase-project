@@ -9,16 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { Calendar as CalendarIcon, Upload } from 'lucide-react';
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+import { Upload } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast"
 import { addStaff, NewStaffData } from '@/lib/staff-data';
 import { useFirestore } from '@/firebase';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const initialStaffState: NewStaffData = {
   employeeId: '',
@@ -44,7 +41,7 @@ export default function AddStaffPage() {
     const [staff, setStaff] = useState<NewStaffData>(initialStaffState);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-    const handleInputChange = (field: keyof NewStaffData, value: string | Date | boolean) => {
+    const handleInputChange = (field: keyof NewStaffData, value: string | Date | boolean | undefined) => {
         setStaff(prev => ({...prev, [field]: value}));
     };
 
@@ -132,17 +129,7 @@ export default function AddStaffPage() {
                       </div>
                        <div className="space-y-2">
                           <Label htmlFor="joinDate">যোগদানের তারিখ</Label>
-                          <Popover>
-                              <PopoverTrigger asChild>
-                                  <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !staff.joinDate && "text-muted-foreground")}>
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {staff.joinDate ? format(new Date(staff.joinDate), "PPP") : <span>একটি তারিখ নির্বাচন করুন</span>}
-                                  </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0">
-                                  <Calendar mode="single" selected={staff.joinDate} onSelect={date => handleInputChange('joinDate', date as Date)} initialFocus />
-                              </PopoverContent>
-                          </Popover>
+                          <DatePicker value={staff.joinDate} onChange={date => handleInputChange('joinDate', date)} />
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="education">শিক্ষাগত যোগ্যতা</Label>

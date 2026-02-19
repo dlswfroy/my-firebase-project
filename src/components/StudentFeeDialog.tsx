@@ -14,16 +14,14 @@ import { useFirestore } from '@/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { NewTransactionData } from '@/lib/transactions-data';
 import { collection, doc, writeBatch, serverTimestamp, Timestamp, WithFieldValue, DocumentData } from 'firebase/firestore';
-import { Calendar as CalendarIcon, FilePen, Trash2 } from 'lucide-react';
+import { FilePen, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Skeleton } from './ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { DatePicker } from './ui/date-picker';
 
 const feeFields: { key: keyof FeeBreakdown; label: string }[] = [
     { key: 'tuitionCurrent', label: 'চলতি' },
@@ -65,7 +63,7 @@ function FeeCollectionForm({ student, onSave, existingCollection, open, onOpenCh
     const db = useFirestore();
     const { toast } = useToast();
     const { selectedYear } = useAcademicYear();
-    const [collectionDate, setCollectionDate] = useState<Date>(new Date());
+    const [collectionDate, setCollectionDate] = useState<Date | undefined>(new Date());
     const [description, setDescription] = useState('');
     const [breakdown, setBreakdown] = useState<FeeBreakdown>(emptyBreakdown);
 
@@ -200,15 +198,7 @@ function FeeCollectionForm({ student, onSave, existingCollection, open, onOpenCh
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                         <div className="space-y-2">
                             <Label htmlFor="date">আদায়ের তারিখ</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button id="date" variant={"outline"} className={cn("w-full justify-start text-left font-normal", !collectionDate && "text-muted-foreground")}>
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {collectionDate ? format(collectionDate, "PPP", { locale: bn }) : <span>একটি তারিখ নির্বাচন করুন</span>}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={collectionDate} onSelect={(d) => d && setCollectionDate(d)} initialFocus /></PopoverContent>
-                            </Popover>
+                            <DatePicker value={collectionDate} onChange={setCollectionDate} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="description">বিবরণ</Label>
@@ -339,13 +329,15 @@ export function StudentFeeDialog({ student, open, onOpenChange, onFeeCollected }
                              <DialogTitle className="text-2xl">
                                 {isLoading || !student ? <Skeleton className="h-8 w-3/4" /> : `ছাত্র/ ছাত্রীর বেতন আদায় তথ্য`}
                             </DialogTitle>
-                            {isLoading || !student ? (
-                                <Skeleton className="h-4 w-1/2" />
-                            ) : (
-                                <DialogDescription>
-                                    <span className="font-semibold">{student.studentNameBn}</span> (রোল: {student.roll.toLocaleString('bn-BD')}, শ্রেণি: {student.className}-য়)
-                                </DialogDescription>
-                            )}
+                            <DialogDescription>
+                                {isLoading || !student ? (
+                                    <Skeleton className="h-4 w-1/2" />
+                                ) : (
+                                    <>
+                                        <span className="font-semibold">{student.studentNameBn}</span> (রোল: {student.roll.toLocaleString('bn-BD')}, শ্রেণি: {student.className}-য়)
+                                    </>
+                                )}
+                            </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
