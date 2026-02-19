@@ -1,3 +1,4 @@
+
 'use client';
 import {
   collection,
@@ -41,8 +42,14 @@ export const saveClassResults = async (db: Firestore, newResult: ClassResult) =>
   const docId = getDocumentId(newResult);
   const docRef = doc(db, resultsCollection, docId);
   
-  const dataToSave = { ...newResult };
+  const dataToSave: { [key: string]: any } = { ...newResult };
   delete dataToSave.id;
+
+  Object.keys(dataToSave).forEach(key => {
+    if (dataToSave[key] === undefined) {
+      delete dataToSave[key];
+    }
+  });
 
   return setDoc(docRef, dataToSave)
     .catch(async (serverError) => {
