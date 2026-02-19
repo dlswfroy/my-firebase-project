@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { getStudentById, Student } from '@/lib/student-data';
+import { getStudentById, getStudents, Student } from '@/lib/student-data';
 import { getSubjects, Subject } from '@/lib/subjects';
 import { getResultsForClass, ClassResult } from '@/lib/results-data';
 import { processStudentResults, StudentProcessedResult } from '@/lib/results-calculation';
@@ -41,28 +41,49 @@ export default function MarksheetPage() {
         }
         setStudent(studentData);
 
-        // Use studentData as the source of truth
-        const studentClassName = studentData.className;
-        const studentGroup = studentData.group || undefined;
+        // Get all students for the class to calculate merit rank correctly
+        const allStudentsInClass = getStudents().filter(s => 
+            s.academicYear === academicYear && 
+            s.className === studentData.className &&
+            (studentData.className < '9' || !studentData.group || s.group === studentData.group)
+        );
 
-        const allSubjectsForGroup = getSubjects(studentClassName, studentGroup);
-        
-        const resultsBySubject: ClassResult[] = allSubjectsForGroup
-            .map(subject => getResultsForClass(academicYear, studentClassName, subject.name, studentGroup))
-            .filter((result): result is ClassResult => !!result);
-        
-        const [finalResult] = processStudentResults([studentData], resultsBySubject, allSubjectsForGroup);
-        
-        if (!finalResult) {
+        if (allStudentsInClass.length === 0) {
             setIsLoading(false);
             return;
         }
+        
+        // Get all subjects for the group
+        const allSubjectsForGroup = getSubjects(studentData.className, studentData.group || undefined);
+        
+        // Get all available results for those subjects
+        const resultsBySubject: ClassResult[] = allSubjectsForGroup
+            .map(subject => getResultsForClass(academicYear, studentData.className, subject.name, studentData.group || undefined))
+            .filter((result): result is ClassResult => !!result);
+        
+        // Process results for the entire class to get correct merit positions
+        const allFinalResults = processStudentResults(allStudentsInClass, resultsBySubject, allSubjectsForGroup);
 
-        // Get the actual subjects that were processed for this student
-        const subjectsForThisStudent = allSubjectsForGroup.filter(s => finalResult.subjectResults.has(s.name));
+        // Find the result for the current student
+        const finalResultForThisStudent = allFinalResults.find(res => res.student.id === studentId);
+
+        if (!finalResultForThisStudent) {
+            setIsLoading(false);
+            setProcessedResult(null); // Set to null to show error message
+            return;
+        }
+
+        // Determine the subjects to display on this student's marksheet
+        const subjectsForThisStudent = allSubjectsForGroup.filter(subjectInfo => {
+            if (studentData.group === 'science') {
+                 if (studentData.optionalSubject === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
+                 if (studentData.optionalSubject === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
+            }
+            return true;
+        });
         
         setSubjects(subjectsForThisStudent);
-        setProcessedResult(finalResult);
+        setProcessedResult(finalResultForThisStudent);
         setIsLoading(false);
 
     }, [studentId, academicYear]);
@@ -94,7 +115,7 @@ export default function MarksheetPage() {
     }
 
     if (!student || !processedResult) {
-        return <div className="flex items-center justify-center min-h-screen">Marksheet data not found. Please ensure all marks are entered.</div>;
+        return <div className="flex items-center justify-center min-h-screen">Marksheet data not found or could not be processed. Please ensure all marks are entered correctly.</div>;
     }
 
     const sortedSubjects = [...subjects].sort((a,b) => parseInt(a.code) - parseInt(b.code));
