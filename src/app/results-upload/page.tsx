@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from "@/hooks/use-toast";
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { getSubjects, Subject as SubjectType } from '@/lib/subjects';
-import { saveClassResults, getResultsForClass, ClassResult, StudentResult } from '@/lib/results-data';
+import { saveClassResults, getResultsForClass, getDocumentId, ClassResult, StudentResult } from '@/lib/results-data';
 import { Student } from '@/lib/student-data';
 import * as XLSX from 'xlsx';
 import { Download, FileUp } from 'lucide-react';
@@ -53,18 +53,68 @@ export default function ResultsBulkUploadPage() {
             toast({ variant: 'destructive', title: 'শ্রেণি নির্বাচন করুন' });
             return;
         }
-
-        const subjects = getSubjects(className, group);
+    
         const headers: string[] = ['রোল', 'নাম'];
-        
-        subjects.forEach(subject => {
-            headers.push(`${subject.name} (লিখিত)`);
-            headers.push(`${subject.name} (বহুনির্বাচনী)`);
-            if(subject.practical) {
-                headers.push(`${subject.name} (ব্যবহারিক)`);
+        const addedHeaders = new Set<string>();
+    
+        const addHeader = (header: string, sub: SubjectType) => {
+            if (!addedHeaders.has(header)) {
+                headers.push(`${header} (লিখিত)`);
+                headers.push(`${header} (বহুনির্বাচনী)`);
+                if (sub.practical) {
+                    headers.push(`${header} (ব্যবহারিক)`);
+                }
+                addedHeaders.add(header);
             }
-        });
+        };
+    
+        if (className === '9' || className === '10') {
+            const common = ['বাংলা প্রথম', 'বাংলা দ্বিতীয়', 'ইংরেজি প্রথম', 'ইংরেজি দ্বিতীয়', 'গণিত', 'ধর্ম ও নৈতিক শিক্ষা', 'তথ্য ও যোগাযোগ প্রযুক্তি'];
+            const scienceSubs = getSubjects(className, 'science').filter(s => !common.includes(s.name));
+            const artsSubs = getSubjects(className, 'arts').filter(s => !common.includes(s.name));
+            const commerceSubs = getSubjects(className, 'commerce').filter(s => !common.includes(s.name));
+            const allPossibleSubjects = getSubjects(className);
 
+            const commonSubjects = allPossibleSubjects.filter(s => common.includes(s.name));
+            commonSubjects.forEach(sub => addHeader(sub.name, sub));
+
+            if (!group) { // Master template for all groups
+                const combinedHeadersMap: { [key: string]: string } = {
+                    'পদার্থ': 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা',
+                    'রসায়ন': 'ভূগোল ও পরিবেশ',
+                    'জীব বিজ্ঞান': 'পৌরনীতি ও নাগরিকতা',
+                    'উচ্চতর গণিত': 'কৃষি শিক্ষা', // This pair is tricky, handle carefully
+                    'বাংলাদেশ ও বিশ্ব পরিচয়': 'সাধারণ বিজ্ঞান',
+                };
+    
+                const scienceOnly = scienceSubs.filter(s => !Object.keys(combinedHeadersMap).includes(s.name) && !Object.values(combinedHeadersMap).includes(s.name));
+                const artsOnly = artsSubs.filter(s => !Object.keys(combinedHeadersMap).includes(s.name) && !Object.values(combinedHeadersMap).includes(s.name));
+                const commerceOnly = commerceSubs.filter(s => !Object.keys(combinedHeadersMap).includes(s.name) && !Object.values(combinedHeadersMap).includes(s.name));
+                
+                // Add combined headers
+                Object.entries(combinedHeadersMap).forEach(([sciSubName, artSubName]) => {
+                     const sciSub = allPossibleSubjects.find(s => s.name === sciSubName);
+                     const artSub = allPossibleSubjects.find(s => s.name === artSubName);
+                     if (sciSub && artSub) {
+                        const header = `${artSub.name}/${sciSub.name}`;
+                        addHeader(header, sciSub.practical ? sciSub : artSub);
+                     }
+                });
+
+                // Add commerce-only subjects
+                commerceOnly.forEach(sub => addHeader(sub.name, sub));
+
+            } else { // Template for a specific group
+                const groupSubjects = getSubjects(className, group).filter(s => !common.includes(s.name));
+                groupSubjects.forEach(sub => addHeader(sub.name, sub));
+            }
+        } else { // For class 6-8
+            const subjectsForTemplate = getSubjects(className);
+            subjectsForTemplate.forEach(subject => {
+                addHeader(subject.name, subject);
+            });
+        }
+    
         const ws = XLSX.utils.aoa_to_sheet([headers]);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'ফলাফল নমুনা');
@@ -107,7 +157,21 @@ export default function ResultsBulkUploadPage() {
                 const worksheet = workbook.Sheets[sheetName];
                 const json = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-                const resultsToSave = new Map<string, ClassResult>(); // Key: docId
+                const resultsToSave = new Map<string, ClassResult>();
+
+                const subjectNameNormalization: { [key: string]: string } = {
+                    'ধর্ম শিক্ষা': 'ধর্ম ও নৈতিক শিক্ষা',
+                    'বাংলা ১ম': 'বাংলা প্রথম', 'বাংলা 1st': 'বাংলা প্রথম',
+                    'বাংলা ২য়': 'বাংলা দ্বিতীয়', 'বাংলা 2nd': 'বাংলা দ্বিতীয়',
+                    'ইংরেজি ১ম': 'ইংরেজি প্রথম', 'ইংরেজি 1st': 'ইংরেজি প্রথম',
+                    'ইংরেজি ২য়': 'ইংরেজি দ্বিতীয়', 'ইংরেজি 2nd': 'ইংরেজি দ্বিতীয়',
+                    'আইসিটি': 'তথ্য ও যোগাযোগ প্রযুক্তি',
+                    'বিজিএস': 'বাংলাদেশ ও বিশ্ব পরিচয়',
+                    'বি ও বি পরিচয়': 'বাংলাদেশ ও বিশ্ব পরিচয়',
+                    'পদার্থবিজ্ঞান': 'পদার্থ',
+                    'রসায়ন': 'রসায়ন',
+                    'জীববিজ্ঞান': 'জীব বিজ্ঞান',
+                };
 
                 for (const row of json) {
                     const bengaliToEnglishDigit: { [key: string]: string } = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
@@ -127,8 +191,13 @@ export default function ResultsBulkUploadPage() {
                         let subjectName = match[1].trim();
                         const markType = match[2].trim();
                         
+                        subjectName = subjectNameNormalization[subjectName] || subjectName;
+
                         if (subjectName.includes('/')) {
-                            const subjectParts = subjectName.split('/').map(p => p.trim());
+                            const subjectParts = subjectName.split('/').map(p => {
+                                const trimmed = p.trim();
+                                return subjectNameNormalization[trimmed] || trimmed;
+                            });
                             const applicableSubject = subjectParts.find(p => studentSubjects.map(s => s.name).includes(p));
                             if (applicableSubject) {
                                 subjectName = applicableSubject;
@@ -140,12 +209,17 @@ export default function ResultsBulkUploadPage() {
                         const subjectInfo = studentSubjects.find(s => s.name === subjectName);
                         if (!subjectInfo) continue;
 
-                        const docId = `${selectedYear}_${className}_${student.group || 'none'}_${subjectName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+                        const docId = getDocumentId({
+                            academicYear: selectedYear,
+                            className: student.className,
+                            subject: subjectName,
+                            group: student.group || undefined
+                        });
 
                         if (!resultsToSave.has(docId)) {
                             resultsToSave.set(docId, {
                                 academicYear: selectedYear,
-                                className,
+                                className: student.className,
                                 group: student.group || undefined,
                                 subject: subjectName,
                                 fullMarks: subjectInfo.fullMarks,
@@ -236,62 +310,60 @@ export default function ResultsBulkUploadPage() {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end p-4 border rounded-lg">
-                            {isClient ? (
-                                <>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="class">শ্রেণি</Label>
-                                        <Select value={className} onValueChange={setClassName}>
-                                            <SelectTrigger id="class"><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="6">৬ষ্ঠ</SelectItem>
-                                                <SelectItem value="7">৭ম</SelectItem>
-                                                <SelectItem value="8">৮ম</SelectItem>
-                                                <SelectItem value="9">৯ম</SelectItem>
-                                                <SelectItem value="10">১০ম</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                        {isClient ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end p-4 border rounded-lg">
+                                <div className="space-y-2">
+                                    <Label htmlFor="class">শ্রেণি</Label>
+                                    <Select value={className} onValueChange={setClassName}>
+                                        <SelectTrigger id="class"><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="6">৬ষ্ঠ</SelectItem>
+                                            <SelectItem value="7">৭ম</SelectItem>
+                                            <SelectItem value="8">৮ম</SelectItem>
+                                            <SelectItem value="9">৯ম</SelectItem>
+                                            <SelectItem value="10">১০ম</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                                    {showGroupSelector && (
-                                        <div className="space-y-2">
-                                            <Label htmlFor="group">শাখা/গ্রুপ</Label>
-                                            <Select value={group} onValueChange={setGroup}>
-                                                <SelectTrigger id="group"><SelectValue placeholder="সকল গ্রুপ" /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="">সকল গ্রুপ</SelectItem>
-                                                    <SelectItem value="science">বিজ্ঞান</SelectItem>
-                                                    <SelectItem value="arts">মানবিক</SelectItem>
-                                                    <SelectItem value="commerce">ব্যবসায় শিক্ষা</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    )}
+                                <div className={`space-y-2 ${showGroupSelector ? '' : 'lg:hidden'}`}>
+                                    <Label htmlFor="group">শাখা/গ্রুপ</Label>
+                                    <Select value={group} onValueChange={setGroup} disabled={!showGroupSelector}>
+                                        <SelectTrigger id="group"><SelectValue placeholder="সকল গ্রুপ" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">সকল গ্রুপ</SelectItem>
+                                            <SelectItem value="science">বিজ্ঞান</SelectItem>
+                                            <SelectItem value="arts">মানবিক</SelectItem>
+                                            <SelectItem value="commerce">ব্যবসায় শিক্ষা</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                
+                                <div className="hidden lg:block"></div>
 
-                                    <div className="flex flex-col sm:flex-row items-center gap-2 lg:col-span-2 lg:col-start-3 w-full">
-                                        <Button variant="outline" onClick={handleDownloadSample} className="w-full">
-                                            <Download className="mr-2 h-4 w-4" />
-                                            নমুনা ফাইল
-                                        </Button>
-                                        <Button onClick={() => fileInputRef.current?.click()} disabled={isLoading} className="w-full">
-                                            <FileUp className="mr-2 h-4 w-4" />
-                                            {isLoading ? 'আপলোড হচ্ছে...' : 'ফাইল আপলোড করুন'}
-                                        </Button>
-                                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
-                                    <div className="hidden lg:block"></div>
-                                    <div className="flex flex-col sm:flex-row items-center gap-2 lg:col-span-2 lg:col-start-3 w-full">
-                                        <Skeleton className="h-10 w-full" />
-                                        <Skeleton className="h-10 w-full" />
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
+                                <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+                                    <Button variant="outline" onClick={handleDownloadSample} className="w-full">
+                                        <Download className="mr-2 h-4 w-4" />
+                                        নমুনা ফাইল
+                                    </Button>
+                                    <Button onClick={() => fileInputRef.current?.click()} disabled={isLoading} className="w-full">
+                                        <FileUp className="mr-2 h-4 w-4" />
+                                        {isLoading ? 'আপলোড হচ্ছে...' : 'ফাইল আপলোড করুন'}
+                                    </Button>
+                                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
+                                </div>
+                            </div>
+                        ) : (
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end p-4 border rounded-lg">
+                                <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                 <div className="hidden lg:block"></div>
+                                <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+                                    <Skeleton className="h-10 w-full" />
+                                    <Skeleton className="h-10 w-full" />
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>

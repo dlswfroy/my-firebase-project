@@ -33,9 +33,10 @@ export interface ClassResult {
 
 const resultsCollection = 'results';
 
-const getDocumentId = (result: Omit<ClassResult, 'results' | 'fullMarks' | 'id'>): string => {
-    // Sanitize subject name for Firestore document ID
-    return `${result.academicYear}_${result.className}_${result.group || 'none'}_${result.subject.replace(/[^a-zA-Z0-9]/g, '-')}`;
+export const getDocumentId = (result: Omit<ClassResult, 'results' | 'fullMarks' | 'id'>): string => {
+    // Sanitize subject name for Firestore document ID. Allow letters and numbers from any language.
+    const sanitizedSubject = result.subject.replace(/[^\p{L}\p{N}]+/gu, '-');
+    return `${result.academicYear}_${result.className}_${result.group || 'none'}_${sanitizedSubject}`;
 }
 
 export const saveClassResults = async (db: Firestore, newResult: ClassResult) => {
@@ -57,7 +58,7 @@ export const saveClassResults = async (db: Firestore, newResult: ClassResult) =>
       const cleanedResult: { [key: string]: any } = {};
       Object.keys(studentResult).forEach((keyStr) => {
         const key = keyStr as keyof StudentResult;
-        if (studentResult[key] !== undefined) {
+        if (studentResult[key] !== undefined && studentResult[key] !== null) {
           cleanedResult[key] = studentResult[key];
         }
       });
@@ -65,7 +66,7 @@ export const saveClassResults = async (db: Firestore, newResult: ClassResult) =>
     });
   }
 
-  return setDoc(docRef, dataToSave)
+  return setDoc(docRef, dataToSave, { merge: true })
     .catch(async (serverError) => {
       console.error("Error saving results:", serverError);
       const permissionError = new FirestorePermissionError({
