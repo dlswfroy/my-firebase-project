@@ -8,7 +8,7 @@ import { Student } from '@/lib/student-data';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { getAttendanceForDate } from '@/lib/attendance-data';
 import { format } from 'date-fns';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, FirestoreError } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -19,12 +19,13 @@ export default function Home() {
   const [absentStudents, setAbsentStudents] = useState(0);
   const { selectedYear } = useAcademicYear();
   const db = useFirestore();
+  const { user } = useUser();
   
   // For now, let's keep these as static
   const totalTeachers = 0;
 
   useEffect(() => {
-      if (!db) return;
+      if (!db || !user) return;
 
       const studentsQuery = query(collection(db, 'students'), where('academicYear', '==', selectedYear));
       
@@ -72,7 +73,7 @@ export default function Home() {
 
       return () => unsubscribe();
 
-  }, [selectedYear, db]);
+  }, [selectedYear, db, user]);
 
 
   return (

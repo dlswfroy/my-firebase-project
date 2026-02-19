@@ -8,7 +8,7 @@ import { getAttendanceFromStorage, DailyAttendance } from '@/lib/attendance-data
 import { useEffect, useState, useMemo } from 'react';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -24,11 +24,12 @@ interface StudentReport {
 const ReportSheet = ({ classId, students }: { classId: string, students: Student[] }) => {
     const { selectedYear } = useAcademicYear();
     const db = useFirestore();
+    const { user } = useUser();
     const [reportData, setReportData] = useState<StudentReport[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!db) return;
+        if (!db || !user) return;
 
         const fetchAttendance = async () => {
             const allAttendance = (await getAttendanceFromStorage(db)).filter(
@@ -64,7 +65,7 @@ const ReportSheet = ({ classId, students }: { classId: string, students: Student
 
         fetchAttendance();
 
-    }, [classId, students, selectedYear, db]);
+    }, [classId, students, selectedYear, db, user]);
 
      if (isLoading) {
         return <p className="text-center p-8">লোড হচ্ছে...</p>
@@ -121,9 +122,10 @@ export default function AttendanceReportPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const db = useFirestore();
+  const { user } = useUser();
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !user) return;
     setIsLoading(true);
     const studentsQuery = query(
         collection(db, "students"),
@@ -148,7 +150,7 @@ export default function AttendanceReportPage() {
     });
 
     return () => unsubscribe();
-  }, [db, toast]);
+  }, [db, toast, user]);
 
 
   const studentsForYear = useMemo(() => {

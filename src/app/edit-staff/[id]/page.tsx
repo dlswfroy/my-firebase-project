@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,6 +35,7 @@ export default function EditStaffPage() {
     const params = useParams();
     const { toast } = useToast();
     const db = useFirestore();
+    const { user } = useUser();
     
     const staffId = params.id as string;
 
@@ -43,7 +44,7 @@ export default function EditStaffPage() {
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!staffId || !db) return;
+        if (!staffId || !db || !user) return;
 
         const fetchStaff = async () => {
             setIsLoading(true);
@@ -61,7 +62,7 @@ export default function EditStaffPage() {
             setIsLoading(false);
         }
         fetchStaff();
-    }, [staffId, router, toast, db]);
+    }, [staffId, router, toast, db, user]);
 
     const handleInputChange = (field: keyof UpdateStaffData, value: any) => {
         if (!staff) return;

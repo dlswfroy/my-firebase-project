@@ -19,7 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Trash2, FileUp, Download, FilePen } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -36,6 +36,7 @@ export default function ResultsPage() {
     const { toast } = useToast();
     const { selectedYear } = useAcademicYear();
     const db = useFirestore();
+    const { user } = useUser();
     
     const [className, setClassName] = useState('');
     const [group, setGroup] = useState('');
@@ -62,7 +63,7 @@ export default function ResultsPage() {
     const groupMap: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
 
     useEffect(() => {
-      if (!db) return;
+      if (!db || !user) return;
       const studentsQuery = query(collection(db, "students"));
       const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
         const studentsData = querySnapshot.docs.map(doc => ({
@@ -79,11 +80,11 @@ export default function ResultsPage() {
           errorEmitter.emit('permission-error', permissionError);
       });
       return () => unsubscribe();
-    }, [db]);
+    }, [db, user]);
 
 
     const updateSavedResults = async () => {
-        if (!db) return;
+        if (!db || !user) return;
         const allResults = await getAllResults(db, selectedYear);
         setSavedResults(allResults);
     }
@@ -91,7 +92,7 @@ export default function ResultsPage() {
     useEffect(() => {
         updateSavedResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedYear, db]);
+    }, [selectedYear, db, user]);
 
     const groupedResults = useMemo(() => {
         if (savedResults.length === 0) return {};
@@ -154,7 +155,7 @@ export default function ResultsPage() {
     }, [subject, availableSubjects, studentsForClass.length]);
     
     const handleLoadStudents = async () => {
-        if (!className || !subject || !db) {
+        if (!className || !subject || !db || !user) {
             toast({ variant: 'destructive', title: 'তথ্য নির্বাচন করুন' });
             return;
         }

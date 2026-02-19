@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Student } from '@/lib/student-data';
 import { getFeeCollectionsForStudent, FeeCollection, FeeBreakdown } from '@/lib/fees-data';
 import { useAcademicYear } from '@/context/AcademicYearContext';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { NewTransactionData } from '@/lib/transactions-data';
 import { collection, doc, writeBatch, serverTimestamp, Timestamp, WithFieldValue, DocumentData } from 'firebase/firestore';
@@ -254,6 +254,7 @@ function FeeCollectionForm({ student, onSave, existingCollection, open, onOpenCh
 
 export function StudentFeeDialog({ student, open, onOpenChange, onFeeCollected }: { student: Student | null, open: boolean, onOpenChange: (open: boolean) => void, onFeeCollected: () => void }) {
     const db = useFirestore();
+    const { user } = useUser();
     const { selectedYear } = useAcademicYear();
     const { toast } = useToast();
 
@@ -266,12 +267,12 @@ export function StudentFeeDialog({ student, open, onOpenChange, onFeeCollected }
     const studentId = student?.id;
 
     const fetchFeeData = useCallback(async () => {
-        if (!db || !studentId) return;
+        if (!db || !studentId || !user) return;
         setIsLoading(true);
         const collections = await getFeeCollectionsForStudent(db, studentId, selectedYear);
         setFeeCollections(collections);
         setIsLoading(false);
-    }, [db, studentId, selectedYear]);
+    }, [db, studentId, selectedYear, user]);
 
     useEffect(() => {
         if (open && studentId) {

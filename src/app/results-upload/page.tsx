@@ -14,7 +14,7 @@ import { saveClassResults, getResultsForClass, getDocumentId, ClassResult, Stude
 import { Student } from '@/lib/student-data';
 import * as XLSX from 'xlsx';
 import { Download, FileUp } from 'lucide-react';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, onSnapshot, query, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -24,6 +24,7 @@ export default function ResultsBulkUploadPage() {
     const { toast } = useToast();
     const { selectedYear } = useAcademicYear();
     const db = useFirestore();
+    const { user } = useUser();
     
     const [className, setClassName] = useState('');
     const [group, setGroup] = useState('');
@@ -37,7 +38,7 @@ export default function ResultsBulkUploadPage() {
     }, []);
 
     useEffect(() => {
-        if (!db) return;
+        if (!db || !user) return;
         const studentsQuery = query(collection(db, "students"));
         const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
             const studentsData = querySnapshot.docs.map(doc => ({
@@ -54,7 +55,7 @@ export default function ResultsBulkUploadPage() {
             errorEmitter.emit('permission-error', permissionError);
         });
         return () => unsubscribe();
-    }, [db]);
+    }, [db, user]);
 
     const handleDownloadSample = () => {
         if (!className) {

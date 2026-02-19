@@ -32,7 +32,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { Separator } from '@/components/ui/separator';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -45,6 +45,7 @@ export default function StudentListPage() {
   const { selectedYear } = useAcademicYear();
   const [studentToView, setStudentToView] = useState<Student | null>(null);
   const db = useFirestore();
+  const { user } = useUser();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function StudentListPage() {
   }, []);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !user) return;
     setIsLoading(true);
 
     const studentsQuery = query(
@@ -78,7 +79,7 @@ export default function StudentListPage() {
     });
 
     return () => unsubscribe();
-  }, [db, toast]);
+  }, [db, toast, user]);
 
   const studentsForYear = useMemo(() => {
     return allStudents.filter(student => student.academicYear === selectedYear);

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import Image from 'next/image';
 import { useSchoolInfo } from '@/context/SchoolInfoContext';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, onSnapshot, query, FirestoreError } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -24,6 +24,7 @@ export default function MarksheetPage() {
     const searchParams = useSearchParams();
     const studentId = params.id as string;
     const db = useFirestore();
+    const { user } = useUser();
     const { schoolInfo } = useSchoolInfo();
 
     const [student, setStudent] = useState<Student | null>(null);
@@ -35,7 +36,7 @@ export default function MarksheetPage() {
     const academicYear = searchParams.get('academicYear');
 
     useEffect(() => {
-      if (!db) return;
+      if (!db || !user) return;
       const studentsQuery = query(collection(db, "students"));
       const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
         const studentsData = querySnapshot.docs.map(doc => ({
@@ -52,12 +53,12 @@ export default function MarksheetPage() {
           errorEmitter.emit('permission-error', permissionError);
       });
       return () => unsubscribe();
-    }, [db]);
+    }, [db, user]);
 
 
     useEffect(() => {
         const processMarks = async () => {
-            if (!studentId || !academicYear || !db || allStudents.length === 0) {
+            if (!studentId || !academicYear || !db || allStudents.length === 0 || !user) {
                 return;
             }
 
@@ -118,7 +119,7 @@ export default function MarksheetPage() {
         setIsLoading(true);
         processMarks();
 
-    }, [studentId, academicYear, db, allStudents]);
+    }, [studentId, academicYear, db, allStudents, user]);
 
     
     const renderMeritPosition = (position?: number) => {

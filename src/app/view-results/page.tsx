@@ -29,7 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { BookOpen } from 'lucide-react';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { collection, onSnapshot, query, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -39,6 +39,7 @@ export default function ViewResultsPage() {
     const { toast } = useToast();
     const { selectedYear } = useAcademicYear();
     const db = useFirestore();
+    const { user } = useUser();
     
     const [className, setClassName] = useState('');
     const [group, setGroup] = useState('');
@@ -54,7 +55,7 @@ export default function ViewResultsPage() {
     }, []);
 
     useEffect(() => {
-      if (!db) return;
+      if (!db || !user) return;
       const studentsQuery = query(collection(db, "students"));
       const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
         const studentsData = querySnapshot.docs.map(doc => ({
@@ -71,7 +72,7 @@ export default function ViewResultsPage() {
           errorEmitter.emit('permission-error', permissionError);
       });
       return () => unsubscribe();
-    }, [db]);
+    }, [db, user]);
 
     const handleViewResults = async () => {
         if (!className || !db) {

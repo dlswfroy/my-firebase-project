@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useAcademicYear } from '@/context/AcademicYearContext';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DatePicker } from '@/components/ui/date-picker';
 
@@ -37,6 +37,7 @@ export default function EditStudentPage() {
     const { toast } = useToast();
     const { availableYears } = useAcademicYear();
     const db = useFirestore();
+    const { user } = useUser();
     
     const studentId = params.id as string;
 
@@ -51,7 +52,7 @@ export default function EditStudentPage() {
     }, []);
 
     useEffect(() => {
-        if (!studentId || !db) return;
+        if (!studentId || !db || !user) return;
 
         const fetchStudent = async () => {
             setIsLoading(true);
@@ -70,7 +71,7 @@ export default function EditStudentPage() {
             setIsLoading(false);
         }
         fetchStudent();
-    }, [studentId, router, toast, db]);
+    }, [studentId, router, toast, db, user]);
 
      useEffect(() => {
         if (!student) return;
