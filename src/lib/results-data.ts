@@ -45,11 +45,25 @@ export const saveClassResults = async (db: Firestore, newResult: ClassResult) =>
   const dataToSave: { [key: string]: any } = { ...newResult };
   delete dataToSave.id;
 
+  // Clean up top-level undefined properties and nested ones in the results array
   Object.keys(dataToSave).forEach(key => {
     if (dataToSave[key] === undefined) {
       delete dataToSave[key];
     }
   });
+
+  if (dataToSave.results && Array.isArray(dataToSave.results)) {
+    dataToSave.results = dataToSave.results.map((studentResult: StudentResult) => {
+      const cleanedResult: { [key: string]: any } = {};
+      Object.keys(studentResult).forEach((keyStr) => {
+        const key = keyStr as keyof StudentResult;
+        if (studentResult[key] !== undefined) {
+          cleanedResult[key] = studentResult[key];
+        }
+      });
+      return cleanedResult;
+    });
+  }
 
   return setDoc(docRef, dataToSave)
     .catch(async (serverError) => {
@@ -78,7 +92,7 @@ export const getResultsForClass = async (
         if (docSnap.exists()) {
             const data = { id: docSnap.id, ...docSnap.data() } as ClassResult;
             if (data.subject === 'ধর্ম শিক্ষা') {
-                data.subject = 'ধর্ম ও নৈতিক শিক্ষা';
+                return { ...data, subject: 'ধর্ম ও নৈতিক শিক্ষা' };
             }
             return data;
         }
