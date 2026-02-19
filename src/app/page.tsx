@@ -17,18 +17,17 @@ export default function Home() {
   const [totalStudents, setTotalStudents] = useState(0);
   const [presentStudents, setPresentStudents] = useState(0);
   const [absentStudents, setAbsentStudents] = useState(0);
+  const [totalTeachers, setTotalTeachers] = useState(0);
   const { selectedYear } = useAcademicYear();
   const db = useFirestore();
   
-  // For now, let's keep these as static
-  const totalTeachers = 0;
-
   useEffect(() => {
       if (!db) return;
 
+      // Students
       const studentsQuery = query(collection(db, 'students'), where('academicYear', '==', selectedYear));
       
-      const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
+      const unsubscribeStudents = onSnapshot(studentsQuery, (querySnapshot) => {
         const studentsForYear = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Student[];
         setTotalStudents(studentsForYear.length);
         
@@ -70,7 +69,23 @@ export default function Home() {
         errorEmitter.emit('permission-error', permissionError);
       });
 
-      return () => unsubscribe();
+      // Teachers
+      const staffQuery = query(collection(db, 'staff'), where('isActive', '==', true), where('staffType', '==', 'teacher'));
+      const unsubscribeStaff = onSnapshot(staffQuery, (querySnapshot) => {
+        setTotalTeachers(querySnapshot.size);
+      },
+      async (error: FirestoreError) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'staff',
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+
+      return () => {
+        unsubscribeStudents();
+        unsubscribeStaff();
+      };
 
   }, [selectedYear, db]);
 
@@ -123,7 +138,7 @@ export default function Home() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                শিক্ষক
+                মোট শিক্ষক
               </CardTitle>
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
