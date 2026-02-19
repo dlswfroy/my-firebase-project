@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "A student in the school",
+      "type": "object",
+      "properties": {
+        "roll": { "type": "number" },
+        "className": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "studentNameBn": { "type": "string" },
+        "studentNameEn": { "type": "string" },
+        "fatherNameBn": { "type": "string" },
+        "fatherNameEn": { "type": "string" },
+        "motherNameBn": { "type": "string" },
+        "motherNameEn": { "type": "string" },
+        "dob": { "type": "string", "format": "date-time" },
+        "birthRegNo": { "type": "string" },
+        "guardianMobile": { "type": "string" },
+        "studentMobile": { "type": "string" },
+        "fatherNid": { "type": "string" },
+        "motherNid": { "type": "string" },
+        "gender": { "type": "string" },
+        "religion": { "type": "string" },
+        "group": { "type": "string" },
+        "optionalSubject": { "type": "string" },
+        "presentVillage": { "type": "string" },
+        "presentUnion": { "type": "string" },
+        "presentPostOffice": { "type": "string" },
+        "presentUpazila": { "type": "string" },
+        "presentDistrict": { "type": "string" },
+        "permanentVillage": { "type": "string" },
+        "permanentUnion": { "type": "string" },
+        "permanentPostOffice": { "type": "string" },
+        "permanentUpazila": { "type": "string" },
+        "permanentDistrict": { "type": "string" },
+        "photoUrl": { "type": "string" }
+      },
+      "required": ["roll", "className", "academicYear", "studentNameBn", "fatherNameBn", "motherNameBn", "photoUrl"]
+    }
+  },
+  "auth": {
+    "providers": ["anonymous"]
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/student" },
+      "description": "Stores individual student records."
+    }
+  }
+}
