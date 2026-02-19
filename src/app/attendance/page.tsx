@@ -88,7 +88,7 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
 
         saveDailyAttendance(db, dailyAttendance).then(() => {
             setSavedAttendance(dailyAttendance);
-            toast({ title: "হাজিরা সেভ হয়েছে।", description: `শ্রেণি ${classId.toLocaleString('bn-BD')} এর জন্য আজকের হাজিরা সফলভাবে সেভ হয়েছে।` });
+            toast({ title: "হাজিরা সেভ হয়েছে" });
         }).catch(() => {
             // Error is handled by FirebaseErrorListener
         });
@@ -402,13 +402,13 @@ export default function AttendancePage() {
     }, [db, toast]);
     
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background">
+        <div className="flex min-h-screen w-full flex-col bg-lime-50">
             <Header />
             <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
                 <Card>
                     <CardHeader>
                         <CardTitle>হাজিরা</CardTitle>
-                        {isClient && <CardDescription>শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</CardDescription>}
+                        {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (

@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, FileUp, Download } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 import { addStudent, updateStudent, NewStudentData } from '@/lib/student-data';
 import { getSubjects, Subject } from '@/lib/subjects';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -121,7 +121,6 @@ export default function AddStudentPage() {
             toast({
                 variant: "destructive",
                 title: "ছবি আবশ্যক",
-                description: "অনুগ্রহ করে একটি ছবি আপলোড করুন।",
             });
             return;
         }
@@ -130,7 +129,6 @@ export default function AddStudentPage() {
             toast({
                 variant: "destructive",
                 title: "শিক্ষাবর্ষ আবশ্যক",
-                description: "অনুগ্রহ করে একটি শিক্ষাবর্ষ নির্বাচন করুন।",
             });
             return;
         }
@@ -139,7 +137,6 @@ export default function AddStudentPage() {
             toast({
                 variant: "destructive",
                 title: "শ্রেণি আবশ্যক",
-                description: "অনুগ্রহ করে একটি শ্রেণি নির্বাচন করুন।",
             });
             return;
         }
@@ -147,7 +144,6 @@ export default function AddStudentPage() {
         addStudent(db, student).then(() => {
             toast({
                 title: "শিক্ষার্থী যোগ হয়েছে",
-                description: "নতুন শিক্ষার্থী সফলভাবে তালিকায় যোগ করা হয়েছে।",
             });
             router.push('/student-list');
         }).catch(() => {
@@ -211,7 +207,6 @@ export default function AddStudentPage() {
                     toast({
                         variant: "destructive",
                         title: "ফাইল খালি",
-                        description: "আপনার আপলোড করা ফাইলে কোনো তথ্য নেই।",
                     });
                     return;
                 }
@@ -408,7 +403,7 @@ export default function AddStudentPage() {
     };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
+    <div className="flex min-h-screen w-full flex-col bg-green-50">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Card>
@@ -445,7 +440,7 @@ export default function AddStudentPage() {
                           <Label htmlFor="academic-year">শিক্ষাবর্ষ</Label>
                           <Select required value={student.academicYear || ''} onValueChange={value => handleInputChange('academicYear', value)}>
                               <SelectTrigger id="academic-year" name="academic-year">
-                                  <SelectValue placeholder="শিক্ষাবর্ষ নির্বাচন করুন" />
+                                  <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                   {availableYears.map(year => (
@@ -458,7 +453,7 @@ export default function AddStudentPage() {
                           <Label htmlFor="class">শ্রেণি</Label>
                           <Select required value={student.className} onValueChange={value => handleInputChange('className', value)}>
                               <SelectTrigger id="class" name="class">
-                                  <SelectValue placeholder="শ্রেণি নির্বাচন করুন" />
+                                  <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                   <SelectItem value="6">৬ষ্ঠ</SelectItem>
@@ -475,7 +470,7 @@ export default function AddStudentPage() {
                               <Label htmlFor="group">গ্রুপ</Label>
                               <Select value={student.group || ''} onValueChange={value => handleInputChange('group', value)}>
                                   <SelectTrigger id="group" name="group">
-                                      <SelectValue placeholder="গ্রুপ নির্বাচন করুন (যদি থাকে)" />
+                                      <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
                                       <SelectItem value="science">বিজ্ঞান</SelectItem>
@@ -488,7 +483,7 @@ export default function AddStudentPage() {
                               <Label htmlFor="optional-subject">ঐচ্ছিক বিষয় (৪র্থ)</Label>
                               <Select value={student.optionalSubject || ''} onValueChange={value => handleInputChange('optionalSubject', value)} disabled={optionalSubjects.length === 0}>
                                   <SelectTrigger id="optional-subject" name="optional-subject">
-                                      <SelectValue placeholder="ঐচ্ছিক বিষয় নির্বাচন করুন" />
+                                      <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
                                       {optionalSubjects.map(sub => (
@@ -524,7 +519,7 @@ export default function AddStudentPage() {
                       <div className="space-y-2">
                           <Label htmlFor="gender">লিঙ্গ</Label>
                           <Select value={student.gender || ''} onValueChange={value => handleInputChange('gender', value)}>
-                              <SelectTrigger id="gender" name="gender"><SelectValue placeholder="লিঙ্গ নির্বাচন করুন" /></SelectTrigger>
+                              <SelectTrigger id="gender" name="gender"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                   <SelectItem value="male">পুরুষ</SelectItem>
                                   <SelectItem value="female">মহিলা</SelectItem>
@@ -535,7 +530,7 @@ export default function AddStudentPage() {
                       <div className="space-y-2">
                           <Label htmlFor="religion">ধর্ম</Label>
                           <Select value={student.religion || ''} onValueChange={value => handleInputChange('religion', value)}>
-                              <SelectTrigger id="religion" name="religion"><SelectValue placeholder="ধর্ম নির্বাচন করুন" /></SelectTrigger>
+                              <SelectTrigger id="religion" name="religion"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                   <SelectItem value="islam">ইসলাম</SelectItem>
                                   <SelectItem value="hinduism">হিন্দু</SelectItem>

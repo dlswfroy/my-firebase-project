@@ -176,7 +176,7 @@ const NewTransactionTab = ({ onTransactionAdded }: { onTransactionAdded: () => v
 
         try {
             await addTransaction(db, newTransaction);
-            toast({ title: 'লেনদেন যোগ হয়েছে।', description: 'নতুন লেনদেনটি সফলভাবে যোগ করা হয়েছে।' });
+            toast({ title: 'লেনদেন যোগ হয়েছে।' });
             // Reset form
             setDate(new Date());
             setAccountHead('');
@@ -216,7 +216,7 @@ const NewTransactionTab = ({ onTransactionAdded }: { onTransactionAdded: () => v
                          <div className="space-y-2">
                             <Label htmlFor="account-head">খাত</Label>
                             <Select value={accountHead} onValueChange={setAccountHead}>
-                                <SelectTrigger id="account-head"><SelectValue placeholder="খাত নির্বাচন করুন" /></SelectTrigger>
+                                <SelectTrigger id="account-head"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     {(type === 'income' ? incomeHeads : expenseHeads).map(head => (
                                         <SelectItem key={head} value={head}>{head}</SelectItem>
@@ -431,7 +431,7 @@ export default function AccountsPage() {
   }, [fetchTransactions]);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
+    <div className="flex min-h-screen w-full flex-col bg-teal-50">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Card>

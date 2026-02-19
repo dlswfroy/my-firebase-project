@@ -72,7 +72,6 @@ export default function AddStaffPage() {
             toast({
                 variant: "destructive",
                 title: "ছবি আবশ্যক",
-                description: "অনুগ্রহ করে একটি ছবি আপলোড করুন।",
             });
             return;
         }
@@ -80,7 +79,6 @@ export default function AddStaffPage() {
         addStaff(db, staff).then(() => {
             toast({
                 title: "রেকর্ড যোগ হয়েছে",
-                description: "নতুন শিক্ষক/কর্মচারীর তথ্য সফলভাবে তালিকায় যোগ করা হয়েছে।",
             });
             router.push('/staff');
         }).catch(() => {
@@ -89,7 +87,7 @@ export default function AddStaffPage() {
     };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
+    <div className="flex min-h-screen w-full flex-col bg-red-50">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Card>
@@ -121,7 +119,7 @@ export default function AddStaffPage() {
                         <div className="space-y-2">
                             <Label htmlFor="staffType">ধরণ</Label>
                             <Select required value={staff.staffType} onValueChange={(value: 'teacher' | 'staff') => handleInputChange('staffType', value)}>
-                                <SelectTrigger id="staffType" name="staffType"><SelectValue placeholder="ধরণ নির্বাচন করুন" /></SelectTrigger>
+                                <SelectTrigger id="staffType" name="staffType"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="teacher">শিক্ষক</SelectItem>
                                     <SelectItem value="staff">কর্মচারী</SelectItem>

@@ -152,7 +152,7 @@ export default function MarksheetPage() {
     const studentOptionalSubject = student.optionalSubject;
 
     return (
-        <div className="bg-gray-100 p-4 font-sans">
+        <div className="bg-slate-100 p-4 font-sans">
             <div className="fixed top-4 right-4 no-print">
                 <Button onClick={() => window.print()}>
                     <Printer className="mr-2 h-4 w-4" />

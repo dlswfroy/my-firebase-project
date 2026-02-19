@@ -58,7 +58,6 @@ function SchoolInfoSettings() {
         updateSchoolInfo(info).then(() => {
             toast({
                 title: 'তথ্য সংরক্ষিতক্ষিত হয়েছে',
-                description: 'প্রতিষ্ঠানের তথ্য সফলভাবে আপডেট করা হয়েছে।',
             });
         }).catch(() => {
             // Error handled by listener
@@ -70,7 +69,6 @@ function SchoolInfoSettings() {
             <Card>
                 <CardHeader>
                     <Skeleton className="h-6 w-1/3" />
-                    <Skeleton className="h-4 w-2/3" />
                 </CardHeader>
                 <CardContent className="space-y-8">
                     <div className="space-y-4">
@@ -191,7 +189,6 @@ function HolidaySettings() {
             toast({
                 variant: 'destructive',
                 title: 'তথ্য অসম্পূর্ণ',
-                description: 'অনুগ্রহ করে তারিখ এবং ছুটির কারণ উল্লেখ করুন।',
             });
             return;
         }
@@ -205,7 +202,6 @@ function HolidaySettings() {
             if (result) {
                 toast({
                     title: 'ছুটি যোগ হয়েছে',
-                    description: `${format(newHolidayDate, "d MMMM yyyy", { locale: bn })} তারিখটি ছুটির তালিকাভুক্ত হয়েছে।`,
                 });
                 setNewHolidayDate(undefined);
                 setNewHolidayDescription('');
@@ -226,7 +222,6 @@ function HolidaySettings() {
         deleteHoliday(db, id).then(() => {
             toast({
                 title: 'ছুটি মুছে ফেলা হয়েছে',
-                description: 'নির্বাচিত ছুটিটি তালিকা থেকে মুছে ফেলা হয়েছে।',
             });
         }).catch(() => {
             // Error handled by listener
@@ -325,7 +320,7 @@ export default function SettingsPage() {
     }, []);
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background">
+        <div className="flex min-h-screen w-full flex-col bg-indigo-50">
             <Header />
             <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
                 <Card>

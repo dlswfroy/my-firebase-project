@@ -80,7 +80,6 @@ export default function StaffListPage() {
     deleteStaff(db, staffId).then(() => {
         toast({
             title: "রেকর্ড ডিলিট হয়েছে",
-            description: "শিক্ষক/কর্মচারীর তথ্য তালিকা থেকে মুছে ফেলা হয়েছে।",
         });
     }).catch(() => {
         // The error is handled by the global error handler
@@ -91,7 +90,7 @@ export default function StaffListPage() {
 
   return (
     <>
-    <div className="flex min-h-screen w-full flex-col bg-background">
+    <div className="flex min-h-screen w-full flex-col bg-orange-50">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Card>

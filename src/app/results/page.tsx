@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from "@/hooks/use-toast";
 import { useAcademicYear } from '@/context/AcademicYearContext';
-import { Student, NewStudentData } from '@/lib/student-data';
+import { Student, NewStudentData, addStudent } from '@/lib/student-data';
 import { getSubjects, Subject as SubjectType } from '@/lib/subjects';
 import { saveClassResults, getResultsForClass, getAllResults, deleteClassResult, ClassResult, StudentResult } from '@/lib/results-data';
 import { processStudentResults, StudentProcessedResult } from '@/lib/results-calculation';
@@ -241,7 +241,6 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
             toast({
                 variant: "destructive",
                 title: "প্রথমে শ্রেণি ও বিষয় নির্বাচন করুন",
-                description: "Excel ফাইল আপলোড করার আগে অনুগ্রহ করে শ্রেণি এবং বিষয় নির্বাচন করুন।",
             });
             return;
         }
@@ -264,7 +263,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
                 }
                 
                 if (studentsForClass.length === 0) {
-                    toast({ variant: "destructive", title: "শিক্ষার্থী লোড করা হয়নি", description: "ফাইল আপলোড করার আগে 'শিক্ষার্থী লোড করুন' বাটনে ক্লিক করুন।" });
+                    toast({ variant: "destructive", title: "শিক্ষার্থী লোড করা হয়নি" });
                     return;
                 }
 
@@ -356,7 +355,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
                 <div className="space-y-2">
                     <Label htmlFor="class">শ্রেণি</Label>
                     <Select value={className} onValueChange={setClassName}>
-                        <SelectTrigger id="class"><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
+                        <SelectTrigger id="class"><SelectValue /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="6">৬ষ্ঠ</SelectItem>
                             <SelectItem value="7">৭ম</SelectItem>
@@ -371,7 +370,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
                     <div className="space-y-2">
                         <Label htmlFor="group">শাখা/গ্রুপ</Label>
                         <Select value={group} onValueChange={setGroup}>
-                            <SelectTrigger id="group"><SelectValue placeholder="শাখা নির্বাচন" /></SelectTrigger>
+                            <SelectTrigger id="group"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="science">বিজ্ঞান</SelectItem>
                                 <SelectItem value="arts">মানবিক</SelectItem>
@@ -386,7 +385,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
                 <div className="space-y-2">
                     <Label htmlFor="subject">বিষয়</Label>
                     <Select value={subject} onValueChange={setSubject} disabled={!className}>
-                        <SelectTrigger id="subject"><SelectValue placeholder="বিষয় নির্বাচন" /></SelectTrigger>
+                        <SelectTrigger id="subject"><SelectValue /></SelectTrigger>
                         <SelectContent>
                             {availableSubjects.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
                         </SelectContent>
@@ -561,7 +560,6 @@ const ResultSheetTab = ({ allStudents }: { allStudents: Student[] }) => {
             toast({
                 variant: 'destructive',
                 title: 'শ্রেণি নির্বাচন করুন',
-                description: 'ফলাফল দেখার জন্য অনুগ্রহ করে একটি শ্রেণি নির্বাচন করুন।',
             });
             return;
         }
@@ -603,7 +601,6 @@ const ResultSheetTab = ({ allStudents }: { allStudents: Student[] }) => {
             toast({
                 variant: 'destructive',
                 title: 'কোনো ফলাফল নেই',
-                description: 'শিক্ষার্থী উত্তীর্ণ করার জন্য প্রথমে ফলাফল দেখুন।',
             });
             return;
         }
@@ -707,7 +704,7 @@ const ResultSheetTab = ({ allStudents }: { allStudents: Student[] }) => {
                     <div className="space-y-2">
                         <Label htmlFor="class-sheet">শ্রেণি</Label>
                         <Select value={className} onValueChange={c => { setClassName(c); setGroup(''); }}>
-                            <SelectTrigger id="class-sheet"><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
+                            <SelectTrigger id="class-sheet"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="6">৬ষ্ঠ</SelectItem>
                                 <SelectItem value="7">৭ম</SelectItem>
@@ -722,7 +719,7 @@ const ResultSheetTab = ({ allStudents }: { allStudents: Student[] }) => {
                         <div className="space-y-2">
                             <Label htmlFor="group-sheet">শাখা/গ্রুপ</Label>
                             <Select value={group} onValueChange={g => { setGroup(g); }}>
-                                <SelectTrigger id="group-sheet"><SelectValue placeholder="শাখা নির্বাচন" /></SelectTrigger>
+                                <SelectTrigger id="group-sheet"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="science">বিজ্ঞান</SelectItem>
                                     <SelectItem value="arts">মানবিক</SelectItem>
@@ -973,7 +970,6 @@ const BulkUploadTab = ({ allStudents }: { allStudents: Student[] }) => {
                      toast({
                         variant: 'destructive',
                         title: "কোনো শিক্ষার্থীর নম্বর পাওয়া যায়নি",
-                        description: "আপনার আপলোড করা ফাইলে রোল নম্বর এবং নির্বাচিত শ্রেণির শিক্ষার্থীদের মধ্যে কোনো মিল পাওয়া যায়নি।",
                     });
                     setIsLoading(false);
                     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -1024,7 +1020,7 @@ const BulkUploadTab = ({ allStudents }: { allStudents: Student[] }) => {
             <div className="space-y-2">
                 <Label htmlFor="class-upload">শ্রেণি</Label>
                 <Select value={className} onValueChange={setClassName}>
-                    <SelectTrigger id="class-upload"><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
+                    <SelectTrigger id="class-upload"><SelectValue /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="6">৬ষ্ঠ</SelectItem>
                         <SelectItem value="7">৭ম</SelectItem>
@@ -1038,7 +1034,7 @@ const BulkUploadTab = ({ allStudents }: { allStudents: Student[] }) => {
             <div className={`space-y-2 ${showGroupSelector ? '' : 'lg:hidden'}`}>
                 <Label htmlFor="group-upload">শাখা/গ্রুপ</Label>
                  <Select value={group || 'all'} onValueChange={(val) => setGroup(val === 'all' ? '' : val)} disabled={!showGroupSelector}>
-                    <SelectTrigger id="group-upload"><SelectValue placeholder="সকল গ্রুপ" /></SelectTrigger>
+                    <SelectTrigger id="group-upload"><SelectValue /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">সকল গ্রুপ</SelectItem>
                         <SelectItem value="science">বিজ্ঞান</SelectItem>
@@ -1095,7 +1091,7 @@ export default function ResultsPage() {
     }, [db]);
 
     return (
-        <div className="flex min-h-screen w-full flex-col bg-background">
+        <div className="flex min-h-screen w-full flex-col bg-emerald-50">
             <Header />
             <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
                 <Card>
