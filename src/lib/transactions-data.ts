@@ -6,7 +6,6 @@ import {
   deleteDoc,
   getDocs,
   query,
-  orderBy,
   where,
   serverTimestamp,
   Timestamp,
@@ -46,8 +45,7 @@ export const transactionFromDoc = (doc: DocumentData): Transaction => {
 export const getTransactions = async (db: Firestore, academicYear: string): Promise<Transaction[]> => {
     const transactionsQuery = query(
         collection(db, TRANSACTIONS_COLLECTION),
-        where("academicYear", "==", academicYear),
-        orderBy('createdAt', 'desc')
+        where("academicYear", "==", academicYear)
     );
     try {
         const querySnapshot = await getDocs(transactionsQuery);
