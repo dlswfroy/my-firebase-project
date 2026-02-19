@@ -20,7 +20,7 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-export interface MonthlyFee {
+export type MonthlyFee = {
   month: string;
   collectionDate?: Date;
   tuitionCurrent?: number;
@@ -29,15 +29,15 @@ export interface MonthlyFee {
   tuitionFine?: number;
   examFeeHalfYearly?: number;
   examFeeAnnual?: number;
-  examFeePre নির্বাচনী?: number;
-  examFee নির্বাচনী?: number;
+  examFeePreNirbachoni?: number;
+  examFeeNirbachoni?: number;
   sessionFee?: number;
   admissionFee?: number;
   scoutFee?: number;
   developmentFee?: number;
   libraryFee?: number;
   tiffinFee?: number;
-}
+};
 
 export type FeeCollection = {
   id: string; // studentId_academicYear
