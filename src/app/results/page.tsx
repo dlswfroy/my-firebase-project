@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -20,6 +21,7 @@ import * as XLSX from 'xlsx';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 type Marks = {
@@ -48,6 +50,11 @@ export default function ResultsPage() {
 
     const [savedResults, setSavedResults] = useState<ClassResult[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
     
     const classNamesMap: { [key: string]: string } = { '6': '৬ষ্ঠ', '7': '৭ম', '8': '৮ম', '9': '৯ম', '10': '১০ম' };
     const groupMap: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
@@ -272,58 +279,70 @@ export default function ResultsPage() {
                     </CardHeader>
                     <CardContent className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end p-4 border rounded-lg">
-                            <div className="space-y-2">
-                                <Label htmlFor="class">শ্রেণি</Label>
-                                <Select value={className} onValueChange={setClassName}>
-                                    <SelectTrigger id="class"><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="6">৬ষ্ঠ</SelectItem>
-                                        <SelectItem value="7">৭ম</SelectItem>
-                                        <SelectItem value="8">৮ম</SelectItem>
-                                        <SelectItem value="9">৯ম</SelectItem>
-                                        <SelectItem value="10">১০ম</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                             {!isClient ? (
+                                <>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <div className="space-y-2"><Skeleton className="h-5 w-16" /><Skeleton className="h-10 w-full" /></div>
+                                    <Skeleton className="h-10 w-full" />
+                                </>
+                            ) : (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="class">শ্রেণি</Label>
+                                        <Select value={className} onValueChange={setClassName}>
+                                            <SelectTrigger id="class"><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="6">৬ষ্ঠ</SelectItem>
+                                                <SelectItem value="7">৭ম</SelectItem>
+                                                <SelectItem value="8">৮ম</SelectItem>
+                                                <SelectItem value="9">৯ম</SelectItem>
+                                                <SelectItem value="10">১০ম</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
-                            {showGroupSelector && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="group">শাখা/গ্রুপ</Label>
-                                    <Select value={group} onValueChange={setGroup}>
-                                        <SelectTrigger id="group"><SelectValue placeholder="শাখা নির্বাচন" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="science">বিজ্ঞান</SelectItem>
-                                            <SelectItem value="arts">মানবিক</SelectItem>
-                                            <SelectItem value="commerce">ব্যবসায় শিক্ষা</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                    {showGroupSelector && (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="group">শাখা/গ্রুপ</Label>
+                                            <Select value={group} onValueChange={setGroup}>
+                                                <SelectTrigger id="group"><SelectValue placeholder="শাখা নির্বাচন" /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="science">বিজ্ঞান</SelectItem>
+                                                    <SelectItem value="arts">মানবিক</SelectItem>
+                                                    <SelectItem value="commerce">ব্যবসায় শিক্ষা</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="space-y-2">
+                                        <Label htmlFor="subject">বিষয়</Label>
+                                        <Select value={subject} onValueChange={setSubject} disabled={!className}>
+                                            <SelectTrigger id="subject"><SelectValue placeholder="বিষয় নির্বাচন" /></SelectTrigger>
+                                            <SelectContent>
+                                                {availableSubjects.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="full-marks">পূর্ণমান</Label>
+                                        <Input 
+                                            id="full-marks" 
+                                            type="number" 
+                                            placeholder="পূর্ণমান"
+                                            value={fullMarks || ''}
+                                            onChange={(e) => setFullMarks(e.target.value === '' ? undefined : parseInt(e.target.value))} 
+                                        />
+                                    </div>
+                                    
+                                    <Button onClick={handleLoadStudents} disabled={isLoadingStudents} className="w-full">
+                                        {isLoadingStudents ? 'লোড হচ্ছে...' : 'শিক্ষার্থী লোড করুন'}
+                                    </Button>
+                                </>
                             )}
-                            
-                            <div className="space-y-2">
-                                <Label htmlFor="subject">বিষয়</Label>
-                                <Select value={subject} onValueChange={setSubject} disabled={!className}>
-                                    <SelectTrigger id="subject"><SelectValue placeholder="বিষয় নির্বাচন" /></SelectTrigger>
-                                    <SelectContent>
-                                        {availableSubjects.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="full-marks">পূর্ণমান</Label>
-                                <Input 
-                                    id="full-marks" 
-                                    type="number" 
-                                    placeholder="পূর্ণমান"
-                                    value={fullMarks || ''}
-                                    onChange={(e) => setFullMarks(e.target.value === '' ? undefined : parseInt(e.target.value))} 
-                                />
-                            </div>
-                            
-                            <Button onClick={handleLoadStudents} disabled={isLoadingStudents} className="w-full">
-                                {isLoadingStudents ? 'লোড হচ্ছে...' : 'শিক্ষার্থী লোড করুন'}
-                            </Button>
                         </div>
                         
                         {studentsForClass.length > 0 && (
@@ -456,3 +475,5 @@ export default function ResultsPage() {
         </div>
     );
 }
+
+    
