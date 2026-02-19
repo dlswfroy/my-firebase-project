@@ -104,6 +104,32 @@
         }
       },
       "required": ["date", "academicYear", "className", "attendance"]
+    },
+     "feeCollection": {
+      "title": "Fee Collection",
+      "description": "Fee collection record for a student for a specific month and year.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "month": { "type": "string" },
+        "collectionDate": { "type": "string", "format": "date" },
+        "tuitionCurrent": { "type": "number" },
+        "tuitionAdvance": { "type": "number" },
+        "tuitionDue": { "type": "number" },
+        "tuitionFine": { "type": "number" },
+        "examFeeHalfYearly": { "type": "number" },
+        "examFeeAnnual": { "type": "number" },
+        "examFeePre নির্বাচনী": { "type": "number" },
+        "examFee নির্বাচনী": { "type": "number" },
+        "sessionFee": { "type": "number" },
+        "admissionFee": { "type": "number" },
+        "scoutFee": { "type": "number" },
+        "developmentFee": { "type": "number" },
+        "libraryFee": { "type": "number" },
+        "tiffinFee": { "type": "number" }
+      },
+      "required": ["studentId", "academicYear", "month"]
     }
   },
   "auth": {
@@ -133,6 +159,10 @@
     "/results/{resultId}": {
       "schema": { "$ref": "#/entities/result" },
       "description": "Stores results for a class in a particular subject."
+    },
+     "/feeCollections/{collectionId}": {
+      "schema": { "$ref": "#/entities/feeCollection" },
+      "description": "Stores fee collection records for students."
     }
   }
 }
