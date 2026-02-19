@@ -2,35 +2,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    match /students/{docId} {
+    match /students/{docId=**} {
       allow read, write: if true;
     }
 
-    match /staff/{docId} {
+    match /staff/{docId=**} {
       allow read, write: if true;
     }
 
-    match /holidays/{docId} {
+    match /holidays/{docId=**} {
       allow read, write: if true;
     }
 
-    match /attendance/{docId} {
+    match /attendance/{docId=**} {
       allow read, write: if true;
     }
 
-    match /results/{docId} {
+    match /results/{docId=**} {
       allow read, write: if true;
     }
     
-    match /feeCollections/{docId} {
+    match /feeCollections/{docId=**} {
       allow read, write: if true;
     }
 
-    match /transactions/{docId} {
+    match /transactions/{docId=**} {
       allow read, write: if true;
     }
 
-    match /school/info {
+    match /school/{docId=**} {
       allow read, write: if true;
     }
   }
