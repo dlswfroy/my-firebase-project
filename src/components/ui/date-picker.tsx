@@ -23,10 +23,8 @@ type DatePickerProps = {
 
 export function DatePicker({ value, onChange, triggerClassName, placeholder = "একটি তারিখ নির্বাচন করুন" }: DatePickerProps) {
   const [open, setOpen] = React.useState(false)
-  // Internal state for the picker before 'Set' is clicked
   const [displayDate, setDisplayDate] = React.useState<Date | undefined>(value)
 
-  // When the popover opens, sync the display date with the external value
   React.useEffect(() => {
     if (open) {
       setDisplayDate(value);
@@ -39,15 +37,13 @@ export function DatePicker({ value, onChange, triggerClassName, placeholder = "�
   }
   
   const handleCancel = () => {
-    setOpen(false); // Just close, don't revert internal state until next open
+    setOpen(false);
   }
 
   const handleClear = () => {
     onChange(undefined);
     setOpen(false);
   }
-  
-  const headerDate = displayDate || value || new Date();
   
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -65,10 +61,6 @@ export function DatePicker({ value, onChange, triggerClassName, placeholder = "�
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
-        <div className="bg-primary text-primary-foreground p-4 rounded-t-md">
-            <div className="text-lg font-semibold">{format(headerDate, "yyyy", { locale: bn })}</div>
-            <div className="text-3xl font-bold">{format(headerDate, "E, MMM d", { locale: bn })}</div>
-        </div>
         <Calendar
           mode="single"
           selected={displayDate}
@@ -76,7 +68,7 @@ export function DatePicker({ value, onChange, triggerClassName, placeholder = "�
           initialFocus
           locale={bn}
           fromYear={1950}
-          toYear={new Date().getFullYear() + 5}
+          toYear={new Date().getFullYear() + 10}
         />
         <div className="flex justify-end gap-2 p-2 border-t">
           <Button variant="ghost" onClick={handleClear}>মুছুন</Button>

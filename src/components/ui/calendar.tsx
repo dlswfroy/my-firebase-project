@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from "./scroll-area"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -21,8 +22,8 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
     useDayPicker()
 
   const currentYear = new Date().getFullYear()
-  const startYear = fromYear || currentYear - 100
-  const endYear = toYear || currentYear + 5
+  const startYear = fromYear || 1950
+  const endYear = toYear || currentYear + 10
 
   const years = Array.from(
     { length: endYear - startYear + 1 },
@@ -35,7 +36,7 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
   ]
 
   return (
-    <div className="flex justify-between items-center px-1 py-2">
+    <div className="flex justify-between items-center px-1 pt-2 pb-1">
       <div className="flex items-center gap-2">
         <Select
           value={String(displayMonth.getMonth())}
@@ -45,7 +46,7 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
             goToMonth(newDate)
           }}
         >
-          <SelectTrigger className="w-[120px] h-8 text-sm focus:ring-ring focus:ring-offset-0">
+          <SelectTrigger className="w-[120px] h-8 text-sm font-semibold focus:ring-0 focus:ring-offset-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -64,15 +65,17 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
             goToMonth(newDate)
           }}
         >
-          <SelectTrigger className="w-[100px] h-8 text-sm focus:ring-ring focus:ring-offset-0">
+          <SelectTrigger className="w-[100px] h-8 text-sm font-semibold focus:ring-0 focus:ring-offset-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {years.map((year) => (
-              <SelectItem key={year} value={String(year)}>
-                {year.toLocaleString("bn-BD")}
-              </SelectItem>
-            ))}
+            <ScrollArea className="h-72">
+                {years.map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year.toLocaleString("bn-BD")}
+                  </SelectItem>
+                ))}
+            </ScrollArea>
           </SelectContent>
         </Select>
       </div>
@@ -118,15 +121,15 @@ function Calendar({
         head_cell:
           "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-full [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-full last:[&:has([aria-selected])]:rounded-r-full focus-within:relative focus-within:z-20",
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-full"
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-primary text-primary-foreground rounded-md hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground rounded-md",
+          "bg-primary text-primary-foreground rounded-full hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_today: "bg-accent text-accent-foreground rounded-full",
         day_outside:
           "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
         day_disabled: "text-muted-foreground opacity-50",
