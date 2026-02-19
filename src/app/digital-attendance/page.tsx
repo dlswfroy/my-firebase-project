@@ -62,7 +62,7 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
         setAttendance(prev => new Map(prev).set(studentId, status));
     };
 
-    const handleSaveAttendance = async () => {
+    const handleSaveAttendance = () => {
         if (!db) return;
         if (isWeekend) {
             toast({ variant: "destructive", title: "আজ সাপ্তাহিক ছুটি।" });
@@ -85,9 +85,12 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
             attendance: attendanceData,
         };
 
-        await saveDailyAttendance(db, dailyAttendance);
-        setSavedAttendance(dailyAttendance);
-        toast({ title: "হাজিরা সেভ হয়েছে।", description: `শ্রেণি ${classId.toLocaleString('bn-BD')} এর জন্য আজকের হাজিরা সফলভাবে সেভ হয়েছে।` });
+        saveDailyAttendance(db, dailyAttendance).then(() => {
+            setSavedAttendance(dailyAttendance);
+            toast({ title: "হাজিরা সেভ হয়েছে।", description: `শ্রেণি ${classId.toLocaleString('bn-BD')} এর জন্য আজকের হাজিরা সফলভাবে সেভ হয়েছে।` });
+        }).catch(() => {
+            // Error is handled by FirebaseErrorListener
+        });
     };
 
     if (isLoading) {

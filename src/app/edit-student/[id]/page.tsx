@@ -143,38 +143,28 @@ export default function EditStudentPage() {
 
         const { id, ...updatedData } = student;
         
-        try {
-            await updateStudent(db, studentId, updatedData);
+        updateStudent(db, studentId, updatedData).then(() => {
             toast({
                 title: "তথ্য আপডেট হয়েছে",
                 description: "শিক্ষার্থীর তথ্য সফলভাবে আপডেট করা হয়েছে।",
             });
             router.push('/student-list');
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "আপডেট ব্যর্থ হয়েছে",
-                description: "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
-            });
-        }
+        }).catch(() => {
+            // Error handled by FirebaseErrorListener
+        });
     };
 
     const handleDelete = async () => {
         if (!db) return;
-        try {
-            await deleteStudent(db, studentId);
+        deleteStudent(db, studentId).then(() => {
             toast({
                 title: "ছাত্র ডিলিট করা হয়েছে",
                 description: "শিক্ষার্থীর তথ্য তালিকা থেকে মুছে ফেলা হয়েছে।",
             });
             router.push('/student-list');
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "ডিলিট ব্যর্থ হয়েছে",
-                description: "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
-            });
-        }
+        }).catch(() => {
+            // Error handled by FirebaseErrorListener
+        });
     }
     
     const handleSameAddress = (checked: boolean | string) => {

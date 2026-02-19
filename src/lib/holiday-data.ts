@@ -57,7 +57,7 @@ export const addHoliday = async (db: Firestore, holidayData: NewHolidayData) => 
       requestResourceData: holidayData,
     });
     errorEmitter.emit('permission-error', permissionError);
-    throw serverError;
+    throw permissionError;
   });
 };
 
@@ -70,7 +70,7 @@ export const deleteHoliday = async (db: Firestore, id: string): Promise<void> =>
       operation: 'delete',
     });
     errorEmitter.emit('permission-error', permissionError);
-    throw serverError;
+    throw permissionError;
   });
 };
 

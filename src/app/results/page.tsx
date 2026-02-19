@@ -207,24 +207,29 @@ export default function ResultsPage() {
             ...marks
         }));
 
-        await saveClassResults(db, {
+        saveClassResults(db, {
             academicYear: selectedYear,
             className,
             group: group || undefined,
             subject,
             fullMarks: fullMarks || selectedSubjectInfo?.fullMarks || 100,
             results: resultsData
+        }).then(() => {
+            updateSavedResults();
+            toast({ title: 'ফলাফল সেভ হয়েছে' });
+        }).catch(() => {
+            // Error handled by listener
         });
-        
-        await updateSavedResults();
-        toast({ title: 'ফলাফল সেভ হয়েছে' });
     };
 
     const handleDeleteResult = async (result: ClassResult) => {
         if (!db || !result.id) return;
-        await deleteClassResult(db, result.id);
-        await updateSavedResults();
-        toast({ title: 'ফলাফল মোছা হয়েছে' });
+        deleteClassResult(db, result.id).then(() => {
+            updateSavedResults();
+            toast({ title: 'ফলাফল মোছা হয়েছে' });
+        }).catch(() => {
+            // Error handled by listener
+        });
     }
 
     const handleEditClick = (resultToEdit: ClassResult) => {

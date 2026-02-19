@@ -74,20 +74,15 @@ export default function AddStaffPage() {
             return;
         }
         
-        try {
-            await addStaff(db, staff);
+        addStaff(db, staff).then(() => {
             toast({
                 title: "রেকর্ড যোগ হয়েছে",
                 description: "নতুন শিক্ষক/কর্মচারীর তথ্য সফলভাবে তালিকায় যোগ করা হয়েছে।",
             });
             router.push('/staff');
-        } catch (error) {
-             toast({
-                variant: "destructive",
-                title: "যোগ করা সম্ভব হয়নি",
-                description: "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
-            });
-        }
+        }).catch(() => {
+            // FirebaseErrorListener will handle the toast.
+        });
     };
 
   return (

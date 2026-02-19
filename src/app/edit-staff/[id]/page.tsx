@@ -94,34 +94,26 @@ export default function EditStaffPage() {
 
         const { id, ...updatedData } = staff;
         
-        try {
-            await updateStaff(db, staffId, updatedData);
+        updateStaff(db, staffId, updatedData).then(() => {
             toast({
                 title: "তথ্য আপডেট হয়েছে",
             });
             router.push('/staff');
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "আপডেট ব্যর্থ হয়েছে",
-            });
-        }
+        }).catch(() => {
+            // Error handled by FirebaseErrorListener
+        });
     };
 
     const handleDelete = async () => {
         if (!db) return;
-        try {
-            await deleteStaff(db, staffId);
+        deleteStaff(db, staffId).then(() => {
             toast({
                 title: "রেকর্ড ডিলিট করা হয়েছে",
             });
             router.push('/staff');
-        } catch (error) {
-            toast({
-                variant: "destructive",
-                title: "ডিলিট ব্যর্থ হয়েছে",
-            });
-        }
+        }).catch(() => {
+            // Error handled by FirebaseErrorListener
+        });
     }
     
   if (isLoading || !staff) {

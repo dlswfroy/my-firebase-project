@@ -43,9 +43,9 @@ export function SchoolInfoProvider({ children }: { children: ReactNode }) {
   }, [db]);
 
   const updateSchoolInfo = useCallback(async (newInfo: Partial<SchoolInfo>) => {
-    if (!db) return;
+    if (!db) return Promise.reject("Firestore not initialized");
     const updatedInfo = { ...schoolInfo, ...newInfo };
-    await saveSchoolInfo(db, updatedInfo);
+    return saveSchoolInfo(db, updatedInfo);
     // The onSnapshot listener will update the state automatically
   }, [db, schoolInfo]);
 

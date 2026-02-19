@@ -61,7 +61,7 @@ export const saveDailyAttendance = async (db: Firestore, record: DailyAttendance
         requestResourceData: record,
       });
       errorEmitter.emit('permission-error', permissionError);
-      throw serverError;
+      throw permissionError;
     });
   } else {
     const collectionRef = collection(db, ATTENDANCE_COLLECTION);
@@ -73,7 +73,7 @@ export const saveDailyAttendance = async (db: Firestore, record: DailyAttendance
         requestResourceData: record,
       });
       errorEmitter.emit('permission-error', permissionError);
-      throw serverError;
+      throw permissionError;
     });
   }
 };

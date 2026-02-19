@@ -54,11 +54,14 @@ function SchoolInfoSettings() {
         }
     };
 
-    const handleSaveChanges = async () => {
-        await updateSchoolInfo(info);
-        toast({
-            title: 'তথ্য সংরক্ষিতক্ষিত হয়েছে',
-            description: 'প্রতিষ্ঠানের তথ্য সফলভাবে আপডেট করা হয়েছে।',
+    const handleSaveChanges = () => {
+        updateSchoolInfo(info).then(() => {
+            toast({
+                title: 'তথ্য সংরক্ষিতক্ষিত হয়েছে',
+                description: 'প্রতিষ্ঠানের তথ্য সফলভাবে আপডেট করা হয়েছে।',
+            });
+        }).catch(() => {
+            // Error handled by listener
         });
     };
     
@@ -175,7 +178,7 @@ function HolidaySettings() {
         return () => unsubscribe();
     }, [db]);
 
-    const handleAddHoliday = async () => {
+    const handleAddHoliday = () => {
         if (!db) return;
         if (!newHolidayDate || !newHolidayDescription) {
             toast({
@@ -191,12 +194,11 @@ function HolidaySettings() {
             description: newHolidayDescription,
         };
 
-        try {
-            const result = await addHoliday(db, holidayData);
+        addHoliday(db, holidayData).then((result) => {
             if (result) {
                 toast({
                     title: 'ছুটি যোগ হয়েছে',
-                    description: `${format(newHolidayDate, 'd MMMM yyyy', { locale: bn })} তারিখটি ছুটির তালিকাভুক্ত হয়েছে।`,
+                    description: `${format(newHolidayDate, "d MMMM yyyy", { locale: bn })} তারিখটি ছুটির তালিকাভুক্ত হয়েছে।`,
                 });
                 setNewHolidayDate(undefined);
                 setNewHolidayDescription('');
@@ -207,30 +209,21 @@ function HolidaySettings() {
                     description: 'এই তারিখে ইতিমধ্যে একটি ছুটি রয়েছে।',
                 });
             }
-        } catch (error) {
-            toast({
-                variant: 'destructive',
-                title: 'ত্রুটি',
-                description: 'ছুটি যোগ করার সময় একটি সমস্যা হয়েছে।',
-            });
-        }
+        }).catch(() => {
+            // Error handled by listener
+        });
     };
 
-    const handleDeleteHoliday = async (id: string) => {
+    const handleDeleteHoliday = (id: string) => {
         if (!db) return;
-        try {
-            await deleteHoliday(db, id);
+        deleteHoliday(db, id).then(() => {
             toast({
                 title: 'ছুটি মুছে ফেলা হয়েছে',
                 description: 'নির্বাচিত ছুটিটি তালিকা থেকে মুছে ফেলা হয়েছে।',
             });
-        } catch(error) {
-             toast({
-                variant: 'destructive',
-                title: 'ত্রুটি',
-                description: 'ছুটি মোছার সময় একটি সমস্যা হয়েছে।',
-            });
-        }
+        }).catch(() => {
+            // Error handled by listener
+        });
     };
     
     return (

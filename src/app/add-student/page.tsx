@@ -147,20 +147,15 @@ export default function AddStudentPage() {
             return;
         }
         
-        try {
-            await addStudent(db, student);
+        addStudent(db, student).then(() => {
             toast({
                 title: "শিক্ষার্থী যোগ হয়েছে",
                 description: "নতুন শিক্ষার্থী সফলভাবে তালিকায় যোগ করা হয়েছে।",
             });
             router.push('/student-list');
-        } catch (error) {
-             toast({
-                variant: "destructive",
-                title: "শিক্ষার্থী যোগ করা সম্ভব হয়নি",
-                description: "কিছু একটা সমস্যা হয়েছে। আবার চেষ্টা করুন।",
-            });
-        }
+        }).catch(() => {
+            // FirebaseErrorListener will handle the toast.
+        });
     };
 
     const handleSameAddress = (checked: boolean | string) => {
@@ -399,13 +394,15 @@ export default function AddStudentPage() {
                 router.push('/student-list');
 
             } catch (error: any) {
-                console.error("File upload error:", error);
-                toast({
-                    variant: "destructive",
-                    title: "ফাইল আপলোড ব্যর্থ হয়েছে",
-                    description: error.message || "দয়া করে ফাইলের ফরম্যাট এবং আবশ্যকীয় তথ্য ঠিক আছে কিনা তা পরীক্ষা করুন।",
-                    duration: 10000,
-                });
+                if (!error.source || error.source !== 'firestore') {
+                    console.error("File upload error:", error);
+                    toast({
+                        variant: "destructive",
+                        title: "ফাইল আপলোড ব্যর্থ হয়েছে",
+                        description: error.message || "দয়া করে ফাইলের ফরম্যাট এবং আবশ্যকীয় তথ্য ঠিক আছে কিনা তা পরীক্ষা করুন।",
+                        duration: 10000,
+                    });
+                }
             } finally {
                 if (fileInputRef.current) fileInputRef.current.value = '';
             }

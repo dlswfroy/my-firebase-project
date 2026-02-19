@@ -103,7 +103,7 @@ export const addStaff = async (db: Firestore, staffData: NewStaffData) => {
         requestResourceData: staffData,
       });
       errorEmitter.emit('permission-error', permissionError);
-      throw serverError; // re-throw to be caught in the UI
+      throw permissionError; // re-throw to be caught in the UI
     });
 };
 
@@ -135,7 +135,7 @@ export const updateStaff = async (db: Firestore, id: string, staffData: UpdateSt
             requestResourceData: dataToUpdate,
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
+        throw permissionError;
     });
 };
 
@@ -149,6 +149,6 @@ export const deleteStaff = async (db: Firestore, id: string) => {
             operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
+        throw permissionError;
     });
 };

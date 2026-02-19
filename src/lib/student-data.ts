@@ -121,7 +121,7 @@ export const addStudent = async (db: Firestore, studentData: NewStudentData) => 
         requestResourceData: studentData,
       });
       errorEmitter.emit('permission-error', permissionError);
-      throw serverError; // re-throw to be caught in the UI
+      throw permissionError; // re-throw to be caught in the UI
     });
 };
 
@@ -153,7 +153,7 @@ export const updateStudent = async (db: Firestore, id: string, studentData: Upda
             requestResourceData: dataToUpdate,
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
+        throw permissionError;
     });
 };
 
@@ -167,6 +167,6 @@ export const deleteStudent = async (db: Firestore, id: string) => {
             operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
+        throw permissionError;
     });
 };

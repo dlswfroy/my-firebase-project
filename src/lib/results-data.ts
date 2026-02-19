@@ -80,7 +80,7 @@ export const saveClassResults = async (db: Firestore, newResult: ClassResult) =>
         requestResourceData: dataToSave,
       });
       errorEmitter.emit('permission-error', permissionError);
-      throw serverError;
+      throw permissionError;
     });
 };
 
@@ -127,6 +127,6 @@ export const deleteClassResult = async (db: Firestore, id: string): Promise<void
             operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
+        throw permissionError;
     });
 }

@@ -57,6 +57,6 @@ export const saveSchoolInfo = async (db: Firestore, info: Partial<SchoolInfo>): 
         requestResourceData: dataToSave,
       });
       errorEmitter.emit('permission-error', permissionError);
-      throw serverError;
+      throw permissionError;
     });
 };
