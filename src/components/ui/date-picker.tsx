@@ -66,14 +66,15 @@ export function DatePicker({ value, onChange, triggerClassName, placeholder = "à
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
         <div className="bg-primary text-primary-foreground p-4 rounded-t-md">
-            <div className="text-lg font-semibold">{format(headerDate, "yyyy")}</div>
-            <div className="text-3xl font-bold">{format(headerDate, "E, MMM d")}</div>
+            <div className="text-lg font-semibold">{format(headerDate, "yyyy", { locale: bn })}</div>
+            <div className="text-3xl font-bold">{format(headerDate, "E, MMM d", { locale: bn })}</div>
         </div>
         <Calendar
           mode="single"
           selected={displayDate}
           onSelect={setDisplayDate}
           initialFocus
+          locale={bn}
         />
         <div className="flex justify-end gap-2 p-2 border-t">
           <Button variant="ghost" onClick={handleClear}>Clear</Button>
