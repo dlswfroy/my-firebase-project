@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
-import { getSchoolInfo, saveSchoolInfo, SchoolInfo } from '@/lib/school-info';
+import { getSchoolInfo, saveSchoolInfo, SchoolInfo, defaultSchoolInfo } from '@/lib/school-info';
 
 type SchoolInfoContextType = {
   schoolInfo: SchoolInfo;
@@ -11,7 +11,7 @@ type SchoolInfoContextType = {
 const SchoolInfoContext = createContext<SchoolInfoContextType | undefined>(undefined);
 
 export function SchoolInfoProvider({ children }: { children: ReactNode }) {
-  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(getSchoolInfo());
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(defaultSchoolInfo);
 
   useEffect(() => {
     // This effect ensures that the state is updated if localStorage changes in another tab.
@@ -19,6 +19,10 @@ export function SchoolInfoProvider({ children }: { children: ReactNode }) {
       setSchoolInfo(getSchoolInfo());
     };
     window.addEventListener('storage', handleStorageChange);
+    
+    // On mount, read from localStorage. This runs only on the client.
+    setSchoolInfo(getSchoolInfo());
+
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 

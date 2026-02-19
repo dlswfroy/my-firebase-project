@@ -10,7 +10,7 @@ export interface SchoolInfo {
 
 const SCHOOL_INFO_STORAGE_KEY = 'schoolInfoData';
 
-const defaultSchoolInfo: SchoolInfo = {
+export const defaultSchoolInfo: SchoolInfo = {
     name: 'বীরগঞ্জ পৌর উচ্চ বিদ্যালয়',
     eiin: '123456',
     code: '7890',
