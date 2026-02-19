@@ -160,17 +160,40 @@ export default function MarksheetPage() {
                     </div>
                 )}
                 <div className="relative z-10 border-4 border-black p-4 h-full flex flex-col">
-                    <header className="text-center mb-4">
-                        <div className="flex justify-center items-center gap-4">
-                            {schoolLogo && <Image src={schoolLogo.imageUrl} alt="School Logo" width={60} height={60} />}
-                            <div>
+                    <header className="mb-4">
+                        <div className="relative">
+                            <div className="absolute left-0 top-0">
+                                {schoolLogo && <Image src={schoolLogo.imageUrl} alt="School Logo" width={60} height={60} />}
+                            </div>
+                            <div className="text-center">
                                 <h1 className="text-3xl font-bold">BIRGANJ POURO HIGH SCHOOL</h1>
                                 <p className="text-sm">Upazila: Birganj, Post: Birganj, Zila: Dinajpur</p>
                             </div>
-                            <div className="w-[60px]"></div>
+                            <div className="absolute right-0 top-0 w-32 text-xs">
+                                <table className="w-full border-collapse border-2 border-black text-center">
+                                    <thead className="bg-gray-200">
+                                        <tr className="border-b-2 border-black">
+                                            <th className="p-1 border-r border-black">Interval</th>
+                                            <th className="p-1 border-r border-black">Point</th>
+                                            <th className="p-1">Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {gradingScale.map(g => (
+                                            <tr key={g.grade} className="border-b border-black">
+                                                <td className="p-0.5 border-r border-black">{g.interval}</td>
+                                                <td className="p-0.5 border-r border-black">{g.point}</td>
+                                                <td className="p-0.5">{g.grade}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <p className="mt-2"><b>Academic Session:</b> {academicYear}</p>
-                        <h2 className="text-xl font-semibold underline mt-2">Annual Exam Results</h2>
+                        <div className="text-center">
+                            <p className="mt-2"><b>Academic Session:</b> {academicYear}</p>
+                            <h2 className="text-xl font-semibold underline mt-2">Annual Exam Results</h2>
+                        </div>
                     </header>
 
                     <section className="mb-4 text-sm">
@@ -199,7 +222,7 @@ export default function MarksheetPage() {
                         </div>
                     </section>
 
-                    <section className="flex-grow text-sm relative">
+                    <section className="flex-grow text-sm">
                         <table className="w-full border-collapse border-2 border-black">
                             <thead>
                                 <tr className="border-2 border-black">
@@ -249,26 +272,6 @@ export default function MarksheetPage() {
                                 </tr>
                             </tbody>
                         </table>
-                        <div className="absolute top-0 right-0 w-24">
-                             <table className="w-full border-collapse border-2 border-black text-xs text-center">
-                                <thead className="bg-gray-200">
-                                    <tr className="border-b-2 border-black">
-                                        <th className="p-1 border-r border-black">Interval</th>
-                                        <th className="p-1 border-r border-black">Point</th>
-                                        <th className="p-1">Grade</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {gradingScale.map(g => (
-                                        <tr key={g.grade} className="border-b border-black">
-                                            <td className="p-1 border-r border-black">{g.interval}</td>
-                                            <td className="p-1 border-r border-black">{g.point}</td>
-                                            <td className="p-1">{g.grade}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
                     </section>
 
                     <footer className="mt-auto pt-16 text-sm">
