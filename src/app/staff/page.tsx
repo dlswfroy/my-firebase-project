@@ -29,11 +29,13 @@ import {
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function StaffListPage() {
   const [allStaff, setAllStaff] = useState<Staff[]>([]);
@@ -61,32 +63,28 @@ export default function StaffListPage() {
       })) as Staff[];
       setAllStaff(staffData);
       setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching staff: ", error);
-      toast({
-        variant: "destructive",
-        title: "শিক্ষক-কর্মচারীদের তথ্য আনতে সমস্যা হয়েছে",
+    }, async (error: FirestoreError) => {
+      const permissionError = new FirestorePermissionError({
+        path: 'staff',
+        operation: 'list',
       });
+      errorEmitter.emit('permission-error', permissionError);
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [db, toast]);
+  }, [db]);
 
-  const handleDeleteStaff = async (staffId: string) => {
+  const handleDeleteStaff = (staffId: string) => {
     if (!db) return;
-    try {
-        await deleteStaff(db, staffId);
+    deleteStaff(db, staffId).then(() => {
         toast({
             title: "রেকর্ড ডিলিট হয়েছে",
             description: "শিক্ষক/কর্মচারীর তথ্য তালিকা থেকে মুছে ফেলা হয়েছে।",
         });
-    } catch(error) {
-        toast({
-            variant: "destructive",
-            title: "ডিলিট করা সম্ভব হয়নি",
-        });
-    }
+    }).catch(() => {
+        // The error is handled by the global error handler
+    });
   };
 
   const staffTypeMap: { [key: string]: string } = { 'teacher': 'শিক্ষক', 'staff': 'কর্মচারী' };

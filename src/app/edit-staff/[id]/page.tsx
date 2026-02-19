@@ -84,7 +84,7 @@ export default function EditStaffPage() {
         }
     };
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         
         if (!staff || !db) {
@@ -104,7 +104,7 @@ export default function EditStaffPage() {
         });
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!db) return;
         deleteStaff(db, staffId).then(() => {
             toast({

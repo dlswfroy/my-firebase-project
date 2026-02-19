@@ -12,7 +12,9 @@ import { Printer } from 'lucide-react';
 import Image from 'next/image';
 import { useSchoolInfo } from '@/context/SchoolInfoContext';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, FirestoreError } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const classMap: { [key: string]: string } = { '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine', '10': 'Ten' };
 const groupMap: { [key: string]: string } = { 'science': 'Science', 'arts': 'Arts', 'commerce': 'Commerce' };
@@ -43,6 +45,12 @@ export default function MarksheetPage() {
           dob: doc.data().dob?.toDate(),
         })) as Student[];
         setAllStudents(studentsData);
+      }, async (error: FirestoreError) => {
+          const permissionError = new FirestorePermissionError({
+            path: 'students',
+            operation: 'list',
+          });
+          errorEmitter.emit('permission-error', permissionError);
       });
       return () => unsubscribe();
     }, [db]);

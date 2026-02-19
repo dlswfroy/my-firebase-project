@@ -23,7 +23,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, FirestoreError } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 function SchoolInfoSettings() {
@@ -171,8 +173,12 @@ function HolidaySettings() {
             const holidaysData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Holiday));
             setHolidays(holidaysData);
             setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching holidays:", error);
+        }, async (error: FirestoreError) => {
+            const permissionError = new FirestorePermissionError({
+                path: 'holidays',
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
             setIsLoading(false);
         });
         return () => unsubscribe();

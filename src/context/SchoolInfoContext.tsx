@@ -3,7 +3,9 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
 import { getSchoolInfo, saveSchoolInfo, SchoolInfo, defaultSchoolInfo } from '@/lib/school-info';
 import { useFirestore } from '@/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, FirestoreError } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 type SchoolInfoContextType = {
   schoolInfo: SchoolInfo;
@@ -34,8 +36,12 @@ export function SchoolInfoProvider({ children }: { children: ReactNode }) {
             setSchoolInfo(defaultSchoolInfo);
         }
         setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching school info:", error);
+    }, async (error: FirestoreError) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'school/info',
+          operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
         setIsLoading(false);
     });
 

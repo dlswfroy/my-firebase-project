@@ -9,8 +9,10 @@ import { useEffect, useState, useMemo } from 'react';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
 import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface StudentReport {
     student: Student;
@@ -136,9 +138,12 @@ export default function AttendanceReportPage() {
         })) as Student[];
         setAllStudents(studentsData);
         setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching students: ", error);
-        toast({ variant: "destructive", title: "শিক্ষার্থীদের তথ্য আনতে সমস্যা হয়েছে" });
+    }, async (error: FirestoreError) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'students',
+          operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
         setIsLoading(false);
     });
 

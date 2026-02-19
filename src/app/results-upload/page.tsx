@@ -15,8 +15,10 @@ import { Student } from '@/lib/student-data';
 import * as XLSX from 'xlsx';
 import { Download, FileUp } from 'lucide-react';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ResultsBulkUploadPage() {
     const { toast } = useToast();
@@ -44,6 +46,12 @@ export default function ResultsBulkUploadPage() {
             dob: doc.data().dob?.toDate(),
             })) as Student[];
             setAllStudents(studentsData);
+        }, async (error: FirestoreError) => {
+            const permissionError = new FirestorePermissionError({
+                path: 'students',
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
         return () => unsubscribe();
     }, [db]);

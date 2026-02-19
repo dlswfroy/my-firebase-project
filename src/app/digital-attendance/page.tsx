@@ -16,7 +16,9 @@ import { isHoliday, Holiday } from '@/lib/holiday-data';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 // Helper component for taking/viewing attendance for a single class
@@ -215,12 +217,12 @@ export default function DigitalAttendancePage() {
       })) as Student[];
       setAllStudents(studentsData);
       setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching students: ", error);
-      toast({
-        variant: "destructive",
-        title: "শিক্ষার্থীদের তথ্য আনতে সমস্যা হয়েছে",
+    }, async (error: FirestoreError) => {
+      const permissionError = new FirestorePermissionError({
+        path: 'students',
+        operation: 'list',
       });
+      errorEmitter.emit('permission-error', permissionError);
       setIsLoading(false);
     });
 

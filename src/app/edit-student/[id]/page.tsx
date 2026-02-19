@@ -120,7 +120,7 @@ export default function EditStudentPage() {
         }
     };
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         
         if (!student || !db) {
@@ -154,7 +154,7 @@ export default function EditStudentPage() {
         });
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!db) return;
         deleteStudent(db, studentId).then(() => {
             toast({

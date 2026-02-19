@@ -20,8 +20,10 @@ import { Trash2, FileUp, Download, FilePen } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 type Marks = {
@@ -69,6 +71,12 @@ export default function ResultsPage() {
           dob: doc.data().dob?.toDate(),
         })) as Student[];
         setAllStudents(studentsData);
+      }, async (error: FirestoreError) => {
+          const permissionError = new FirestorePermissionError({
+            path: 'students',
+            operation: 'list',
+          });
+          errorEmitter.emit('permission-error', permissionError);
       });
       return () => unsubscribe();
     }, [db]);
@@ -195,7 +203,7 @@ export default function ResultsPage() {
         setMarks(newMarks);
     };
 
-    const handleSaveResults = async () => {
+    const handleSaveResults = () => {
         if (!db) return;
         if (studentsForClass.length === 0) {
             toast({ variant: 'destructive', title: 'কোনো শিক্ষার্থী নেই' });
@@ -222,7 +230,7 @@ export default function ResultsPage() {
         });
     };
 
-    const handleDeleteResult = async (result: ClassResult) => {
+    const handleDeleteResult = (result: ClassResult) => {
         if (!db || !result.id) return;
         deleteClassResult(db, result.id).then(() => {
             updateSavedResults();

@@ -33,8 +33,10 @@ import { useToast } from "@/hooks/use-toast"
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function StudentListPage() {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
@@ -66,13 +68,12 @@ export default function StudentListPage() {
       })) as Student[];
       setAllStudents(studentsData);
       setIsLoading(false);
-    }, (error) => {
-      console.error("Error fetching students: ", error);
-      toast({
-        variant: "destructive",
-        title: "শিক্ষার্থীদের তথ্য আনতে সমস্যা হয়েছে",
-        description: "দয়া করে কিছুক্ষণ পর আবার চেষ্টা করুন।",
+    }, async (error: FirestoreError) => {
+      const permissionError = new FirestorePermissionError({
+        path: 'students',
+        operation: 'list',
       });
+      errorEmitter.emit('permission-error', permissionError);
       setIsLoading(false);
     });
 
@@ -83,21 +84,16 @@ export default function StudentListPage() {
     return allStudents.filter(student => student.academicYear === selectedYear);
   }, [allStudents, selectedYear]);
 
-  const handleDeleteStudent = async (studentId: string) => {
+  const handleDeleteStudent = (studentId: string) => {
     if (!db) return;
-    try {
-        await deleteStudent(db, studentId);
+    deleteStudent(db, studentId).then(() => {
         toast({
             title: "শিক্ষার্থী ডিলিট হয়েছে",
             description: "শিক্ষার্থীর তথ্য তালিকা থেকে মুছে ফেলা হয়েছে।",
         });
-    } catch(error) {
-        toast({
-            variant: "destructive",
-            title: "ডিলিট করা সম্ভব হয়নি",
-            description: "শিক্ষার্থীর তথ্য ডিলিট করার সময় একটি সমস্যা হয়েছে।",
-        });
-    }
+    }).catch(() => {
+        // Error is handled by the global error handler
+    });
   };
 
   const classes = ['6', '7', '8', '9', '10'];
