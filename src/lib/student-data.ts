@@ -106,6 +106,12 @@ export const addStudent = async (db: Firestore, studentData: NewStudentData) => 
     dataToSave.dob = Timestamp.fromDate(studentData.dob);
   }
 
+  Object.keys(dataToSave).forEach(key => {
+    if (dataToSave[key] === undefined) {
+      delete dataToSave[key];
+    }
+  });
+
   return addDoc(collection(db, 'students'), dataToSave)
     .catch(async (serverError) => {
       console.error("Error adding student:", serverError);
@@ -131,6 +137,12 @@ export const updateStudent = async (db: Firestore, id: string, studentData: Upda
   } else if (studentData.hasOwnProperty('dob') && studentData.dob === undefined) {
     dataToUpdate.dob = null;
   }
+
+  Object.keys(dataToUpdate).forEach(key => {
+    if (dataToUpdate[key] === undefined) {
+      delete dataToUpdate[key];
+    }
+  });
 
   return updateDoc(docRef, dataToUpdate)
     .catch(async (serverError) => {
