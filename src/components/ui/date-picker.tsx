@@ -13,7 +13,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { ScrollArea } from "./scroll-area"
 
 type DatePickerProps = {
   value: Date | undefined;
@@ -24,22 +23,16 @@ type DatePickerProps = {
 
 export function DatePicker({ value, onChange, triggerClassName, placeholder = "একটি তারিখ নির্বাচন করুন" }: DatePickerProps) {
   const [open, setOpen] = React.useState(false)
-  const [displayDate, setDisplayDate] = React.useState<Date | undefined>(value)
-  const [view, setView] = React.useState<'day' | 'year'>('day');
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(value)
 
-  React.useEffect(() => {
-    setDisplayDate(value);
-  }, [value]);
-  
   React.useEffect(() => {
     if (open) {
-      setView('day');
+      setSelectedDate(value)
     }
-  }, [open]);
-
+  }, [open, value])
 
   const handleSet = () => {
-    onChange(displayDate);
+    onChange(selectedDate);
     setOpen(false);
   }
   
@@ -52,18 +45,6 @@ export function DatePicker({ value, onChange, triggerClassName, placeholder = "�
     setOpen(false);
   }
 
-  const handleYearSelect = (year: number) => {
-    const newDate = displayDate ? new Date(displayDate) : new Date();
-    newDate.setFullYear(year);
-    setDisplayDate(newDate);
-    setView('day');
-  }
-
-  const years = Array.from(
-    { length: (new Date().getFullYear() + 10) - 1950 + 1 },
-    (_, i) => 1950 + i
-  ).reverse();
-  
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -80,48 +61,18 @@ export function DatePicker({ value, onChange, triggerClassName, placeholder = "�
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
-         <div className="p-4 bg-primary text-primary-foreground rounded-t-md">
-            <div 
-                className="font-semibold cursor-pointer"
-                onClick={() => setView(v => v === 'day' ? 'year' : 'day')}
-            >
-                {displayDate ? displayDate.getFullYear().toLocaleString('bn-BD') : new Date().getFullYear().toLocaleString('bn-BD')}
-            </div>
-            <div className="text-2xl font-bold">
-                {displayDate ? format(displayDate, "E, d MMM", { locale: bn }) : "তারিখ নির্বাচন"}
-            </div>
-        </div>
-
-        {view === 'day' ? (
-             <Calendar
-                mode="single"
-                selected={displayDate}
-                onSelect={setDisplayDate}
-                month={displayDate}
-                onMonthChange={setDisplayDate}
-                initialFocus
-                locale={bn}
-                fromYear={1950}
-                toYear={new Date().getFullYear() + 10}
-            />
-        ) : (
-             <ScrollArea className="h-[254px]">
-                <div className="grid grid-cols-1 gap-1 p-2 text-center">
-                    {years.map((year) => (
-                    <Button
-                        key={year}
-                        variant={displayDate?.getFullYear() === year ? "default" : "ghost"}
-                        className={cn("w-full", displayDate?.getFullYear() === year && "bg-primary text-primary-foreground")}
-                        onClick={() => handleYearSelect(year)}
-                    >
-                        {year.toLocaleString('bn-BD')}
-                    </Button>
-                    ))}
-                </div>
-            </ScrollArea>
-        )}
+         <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            initialFocus
+            locale={bn}
+            captionLayout="dropdown-buttons"
+            fromYear={1950}
+            toYear={new Date().getFullYear() + 5}
+        />
        
-        <div className="flex justify-end gap-2 p-2 border-t">
+        <div className="flex justify-end gap-2 p-3 border-t">
           <Button variant="ghost" onClick={handleClear}>মুছুন</Button>
           <Button variant="ghost" onClick={handleCancel}>বাতিল</Button>
           <Button onClick={handleSet}>সেট</Button>
