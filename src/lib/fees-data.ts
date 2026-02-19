@@ -81,8 +81,7 @@ const feeCollectionFromDoc = (docSnap: QueryDocumentSnapshot): FeeCollection | n
     }
     
     if (!collectionDate) {
-        // Don't crash, just log and skip this doc
-        console.error(`Invalid or missing collectionDate for feeCollection document: ${docSnap.id}`);
+        // Silently skip documents with invalid or missing dates.
         return null;
     }
 
