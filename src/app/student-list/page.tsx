@@ -34,6 +34,7 @@ import { useAcademicYear } from '@/context/AcademicYearContext';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function StudentListPage() {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
@@ -42,6 +43,11 @@ export default function StudentListPage() {
   const { selectedYear } = useAcademicYear();
   const [studentToView, setStudentToView] = useState<Student | null>(null);
   const db = useFirestore();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     if (!db) return;
@@ -129,110 +135,154 @@ export default function StudentListPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="6">
-              <TabsList className="grid w-full grid-cols-5">
-                {classes.map((className) => (
-                  <TabsTrigger key={className} value={className}>
-                    {classNamesMap[className]} শ্রেণি
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {classes.map((className) => (
-                <TabsContent key={className} value={className}>
-                  <Card>
-                    <CardContent className="p-0">
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>ছবি</TableHead>
-                              <TableHead>রোল</TableHead>
-                              <TableHead>শিক্ষার্থীর নাম</TableHead>
-                              <TableHead>পিতার নাম</TableHead>
-                              <TableHead>মোবাইল নম্বর</TableHead>
-                              <TableHead className="text-right">কার্যক্রম</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {isLoading ? (
-                               <TableRow>
-                                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                                      লোড হচ্ছে...
-                                  </TableCell>
-                               </TableRow>
-                            ) : getStudentsByClass(className).length === 0 ? (
-                               <TableRow>
-                                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                                      এই শ্রেণিতে কোনো শিক্ষার্থী নেই।
-                                  </TableCell>
-                               </TableRow>
-                            ) : (
-                              getStudentsByClass(className).map((student) => (
-                              <TableRow key={student.id}>
-                                <TableCell>
-                                  <Image
-                                    src={student.photoUrl}
-                                    alt={student.studentNameBn}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full object-cover"
-                                  />
-                                </TableCell>
-                                <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
-                                <TableCell className="whitespace-nowrap">{student.studentNameBn}</TableCell>
-                                <TableCell className="whitespace-nowrap">{student.fatherNameBn}</TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col whitespace-nowrap">
-                                    {student.guardianMobile && <span>{student.guardianMobile}</span>}
-                                    {student.studentMobile && <span>{student.studentMobile}</span>}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex justify-end gap-2">
-                                    <Button variant="outline" size="icon" onClick={() => setStudentToView(student)}>
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                    <Link href={`/edit-student/${student.id}`}>
-                                      <Button variant="outline" size="icon" asChild>
-                                        <span className="cursor-pointer">
-                                          <FilePen className="h-4 w-4" />
-                                        </span>
-                                      </Button>
-                                    </Link>
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="icon">
-                                          <Trash2 className="h-4 w-4" />
+             {isClient ? (
+                <Tabs defaultValue="6">
+                  <TabsList className="grid w-full grid-cols-5">
+                    {classes.map((className) => (
+                      <TabsTrigger key={className} value={className}>
+                        {classNamesMap[className]} শ্রেণি
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {classes.map((className) => (
+                    <TabsContent key={className} value={className}>
+                      <Card>
+                        <CardContent className="p-0">
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>ছবি</TableHead>
+                                  <TableHead>রোল</TableHead>
+                                  <TableHead>শিক্ষার্থীর নাম</TableHead>
+                                  <TableHead>পিতার নাম</TableHead>
+                                  <TableHead>মোবাইল নম্বর</TableHead>
+                                  <TableHead className="text-right">কার্যক্রম</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {isLoading ? (
+                                   <TableRow>
+                                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                          লোড হচ্ছে...
+                                      </TableCell>
+                                   </TableRow>
+                                ) : getStudentsByClass(className).length === 0 ? (
+                                   <TableRow>
+                                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                          এই শ্রেণিতে কোনো শিক্ষার্থী নেই।
+                                      </TableCell>
+                                   </TableRow>
+                                ) : (
+                                  getStudentsByClass(className).map((student) => (
+                                  <TableRow key={student.id}>
+                                    <TableCell>
+                                      <Image
+                                        src={student.photoUrl}
+                                        alt={student.studentNameBn}
+                                        width={40}
+                                        height={40}
+                                        className="rounded-full object-cover"
+                                      />
+                                    </TableCell>
+                                    <TableCell>{student.roll.toLocaleString('bn-BD')}</TableCell>
+                                    <TableCell className="whitespace-nowrap">{student.studentNameBn}</TableCell>
+                                    <TableCell className="whitespace-nowrap">{student.fatherNameBn}</TableCell>
+                                    <TableCell>
+                                      <div className="flex flex-col whitespace-nowrap">
+                                        {student.guardianMobile && <span>{student.guardianMobile}</span>}
+                                        {student.studentMobile && <span>{student.studentMobile}</span>}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="flex justify-end gap-2">
+                                        <Button variant="outline" size="icon" onClick={() => setStudentToView(student)}>
+                                          <Eye className="h-4 w-4" />
                                         </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            এই কাজটি ফিরিয়ে আনা যাবে না। এটি তালিকা থেকে স্থায়ীভাবে শিক্ষার্থীকে মুছে ফেলবে।
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>
-                                            ডিলিট করুন
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                             ))
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              ))}
-            </Tabs>
+                                        <Link href={`/edit-student/${student.id}`}>
+                                          <Button variant="outline" size="icon" asChild>
+                                            <span className="cursor-pointer">
+                                              <FilePen className="h-4 w-4" />
+                                            </span>
+                                          </Button>
+                                        </Link>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="icon">
+                                              <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                এই কাজটি ফিরিয়ে আনা যাবে না। এটি তালিকা থেকে স্থায়ীভাবে শিক্ষার্থীকে মুছে ফেলবে।
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDeleteStudent(student.id)}>
+                                                ডিলিট করুন
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                 ))
+                                )}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+             ) : (
+                <div>
+                <div className="grid w-full grid-cols-5 h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground mb-2">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex justify-center"><Skeleton className="h-8 w-[80%]" /></div>
+                  ))}
+                </div>
+                <div className="border rounded-md">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ছবি</TableHead>
+                          <TableHead>রোল</TableHead>
+                          <TableHead>শিক্ষার্থীর নাম</TableHead>
+                          <TableHead>পিতার নাম</TableHead>
+                          <TableHead>মোবাইল নম্বর</TableHead>
+                          <TableHead className="text-right">কার্যক্রম</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {[...Array(5)].map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell><Skeleton className="h-10 w-10 rounded-full" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-10" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-32" /></TableCell>
+                            <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Skeleton className="h-9 w-9" />
+                                <Skeleton className="h-9 w-9" />
+                                <Skeleton className="h-9 w-9" />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+             )}
           </CardContent>
         </Card>
       </main>
