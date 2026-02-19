@@ -78,27 +78,37 @@ export const getFeeCollectionForStudent = async (db: Firestore, studentId: strin
 export const saveFeeCollection = async (db: Firestore, feeData: NewFeeCollectionData) => {
   const docId = `${feeData.studentId}_${feeData.academicYear}`;
   const docRef = doc(db, FEE_COLLECTION_PATH, docId);
-  
-  const dataToSave: WithFieldValue<DocumentData> = {
-    ...feeData,
-    updatedAt: serverTimestamp(),
-  };
 
-  // Convert Dates to Timestamps
-  for (const month in dataToSave.monthlyFees) {
-    if (dataToSave.monthlyFees[month].collectionDate) {
-        dataToSave.monthlyFees[month].collectionDate = Timestamp.fromDate(dataToSave.monthlyFees[month].collectionDate);
+  // Create a new monthlyFees object for Firestore to avoid mutating component state
+  const monthlyFeesForFirestore: { [month: string]: any } = {};
+  for (const month in feeData.monthlyFees) {
+    // Make a copy of the month's data
+    const monthData = { ...feeData.monthlyFees[month] };
+
+    // Convert Date to Timestamp if it exists
+    if (monthData.collectionDate) {
+      monthData.collectionDate = Timestamp.fromDate(monthData.collectionDate as Date);
+    }
+    
+    // Clean undefined/null/NaN values from the copy
+    Object.keys(monthData).forEach((key) => {
+      const value = (monthData as any)[key];
+      if (value === undefined || value === null || (typeof value === 'number' && isNaN(value))) {
+        delete (monthData as any)[key];
+      }
+    });
+
+    if (Object.keys(monthData).length > 1 || (Object.keys(monthData).length === 1 && monthData.month)) {
+        monthlyFeesForFirestore[month] = monthData;
     }
   }
 
-  // Clean undefined values
-  Object.keys(dataToSave.monthlyFees).forEach(month => {
-    Object.keys(dataToSave.monthlyFees[month]).forEach(key => {
-        if (dataToSave.monthlyFees[month][key] === undefined || dataToSave.monthlyFees[month][key] === null || (typeof dataToSave.monthlyFees[month][key] === 'number' && isNaN(dataToSave.monthlyFees[month][key]))) {
-            delete dataToSave.monthlyFees[month][key];
-        }
-    });
-  });
+  const dataToSave: WithFieldValue<DocumentData> = {
+    studentId: feeData.studentId,
+    academicYear: feeData.academicYear,
+    monthlyFees: monthlyFeesForFirestore,
+    updatedAt: serverTimestamp(),
+  };
 
   try {
     const docSnap = await getDoc(docRef);
