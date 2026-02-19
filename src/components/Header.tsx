@@ -108,12 +108,6 @@ export function Header() {
                 >
                   হাজিরা রিপোর্ট
                 </Link>
-                 <Link
-                  href="/holidays"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                >
-                  অতিরিক্ত ছুটি
-                </Link>
                 <Link
                   href="/results"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
@@ -139,7 +133,7 @@ export function Header() {
                   শিক্ষক ও কর্মচারী
                 </Link>
                 <Link
-                  href="#"
+                  href="/settings"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                 >
                   সেটিং
