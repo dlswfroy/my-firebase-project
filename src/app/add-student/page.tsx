@@ -186,9 +186,15 @@ export default function AddStudentPage() {
     }
 
     const handleDownloadSample = () => {
-        const headers = [
-            ['রোল', 'শ্রেণি', 'নাম (বাংলা)', 'নাম (ইংরেজি)', 'জন্ম তারিখ', 'জন্ম নিবন্ধন নম্বর', 'লিঙ্গ', 'ধর্ম', 'পিতার নাম (বাংলা)', 'পিতার নাম (ইংরেজি)', 'পিতার NID', 'মাতার নাম (বাংলা)', 'মাতার নাম (ইংরেজি)', 'মাতার NID', 'মোবাইল', 'শিক্ষার্থীর মোবাইল নম্বর', 'বর্তমান গ্রাম', 'বর্তমান ইউনিয়ন', 'বর্তমান ডাকঘর', 'বর্তমান উপজেলা', 'বর্তমান জেলা', 'স্থায়ী গ্রাম', 'স্থায়ী ইউনিয়ন', 'স্থায়ী ডাকঘর', 'স্থায়ী উপজেলা', 'স্থায়ী জেলা']
+        const baseHeaders = [
+            'রোল', 'শ্রেণি', 'নাম (বাংলা)', 'নাম (ইংরেজি)', 'জন্ম তারিখ', 'জন্ম নিবন্ধন নম্বর', 'লিঙ্গ', 'ধর্ম', 'পিতার নাম (বাংলা)', 'পিতার নাম (ইংরেজি)', 'পিতার nid', 'মাতার নাম (বাংলা)', 'মাতার নাম (ইংরেজি)', 'মাতার nid', 'অভিভাবকের মোবাইল নম্বর', 'শিক্ষার্থীর মোবাইল নম্বর', 'বর্তমান গ্রাম', 'বর্তমান ইউনিয়ন', 'বর্তমান ডাকঘর', 'বর্তমান উপজেলা', 'বর্তমান জেলা', 'স্থায়ী গ্রাম', 'স্থায়ী ইউনিয়ন', 'স্থায়ী ডাকঘর', 'স্থায়ী উপজেলা', 'স্থায়ী জেলা'
         ];
+        
+        if (student.className === '9' || student.className === '10') {
+            baseHeaders.splice(2, 0, 'গ্রুপ', 'ঐচ্ছিক বিষয়');
+        }
+
+        const headers = [baseHeaders];
         const ws = XLSX.utils.aoa_to_sheet(headers);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'নমুনা');
@@ -219,34 +225,68 @@ export default function AddStudentPage() {
                 }
 
                 const headerMapping: { [key: string]: keyof NewStudentData } = {
-                    'রোল': 'roll', 'roll': 'roll',
-                    'শ্রেণি': 'className', 'শ্রেণী': 'className', 'class': 'className',
-                    'গ্রুপ': 'group', 'group': 'group', 'শাখা': 'group', 'বিভাগ': 'group',
-                    'ঐচ্ছিক বিষয়': 'optionalSubject', 'optional subject': 'optionalSubject',
-                    'নাম (বাংলা)': 'studentNameBn', 'student name (bangla)': 'studentNameBn', 'name (bangla)': 'studentNameBn',
-                    'নাম (ইংরেজি)': 'studentNameEn', 'student name (english)': 'studentNameEn', 'name (english)': 'studentNameEn',
-                    'জন্ম তারিখ': 'dob', 'date of birth': 'dob',
-                    'জন্ম নিবন্ধন নম্বর': 'birthRegNo', 'birth registration no': 'birthRegNo',
-                    'লিঙ্গ': 'gender', 'gender': 'gender',
-                    'ধর্ম': 'religion', 'religion': 'religion',
-                    'পিতার নাম (বাংলা)': 'fatherNameBn', "father's name (bangla)": 'fatherNameBn',
-                    'পিতার নাম (ইংরেজি)': 'fatherNameEn', "father's name (english)": 'fatherNameEn',
-                    'পিতার nid': 'fatherNid', 'father nid': 'fatherNid',
-                    'মাতার নাম (বাংলা)': 'motherNameBn', "mother's name (bangla)": 'motherNameBn',
-                    'মাতার নাম (ইংরেজি)': 'motherNameEn', "mother's name (english)": 'motherNameEn',
-                    'মাতার nid': 'motherNid', 'mother nid': 'motherNid',
-                    'মোবাইল': 'guardianMobile', 'guardian mobile': 'guardianMobile',
-                    'শিক্ষার্থীর মোবাইল নম্বর': 'studentMobile', 'student mobile': 'studentMobile',
-                    'বর্তমান গ্রাম': 'presentVillage', 'present village': 'presentVillage',
-                    'বর্তমান ইউনিয়ন': 'presentUnion', 'present union': 'presentUnion',
-                    'বর্তমান ডাকঘর': 'presentPostOffice', 'present post office': 'presentPostOffice',
-                    'বর্তমান উপজেলা': 'presentUpazila', 'present upazila': 'presentUpazila',
-                    'বর্তমান জেলা': 'presentDistrict', 'present district': 'presentDistrict',
-                    'স্থায়ী গ্রাম': 'permanentVillage', 'permanent village': 'permanentVillage',
-                    'স্থায়ী ইউনিয়ন': 'permanentUnion', 'permanent union': 'permanentUnion',
-                    'স্থায়ী ডাকঘর': 'permanentPostOffice', 'permanent post office': 'permanentPostOffice',
-                    'স্থায়ী উপজেলা': 'permanentUpazila', 'permanent upazila': 'permanentUpazila',
-                    'স্থায়ী জেলা': 'permanentDistrict', 'permanent district': 'permanentDistrict',
+                    'রোল': 'roll',
+                    'roll': 'roll',
+                    'শ্রেণি': 'className',
+                    'শ্রেণী': 'className',
+                    'class': 'className',
+                    'গ্রুপ': 'group',
+                    'group': 'group',
+                    'শাখা': 'group',
+                    'বিভাগ': 'group',
+                    'ঐচ্ছিক বিষয়': 'optionalSubject',
+                    'optional subject': 'optionalSubject',
+                    'নাম (বাংলা)': 'studentNameBn',
+                    'student name (bangla)': 'studentNameBn',
+                    'name (bangla)': 'studentNameBn',
+                    'নাম (ইংরেজি)': 'studentNameEn',
+                    'student name (english)': 'studentNameEn',
+                    'name (english)': 'studentNameEn',
+                    'জন্ম তারিখ': 'dob',
+                    'date of birth': 'dob',
+                    'জন্ম নিবন্ধন নম্বর': 'birthRegNo',
+                    'birth registration no': 'birthRegNo',
+                    'লিঙ্গ': 'gender',
+                    'gender': 'gender',
+                    'ধর্ম': 'religion',
+                    'religion': 'religion',
+                    'পিতার নাম (বাংলা)': 'fatherNameBn',
+                    "father's name (bangla)": 'fatherNameBn',
+                    'পিতার নাম (ইংরেজি)': 'fatherNameEn',
+                    "father's name (english)": 'fatherNameEn',
+                    'পিতার nid': 'fatherNid',
+                    'father nid': 'fatherNid',
+                    'মাতার নাম (বাংলা)': 'motherNameBn',
+                    "mother's name (bangla)": 'motherNameBn',
+                    'মাতার নাম (ইংরেজি)': 'motherNameEn',
+                    "mother's name (english)": 'motherNameEn',
+                    'মাতার nid': 'motherNid',
+                    'mother nid': 'motherNid',
+                    'মোবাইল': 'guardianMobile',
+                    'guardian mobile': 'guardianMobile',
+                    'অভিভাবকের মোবাইল নম্বর': 'guardianMobile',
+                    'শিক্ষার্থীর মোবাইল নম্বর': 'studentMobile',
+                    'student mobile': 'studentMobile',
+                    'বর্তমান গ্রাম': 'presentVillage',
+                    'present village': 'presentVillage',
+                    'বর্তমান ইউনিয়ন': 'presentUnion',
+                    'present union': 'presentUnion',
+                    'বর্তমান ডাকঘর': 'presentPostOffice',
+                    'present post office': 'presentPostOffice',
+                    'বর্তমান উপজেলা': 'presentUpazila',
+                    'present upazila': 'presentUpazila',
+                    'বর্তমান জেলা': 'presentDistrict',
+                    'present district': 'presentDistrict',
+                    'স্থায়ী গ্রাম': 'permanentVillage',
+                    'permanent village': 'permanentVillage',
+                    'স্থায়ী ইউনিয়ন': 'permanentUnion',
+                    'permanent union': 'permanentUnion',
+                    'স্থায়ী ডাকঘর': 'permanentPostOffice',
+                    'permanent post office': 'permanentPostOffice',
+                    'স্থায়ী উপজেলা': 'permanentUpazila',
+                    'permanent upazila': 'permanentUpazila',
+                    'স্থায়ী জেলা': 'permanentDistrict',
+                    'permanent district': 'permanentDistrict',
                 };
                 
                 const genderMap: { [key: string]: string } = { 'পুরুষ': 'male', 'male': 'male', 'মহিলা': 'female', 'female': 'female', 'অন্যান্য': 'other', 'other': 'other' };
@@ -269,6 +309,43 @@ export default function AddStudentPage() {
                     const num = parseInt(strValue, 10);
                     return isNaN(num) ? undefined : num;
                 };
+                
+                const processRow = (row: any) => {
+                    const newStudentData: any = {};
+                    for (const excelHeader of Object.keys(row)) {
+                        const studentKey = headerMapping[excelHeader.trim().toLowerCase()];
+                        if (studentKey) {
+                            let value = row[excelHeader];
+                            if (value && typeof value === 'string') value = value.trim();
+
+                            if (value === undefined || value === null || value === '') {
+                                newStudentData[studentKey] = undefined;
+                                continue;
+                            }
+
+                            const valueStr = String(value);
+                            const valueStrLower = valueStr.toLowerCase();
+
+                            if (studentKey === 'gender') newStudentData[studentKey] = genderMap[valueStr] || genderMap[valueStrLower] || 'other';
+                            else if (studentKey === 'religion') newStudentData[studentKey] = religionMap[valueStr] || religionMap[valueStrLower] || 'other';
+                            else if (studentKey === 'group') newStudentData[studentKey] = groupMap[valueStr] || groupMap[valueStrLower] || undefined;
+                            else if (studentKey === 'optionalSubject') newStudentData[studentKey] = optionalSubjectMap[valueStr] || optionalSubjectMap[valueStrLower] || undefined;
+                            else if (studentKey === 'dob') {
+                                 let parsedDate: Date | undefined;
+                                if (value instanceof Date && !isNaN(value.getTime())) parsedDate = value;
+                                else if (typeof value === 'number' && value > 1) parsedDate = new Date((value - 25569) * 86400 * 1000);
+                                else if (typeof value === 'string') {
+                                     const date = new Date(value);
+                                    if (date && !isNaN(date.getTime())) parsedDate = date;
+                                }
+                                newStudentData.dob = parsedDate;
+                            } else if (studentKey === 'roll') newStudentData.roll = convertToNumber(value);
+                            else if (studentKey === 'className') newStudentData.className = String(value).replace(/[০-৯]/g, d => bengaliToEnglishDigit[d]);
+                            else newStudentData[studentKey] = value;
+                        }
+                    }
+                    return newStudentData;
+                }
 
                 const studentsQuery = query(collection(db, "students"), where("academicYear", "==", selectedYear));
                 const querySnapshot = await getDocs(studentsQuery);
@@ -281,40 +358,7 @@ export default function AddStudentPage() {
 
                 for (const [index, row] of json.entries()) {
                     try {
-                        const newStudentData: any = {};
-                        for (const excelHeader of Object.keys(row)) {
-                            const studentKey = headerMapping[excelHeader.trim().toLowerCase()];
-                            if (studentKey) {
-                                let value = row[excelHeader];
-                                if (value && typeof value === 'string') value = value.trim();
-
-                                if (value === undefined || value === null || value === '') {
-                                    newStudentData[studentKey] = undefined;
-                                    continue;
-                                }
-
-                                const valueStr = String(value);
-                                const valueStrLower = valueStr.toLowerCase();
-
-                                if (studentKey === 'gender') newStudentData[studentKey] = genderMap[valueStr] || genderMap[valueStrLower] || 'other';
-                                else if (studentKey === 'religion') newStudentData[studentKey] = religionMap[valueStr] || religionMap[valueStrLower] || 'other';
-                                else if (studentKey === 'group') newStudentData[studentKey] = groupMap[valueStr] || groupMap[valueStrLower] || undefined;
-                                else if (studentKey === 'optionalSubject') newStudentData[studentKey] = optionalSubjectMap[valueStr] || optionalSubjectMap[valueStrLower] || undefined;
-                                else if (studentKey === 'dob') {
-                                     let parsedDate: Date | undefined;
-                                    if (value instanceof Date && !isNaN(value.getTime())) parsedDate = value;
-                                    else if (typeof value === 'number' && value > 1) parsedDate = new Date((value - 25569) * 86400 * 1000);
-                                    else if (typeof value === 'string') {
-                                         const date = new Date(value);
-                                        if (date && !isNaN(date.getTime())) parsedDate = date;
-                                    }
-                                    newStudentData.dob = parsedDate;
-                                } else if (studentKey === 'roll') newStudentData.roll = convertToNumber(value);
-                                else if (studentKey === 'className') newStudentData.className = String(value);
-                                else newStudentData[studentKey] = value;
-                            }
-                        }
-
+                        const newStudentData = processRow(row);
                         newStudentData.academicYear = selectedYear;
 
                         const requiredFields: (keyof NewStudentData)[] = ['roll', 'className', 'studentNameBn', 'fatherNameBn', 'motherNameBn', 'academicYear'];
