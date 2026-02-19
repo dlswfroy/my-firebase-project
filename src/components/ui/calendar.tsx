@@ -18,17 +18,7 @@ import { ScrollArea } from "./scroll-area"
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 function CustomCaption({ displayMonth }: { displayMonth: Date }) {
-  const { goToMonth, nextMonth, previousMonth, fromYear, toYear } =
-    useDayPicker()
-
-  const currentYear = new Date().getFullYear()
-  const startYear = fromYear || 1950
-  const endYear = toYear || currentYear + 10
-
-  const years = Array.from(
-    { length: endYear - startYear + 1 },
-    (_, i) => startYear + i
-  )
+  const { goToMonth, nextMonth, previousMonth } = useDayPicker()
 
   const bnMonths = [
     'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
@@ -46,7 +36,7 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
             goToMonth(newDate)
           }}
         >
-          <SelectTrigger className="w-[120px] h-8 text-sm font-semibold focus:ring-0 focus:ring-offset-0">
+          <SelectTrigger className="w-[120px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -57,27 +47,7 @@ function CustomCaption({ displayMonth }: { displayMonth: Date }) {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={String(displayMonth.getFullYear())}
-          onValueChange={(value) => {
-            const newDate = new Date(displayMonth)
-            newDate.setFullYear(parseInt(value))
-            goToMonth(newDate)
-          }}
-        >
-          <SelectTrigger className="w-[100px] h-8 text-sm font-semibold focus:ring-0 focus:ring-offset-0">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <ScrollArea className="h-72">
-                {years.map((year) => (
-                  <SelectItem key={year} value={String(year)}>
-                    {year.toLocaleString("bn-BD")}
-                  </SelectItem>
-                ))}
-            </ScrollArea>
-          </SelectContent>
-        </Select>
+        <span className="text-sm font-semibold">{displayMonth.getFullYear().toLocaleString('bn-BD')}</span>
       </div>
       <div className="flex items-center gap-1">
         <Button
