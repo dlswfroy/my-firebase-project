@@ -17,12 +17,13 @@ import { Calendar as CalendarIcon, Upload, FileUp, Download } from 'lucide-react
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import { addStudent, getStudents, updateStudent, NewStudentData } from '@/lib/student-data';
+import { addStudent, updateStudent, NewStudentData } from '@/lib/student-data';
 import { getSubjects, Subject } from '@/lib/subjects';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useFirestore } from '@/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const initialStudentState: NewStudentData = {
   roll: undefined,
@@ -67,6 +68,11 @@ export default function AddStudentPage() {
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [optionalSubjects, setOptionalSubjects] = useState<Subject[]>([]);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         if (selectedYear) {
@@ -380,6 +386,7 @@ export default function AddStudentPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {isClient ? (
             <form className="space-y-8" onSubmit={handleSubmit}>
               
               <div className="space-y-4">
@@ -638,6 +645,82 @@ export default function AddStudentPage() {
                 <Button type="submit">সেভ করুন</Button>
               </div>
             </form>
+            ) : (
+            <div className="space-y-8">
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2 md:col-span-3"><Skeleton className="h-5 w-20" /><div className="flex items-center gap-4"><Skeleton className="h-24 w-24 rounded-md" /><Skeleton className="h-10 w-32" /></div></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center border-b pb-2">
+                        <Skeleton className="h-7 w-48" />
+                        <div className="flex items-center space-x-2">
+                            <Skeleton className="h-4 w-4" />
+                            <Skeleton className="h-4 w-32" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex justify-end pt-4 border-t mt-4">
+                    <Skeleton className="h-10 w-24" />
+                </div>
+            </div>
+            )}
           </CardContent>
         </Card>
       </main>

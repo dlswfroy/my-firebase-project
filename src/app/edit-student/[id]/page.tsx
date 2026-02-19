@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useFirestore } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function EditStudentPage() {
     const router = useRouter();
@@ -46,6 +47,11 @@ export default function EditStudentPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [optionalSubjects, setOptionalSubjects] = useState<Subject[]>([]);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         if (!studentId || !db) return;
@@ -220,6 +226,7 @@ export default function EditStudentPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {isClient ? (
             <form className="space-y-8" onSubmit={handleSubmit}>
               
               <div className="space-y-4">
@@ -496,6 +503,83 @@ export default function EditStudentPage() {
                 <Button type="submit">আপডেট করুন</Button>
               </div>
             </form>
+            ) : (
+             <div className="space-y-8">
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2 md:col-span-3"><Skeleton className="h-5 w-20" /><div className="flex items-center gap-4"><Skeleton className="h-24 w-24 rounded-md" /><Skeleton className="h-10 w-32" /></div></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center border-b pb-2">
+                        <Skeleton className="h-7 w-48" />
+                        <div className="flex items-center space-x-2">
+                            <Skeleton className="h-4 w-4" />
+                            <Skeleton className="h-4 w-32" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                            <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="md:col-span-2 flex justify-between items-center pt-4 border-t mt-4">
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-28" />
+                </div>
+             </div>
+            )}
           </CardContent>
         </Card>
       </main>
