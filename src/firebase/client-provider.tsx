@@ -1,7 +1,12 @@
 'use client';
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import {
+  getAuth,
+  connectAuthEmulator,
+  signInAnonymously,
+  onAuthStateChanged,
+} from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 import { firebaseConfig } from './config';
@@ -19,6 +24,19 @@ if (typeof window !== 'undefined') {
 }
 
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          signInAnonymously(auth).catch((error) => {
+            console.error('Anonymous sign-in failed', error);
+          });
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
+
   const instances = useMemo(() => {
     if (typeof window === 'undefined') {
       return { app: null, auth: null, firestore: null };
