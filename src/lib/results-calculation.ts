@@ -1,4 +1,3 @@
-
 'use client';
 import type { Student } from './student-data';
 import type { ClassResult } from './results-data';
@@ -31,8 +30,6 @@ export interface StudentProcessedResult {
     subjectResults: Map<string, StudentSubjectResult>;
 }
 
-const PASS_PERCENTAGE = 33;
-
 export const getGradePoint = (percentage: number): GradeInfo => {
     if (percentage < 33) return { grade: 'F', point: 0.0 };
     if (percentage < 40) return { grade: 'D', point: 1.0 };
@@ -63,13 +60,11 @@ export function processStudentResults(
         const optionalSubjectName = student.optionalSubject;
 
         const subjectsForStudent = allSubjectsForGroup.filter(subjectInfo => {
+            // For science group, 'Higher Math' and 'Agriculture Studies' are mutually exclusive optional subjects.
+            // This logic ensures that if one is selected as optional, the other is not included in the results calculation.
             if (student.group === 'science') {
                  if (optionalSubjectName === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
                  if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
-            }
-             if (student.group === 'arts') {
-                 // Example rule, can be expanded
-                 // if (optionalSubjectName === 'কৃষি শিক্ষা' && subjectInfo.name === 'সাধারণ বিজ্ঞান') return false;
             }
             return true;
         });
@@ -87,15 +82,10 @@ export function processStudentResults(
             const mcq = studentResult?.mcq;
             const practical = studentResult?.practical;
             const obtainedMarks = (written || 0) + (mcq || 0) + (practical || 0);
+            
+            const passMark = Math.ceil(fullMarks * 0.33);
 
-            let isPassSubject: boolean;
-
-            if (written === undefined && mcq === undefined && practical === undefined) {
-                isPassSubject = false;
-            } else {
-                const percentage = (obtainedMarks / fullMarks) * 100;
-                isPassSubject = percentage >= PASS_PERCENTAGE;
-            }
+            let isPassSubject = (written !== undefined || mcq !== undefined || practical !== undefined) && obtainedMarks >= passMark;
             
             const percentageForGrade = (obtainedMarks / fullMarks) * 100;
             const { grade, point } = getGradePoint(isPassSubject ? percentageForGrade : 0);

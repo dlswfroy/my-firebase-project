@@ -1,4 +1,3 @@
-
 'use client';
 
 export interface StudentResult {
@@ -25,7 +24,16 @@ export const getResultsFromStorage = (): ClassResult[] => {
   }
   try {
     const data = window.localStorage.getItem(RESULTS_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const results: ClassResult[] = data ? JSON.parse(data) : [];
+
+    // Normalize subject names to fix old data
+    return results.map(res => {
+        if (res.subject === 'ধর্ম শিক্ষা') {
+            return { ...res, subject: 'ধর্ম ও নৈতিক শিক্ষা' };
+        }
+        return res;
+    });
+
   } catch (error) {
     console.error("Error reading results from localStorage", error);
     return [];

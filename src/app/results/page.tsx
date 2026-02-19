@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -18,6 +17,7 @@ import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Trash2, FileUp, Download, FilePen } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 
 type Marks = {
@@ -43,6 +43,10 @@ export default function ResultsPage() {
 
     const [savedResults, setSavedResults] = useState<ClassResult[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    const classNamesMap: { [key: string]: string } = { '6': '৬ষ্ঠ', '7': '৭ম', '8': '৮ম', '9': '৯ম', '10': '১০ম' };
+    const groupMap: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
+
 
     const updateSavedResults = () => {
         const allResults = getAllResults().filter(r => r.academicYear === selectedYear);
@@ -53,6 +57,37 @@ export default function ResultsPage() {
         updateSavedResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedYear]);
+
+    const groupedResults = useMemo(() => {
+        if (savedResults.length === 0) return {};
+
+        const groups: { [key: string]: ClassResult[] } = {};
+        savedResults.forEach(res => {
+            const key = res.className; // Use numeric class name as key for sorting
+            if (!groups[key]) {
+                groups[key] = [];
+            }
+            groups[key].push(res);
+        });
+
+        // Sort results within each group
+        for (const key in groups) {
+            groups[key].sort((a, b) => {
+                const groupA = a.group || '';
+                const groupB = b.group || '';
+                if (groupA !== groupB) {
+                    return groupA.localeCompare(groupB);
+                }
+                return a.subject.localeCompare(b.subject, 'bn');
+            });
+        }
+        return groups;
+    }, [savedResults]);
+
+    const sortedClassKeys = useMemo(() => {
+        return Object.keys(groupedResults).sort((a, b) => parseInt(a) - parseInt(b));
+    }, [groupedResults]);
+
 
     useEffect(() => {
         if (className) {
@@ -217,7 +252,7 @@ export default function ResultsPage() {
             });
         } else { // Class 9-10
             headers = [
-                'রোল', 'নাম', 'শাখা',
+                'রোল', 'নাম', 'শাখা', 'ঐচ্ছিক বিষয়',
                 'বাংলা প্রথম (লিখিত)', 'বাংলা প্রথম (বহুনির্বাচনী)',
                 'বাংলা দ্বিতীয় (লিখিত)', 'বাংলা দ্বিতীয় (বহুনির্বাচনী)',
                 'ইংরেজি প্রথম (লিখিত)', 'ইংরেজি প্রথম (বহুনির্বাচনী)',
@@ -333,7 +368,7 @@ export default function ResultsPage() {
 
                 json.forEach((row: any, rowIndex: number) => {
                     try {
-                        const rollHeader = Object.keys(row).find(k => k.trim().toLowerCase() === 'রোল' || k.trim().toLowerCase() === 'roll');
+                        const rollHeader = Object.keys(row).find(k => ['রোল', 'roll'].includes(k.trim().toLowerCase()));
                         const rollValue = rollHeader ? row[rollHeader] : undefined;
                         const roll = convertToNumber(rollValue);
 
@@ -388,7 +423,7 @@ export default function ResultsPage() {
 
                         Object.entries(row).forEach(([header, value]) => {
                              const trimmedHeader = header.trim().toLowerCase();
-                             if (['রোল', 'roll', 'নাম', 'name', 'শাখা', 'group', 'বিভাগ'].includes(trimmedHeader)) return;
+                             if (['রোল', 'roll', 'নাম', 'name', 'শাখা', 'group', 'বিভাগ', 'ঐচ্ছিক বিষয়', 'optional subject'].includes(trimmedHeader)) return;
                             
                             const match = header.match(/(.+) \((.+)\)/);
                             if (!match) return;
@@ -503,9 +538,6 @@ export default function ResultsPage() {
 
 
     const showGroupSelector = className === '9' || className === '10';
-    
-    const classNamesMap: { [key: string]: string } = { '6': '৬ষ্ঠ', '7': '৭ম', '8': '৮ম', '9': '৯ম', '10': '১০ম' };
-    const groupMap: { [key: string]: string } = { 'science': 'বিজ্ঞান', 'arts': 'মানবিক', 'commerce': 'ব্যবসায় শিক্ষা' };
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-background">
@@ -646,65 +678,70 @@ export default function ResultsPage() {
 
                         <div className="space-y-4">
                             <h3 className="font-semibold text-lg border-b pb-2">সংরক্ষিত ফলাফল (শিক্ষাবর্ষ {selectedYear.toLocaleString('bn-BD')})</h3>
-                            <div className="border rounded-md overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>শ্রেণি</TableHead>
-                                            <TableHead>শাখা</TableHead>
-                                            <TableHead>বিষয়</TableHead>
-                                            <TableHead>পূর্ণমান</TableHead>
-                                            <TableHead className="text-right">কার্যক্রম</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {savedResults.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                                                    এই শিক্ষাবর্ষে কোনো ফলাফল সেভ করা হয়নি।
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            savedResults.map((res, i) => (
-                                                <TableRow key={i}>
-                                                    <TableCell>{classNamesMap[res.className] || res.className}</TableCell>
-                                                    <TableCell>{res.group ? groupMap[res.group] : '-'}</TableCell>
-                                                    <TableCell>{res.subject}</TableCell>
-                                                    <TableCell>{res.fullMarks.toLocaleString('bn-BD')}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <Button variant="outline" size="icon" onClick={() => handleEditClick(res)}>
-                                                                <FilePen className="h-4 w-4" />
-                                                            </Button>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button variant="destructive" size="icon">
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            এই বিষয়ের ফলাফল স্থায়ীভাবে মুছে যাবে।
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                                                        <AlertDialogAction onClick={() => handleDeleteResult(res)}>
-                                                                            মুছে ফেলুন
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                            {savedResults.length === 0 ? (
+                                <div className="border rounded-md text-center text-muted-foreground py-8">
+                                    এই শিক্ষাবর্ষে কোনো ফলাফল সেভ করা হয়নি।
+                                </div>
+                            ) : (
+                                <Accordion type="multiple" className="w-full">
+                                    {sortedClassKeys.map(classNameKey => (
+                                        <AccordionItem value={classNameKey} key={classNameKey}>
+                                            <AccordionTrigger>শ্রেণি {classNamesMap[classNameKey] || classNameKey}</AccordionTrigger>
+                                            <AccordionContent>
+                                                <div className="border rounded-md overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>শাখা</TableHead>
+                                                                <TableHead>বিষয়</TableHead>
+                                                                <TableHead>পূর্ণমান</TableHead>
+                                                                <TableHead className="text-right">কার্যক্রম</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {groupedResults[classNameKey].map((res, i) => (
+                                                                <TableRow key={`${res.subject}-${res.group}-${i}`}>
+                                                                    <TableCell>{res.group ? groupMap[res.group] : '-'}</TableCell>
+                                                                    <TableCell>{res.subject}</TableCell>
+                                                                    <TableCell>{res.fullMarks.toLocaleString('bn-BD')}</TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        <div className="flex justify-end gap-2">
+                                                                            <Button variant="outline" size="icon" onClick={() => handleEditClick(res)}>
+                                                                                <FilePen className="h-4 w-4" />
+                                                                            </Button>
+                                                                            <AlertDialog>
+                                                                                <AlertDialogTrigger asChild>
+                                                                                    <Button variant="destructive" size="icon">
+                                                                                        <Trash2 className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                </AlertDialogTrigger>
+                                                                                <AlertDialogContent>
+                                                                                    <AlertDialogHeader>
+                                                                                        <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                                                        <AlertDialogDescription>
+                                                                                            এই বিষয়ের ফলাফল স্থায়ীভাবে মুছে যাবে।
+                                                                                        </AlertDialogDescription>
+                                                                                    </AlertDialogHeader>
+                                                                                    <AlertDialogFooter>
+                                                                                        <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                                                        <AlertDialogAction onClick={() => handleDeleteResult(res)}>
+                                                                                            মুছে ফেলুন
+                                                                                        </AlertDialogAction>
+                                                                                    </AlertDialogFooter>
+                                                                                </AlertDialogContent>
+                                                                            </AlertDialog>
+                                                                        </div>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    ))}
+                                </Accordion>
+                            )}
                         </div>
 
                     </CardContent>
