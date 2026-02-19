@@ -69,7 +69,7 @@ export default function ResultsBulkUploadPage() {
         if (!db || !className) {
             toast({
                 variant: "destructive",
-                title: "প্রথমে শ্রেণি ও গ্রুপ নির্বাচন করুন",
+                title: "প্রথমে শ্রেণি নির্বাচন করুন",
             });
             return;
         }
@@ -83,8 +83,7 @@ export default function ResultsBulkUploadPage() {
 
         const studentsForClass = allStudents.filter(s => 
             s.academicYear === selectedYear && 
-            s.className === className &&
-            (className < '9' || !group || s.group === group)
+            s.className === className
         );
 
         if (studentsForClass.length === 0) {
@@ -102,19 +101,7 @@ export default function ResultsBulkUploadPage() {
                 const worksheet = workbook.Sheets[sheetName];
                 const json = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-                const resultsBySubject = new Map<string, ClassResult>();
-                const allSubjectsForClass = getSubjects(className, group);
-
-                allSubjectsForClass.forEach(sub => {
-                    resultsBySubject.set(sub.name, {
-                        academicYear: selectedYear,
-                        className,
-                        group: group || undefined,
-                        subject: sub.name,
-                        fullMarks: sub.fullMarks,
-                        results: []
-                    });
-                });
+                const resultsToSave = new Map<string, ClassResult>(); // Key: docId
 
                 for (const row of json) {
                     const bengaliToEnglishDigit: { [key: string]: string } = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
@@ -125,16 +112,42 @@ export default function ResultsBulkUploadPage() {
                     const student = studentsForClass.find(s => s.roll === roll);
                     if (!student) continue;
 
+                    const studentSubjects = getSubjects(student.className, student.group);
+
                     for (const header of Object.keys(row)) {
                         const match = header.match(/(.+?) \((.+)\)/);
                         if (!match) continue;
 
-                        const subjectName = match[1].trim();
+                        let subjectName = match[1].trim();
                         const markType = match[2].trim();
+                        
+                        if (subjectName.includes('/')) {
+                            const subjectParts = subjectName.split('/').map(p => p.trim());
+                            const applicableSubject = subjectParts.find(p => studentSubjects.map(s => s.name).includes(p));
+                            if (applicableSubject) {
+                                subjectName = applicableSubject;
+                            } else {
+                                continue;
+                            }
+                        }
 
-                        const classResult = resultsBySubject.get(subjectName);
-                        if (!classResult) continue;
+                        const subjectInfo = studentSubjects.find(s => s.name === subjectName);
+                        if (!subjectInfo) continue;
 
+                        const docId = `${selectedYear}_${className}_${student.group || 'none'}_${subjectName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+
+                        if (!resultsToSave.has(docId)) {
+                            resultsToSave.set(docId, {
+                                academicYear: selectedYear,
+                                className,
+                                group: student.group || undefined,
+                                subject: subjectName,
+                                fullMarks: subjectInfo.fullMarks,
+                                results: []
+                            });
+                        }
+
+                        const classResult = resultsToSave.get(docId)!;
                         let studentResult = classResult.results.find(r => r.studentId === student.id);
                         if (!studentResult) {
                             studentResult = { studentId: student.id };
@@ -142,7 +155,7 @@ export default function ResultsBulkUploadPage() {
                         }
                         
                         const markStr = String(row[header] || '').replace(/[০-৯]/g, d => bengaliToEnglishDigit[d]);
-                        const markValue = (row[header] !== undefined && row[header] !== '') ? parseInt(markStr, 10) : undefined;
+                        const markValue = (row[header] !== undefined && row[header] !== null && row[header] !== '') ? parseInt(markStr, 10) : undefined;
 
                         if (markValue === undefined || isNaN(markValue)) continue;
 
@@ -152,7 +165,18 @@ export default function ResultsBulkUploadPage() {
                     }
                 }
                 
-                const subjectsToUpdate = Array.from(resultsBySubject.values()).filter(res => res.results.length > 0);
+                const subjectsToUpdate = Array.from(resultsToSave.values());
+
+                if (subjectsToUpdate.length === 0) {
+                     toast({
+                        variant: 'destructive',
+                        title: "কোনো শিক্ষার্থীর নম্বর পাওয়া যায়নি",
+                        description: "আপনার আপলোড করা ফাইলে রোল নম্বর এবং নির্বাচিত শ্রেণির শিক্ষার্থীদের মধ্যে কোনো মিল পাওয়া যায়নি।",
+                    });
+                    setIsLoading(false);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                    return;
+                }
 
                 const promises = subjectsToUpdate.map(async (newClassResult) => {
                     const existingResult = await getResultsForClass(db, newClassResult.academicYear, newClassResult.className, newClassResult.subject, newClassResult.group);
@@ -225,8 +249,9 @@ export default function ResultsBulkUploadPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="group">শাখা/গ্রুপ</Label>
                                     <Select value={group} onValueChange={setGroup}>
-                                        <SelectTrigger id="group"><SelectValue placeholder="শাখা নির্বাচন" /></SelectTrigger>
+                                        <SelectTrigger id="group"><SelectValue placeholder="সকল গ্রুপ" /></SelectTrigger>
                                         <SelectContent>
+                                            <SelectItem value="">সকল গ্রুপ</SelectItem>
                                             <SelectItem value="science">বিজ্ঞান</SelectItem>
                                             <SelectItem value="arts">মানবিক</SelectItem>
                                             <SelectItem value="commerce">ব্যবসায় শিক্ষা</SelectItem>
