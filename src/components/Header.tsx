@@ -20,6 +20,7 @@ import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useSchoolInfo } from '@/context/SchoolInfoContext';
 import { Label } from "@/components/ui/label";
 import { Skeleton } from './ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 
 export function Header() {
@@ -78,37 +79,44 @@ export function Header() {
                 )}
             </div>
             <nav className="flex-1 overflow-y-auto">
-              <div className="grid gap-2 p-4 text-base font-medium">
+              <div className="grid gap-1 p-2 text-base font-medium">
                 <Link
                   href="/"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
                 >
                   ড্যাসবোর্ড
                 </Link>
-                <Link
-                  href="/add-student"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                >
-                  নতুন শিক্ষার্থী যোগ
-                </Link>
-                <Link
-                  href="/student-list"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                >
-                  শিক্ষার্থী তালিকা
-                </Link>
-                <Link
-                  href="/digital-attendance"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                >
-                  ডিজিটাল হাজিরা
-                </Link>
-                <Link
-                  href="/attendance-report"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                >
-                  হাজিরা রিপোর্ট
-                </Link>
+
+                <Accordion type="multiple" className="w-full -space-y-1">
+                    <AccordionItem value="student-management" className="border-b-0">
+                        <AccordionTrigger className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:no-underline">
+                            <span>শিক্ষার্থী ব্যবস্থাপনা</span>
+                        </AccordionTrigger>
+                        <AccordionContent className="pl-8 pt-1 pb-0 space-y-1">
+                            <Link href="/add-student" className="block rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+                                নতুন শিক্ষার্থী যোগ
+                            </Link>
+                            <Link href="/student-list" className="block rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+                                শিক্ষার্থী তালিকা
+                            </Link>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="attendance" className="border-b-0">
+                        <AccordionTrigger className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:no-underline">
+                            <span>হাজিরা</span>
+                        </AccordionTrigger>
+                        <AccordionContent className="pl-8 pt-1 pb-0 space-y-1">
+                             <Link
+                                href="/attendance"
+                                className="block rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                              >
+                                হাজিরা নিন ও দেখুন
+                              </Link>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
+                
                 <Link
                   href="/results"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
