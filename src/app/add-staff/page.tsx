@@ -16,6 +16,7 @@ import { useFirestore } from '@/firebase';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const initialStaffState: NewStaffData = {
   employeeId: '',
@@ -40,6 +41,11 @@ export default function AddStaffPage() {
     
     const [staff, setStaff] = useState<NewStaffData>(initialStaffState);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const handleInputChange = (field: keyof NewStaffData, value: string | Date | boolean | undefined) => {
         setStaff(prev => ({...prev, [field]: value}));
@@ -92,100 +98,133 @@ export default function AddStaffPage() {
             <CardDescription>নতুন শিক্ষক বা কর্মচারীর তথ্য পূরণ করুন।</CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-8" onSubmit={handleSubmit}>
-              
-              <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">সাধারণ তথ্য</h3>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                      <div className="space-y-2">
-                          <Label htmlFor="employeeId">কর্মচারী আইডি</Label>
-                          <Input id="employeeId" name="employeeId" placeholder="কর্মচারী আইডি" required value={staff.employeeId} onChange={e => handleInputChange('employeeId', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="nameBn">নাম (বাংলা)</Label>
-                          <Input id="nameBn" name="nameBn" placeholder="নাম বাংলায়" required value={staff.nameBn} onChange={e => handleInputChange('nameBn', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="nameEn">Name (English)</Label>
-                          <Input id="nameEn" name="nameEn" placeholder="Name in English" value={staff.nameEn} onChange={e => handleInputChange('nameEn', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="designation">পদবি</Label>
-                          <Input id="designation" name="designation" placeholder="পদবি" required value={staff.designation} onChange={e => handleInputChange('designation', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="staffType">ধরণ</Label>
-                          <Select required value={staff.staffType} onValueChange={(value: 'teacher' | 'staff') => handleInputChange('staffType', value)}>
-                              <SelectTrigger id="staffType" name="staffType"><SelectValue placeholder="ধরণ নির্বাচন করুন" /></SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="teacher">শিক্ষক</SelectItem>
-                                  <SelectItem value="staff">কর্মচারী</SelectItem>
-                              </SelectContent>
-                          </Select>
-                      </div>
-                       <div className="space-y-2">
-                          <Label htmlFor="subject">বিষয়</Label>
-                          <Input id="subject" name="subject" placeholder="বিষয় (যদি প্রযোজ্য হয়)" value={staff.subject} onChange={e => handleInputChange('subject', e.target.value)} />
-                      </div>
-                       <div className="space-y-2">
-                          <Label htmlFor="joinDate">যোগদানের তারিখ</Label>
-                          <DatePicker value={staff.joinDate} onChange={date => handleInputChange('joinDate', date)} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="education">শিক্ষাগত যোগ্যতা</Label>
-                          <Input id="education" name="education" placeholder="সর্বোচ্চ শিক্ষাগত যোগ্যতা" value={staff.education} onChange={e => handleInputChange('education', e.target.value)} />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                            <Switch id="isActive" checked={staff.isActive} onCheckedChange={checked => handleInputChange('isActive', checked)} />
-                            <Label htmlFor="isActive">সক্রিয়</Label>
+            {isClient ? (
+              <form className="space-y-8" onSubmit={handleSubmit}>
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">সাধারণ তথ্য</h3>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div className="space-y-2">
+                            <Label htmlFor="employeeId">কর্মচারী আইডি</Label>
+                            <Input id="employeeId" name="employeeId" placeholder="কর্মচারী আইডি" required value={staff.employeeId} onChange={e => handleInputChange('employeeId', e.target.value)} />
                         </div>
-                  </div>
-              </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="nameBn">নাম (বাংলা)</Label>
+                            <Input id="nameBn" name="nameBn" placeholder="নাম বাংলায়" required value={staff.nameBn} onChange={e => handleInputChange('nameBn', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="nameEn">Name (English)</Label>
+                            <Input id="nameEn" name="nameEn" placeholder="Name in English" value={staff.nameEn} onChange={e => handleInputChange('nameEn', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="designation">পদবি</Label>
+                            <Input id="designation" name="designation" placeholder="পদবি" required value={staff.designation} onChange={e => handleInputChange('designation', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="staffType">ধরণ</Label>
+                            <Select required value={staff.staffType} onValueChange={(value: 'teacher' | 'staff') => handleInputChange('staffType', value)}>
+                                <SelectTrigger id="staffType" name="staffType"><SelectValue placeholder="ধরণ নির্বাচন করুন" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="teacher">শিক্ষক</SelectItem>
+                                    <SelectItem value="staff">কর্মচারী</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="subject">বিষয়</Label>
+                            <Input id="subject" name="subject" placeholder="বিষয় (যদি প্রযোজ্য হয়)" value={staff.subject} onChange={e => handleInputChange('subject', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="joinDate">যোগদানের তারিখ</Label>
+                            <DatePicker value={staff.joinDate} onChange={date => handleInputChange('joinDate', date)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="education">শিক্ষাগত যোগ্যতা</Label>
+                            <Input id="education" name="education" placeholder="সর্বোচ্চ শিক্ষাগত যোগ্যতা" value={staff.education} onChange={e => handleInputChange('education', e.target.value)} />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                              <Switch id="isActive" checked={staff.isActive} onCheckedChange={checked => handleInputChange('isActive', checked)} />
+                              <Label htmlFor="isActive">সক্রিয়</Label>
+                          </div>
+                    </div>
+                </div>
 
-               <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">যোগাযোগ ও অন্যান্য</h3>
-                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <div className="space-y-2">
-                          <Label htmlFor="mobile">মোবাইল নম্বর</Label>
-                          <Input id="mobile" name="mobile" placeholder="মোবাইল নম্বর" required value={staff.mobile} onChange={e => handleInputChange('mobile', e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="email">ইমেইল</Label>
-                          <Input id="email" name="email" type="email" placeholder="ইমেইল" value={staff.email} onChange={e => handleInputChange('email', e.target.value)} />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="address">ঠিকানা</Label>
-                          <Textarea id="address" name="address" placeholder="বর্তমান ঠিকানা" value={staff.address} onChange={e => handleInputChange('address', e.target.value)} />
-                      </div>
-                   </div>
-               </div>
-              
-              <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">ছবি</h3>
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-4">
-                            <div className="w-24 h-24 rounded-md border flex items-center justify-center bg-muted overflow-hidden">
-                                {photoPreview ? (
-                                    <Image src={photoPreview} alt="Staff photo" width={96} height={96} className="object-cover w-full h-full" />
-                                ) : (
-                                    <div className="flex flex-col items-center gap-1 text-center text-muted-foreground">
-                                        <Upload className="h-8 w-8" />
-                                        <span>ছবি</span>
-                                    </div>
-                                )}
-                            </div>
-                            <Input id="photo" name="photo" type="file" className="hidden" onChange={handlePhotoChange} accept="image/*" />
-                            <Button type="button" variant="outline" onClick={() => document.getElementById('photo')?.click()}>
-                                ছবি আপলোড করুন
-                            </Button>
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">যোগাযোগ ও অন্যান্য</h3>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="mobile">মোবাইল নম্বর</Label>
+                            <Input id="mobile" name="mobile" placeholder="মোবাইল নম্বর" required value={staff.mobile} onChange={e => handleInputChange('mobile', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">ইমেইল</Label>
+                            <Input id="email" name="email" type="email" placeholder="ইমেইল" value={staff.email} onChange={e => handleInputChange('email', e.target.value)} />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="address">ঠিকানা</Label>
+                            <Textarea id="address" name="address" placeholder="বর্তমান ঠিকানা" value={staff.address} onChange={e => handleInputChange('address', e.target.value)} />
                         </div>
                     </div>
-              </div>
+                </div>
+                
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">ছবি</h3>
+                      <div className="space-y-2">
+                          <div className="flex items-center gap-4">
+                              <div className="w-24 h-24 rounded-md border flex items-center justify-center bg-muted overflow-hidden">
+                                  {photoPreview ? (
+                                      <Image src={photoPreview} alt="Staff photo" width={96} height={96} className="object-cover w-full h-full" />
+                                  ) : (
+                                      <div className="flex flex-col items-center gap-1 text-center text-muted-foreground">
+                                          <Upload className="h-8 w-8" />
+                                          <span>ছবি</span>
+                                      </div>
+                                  )}
+                              </div>
+                              <Input id="photo" name="photo" type="file" className="hidden" onChange={handlePhotoChange} accept="image/*" />
+                              <Button type="button" variant="outline" onClick={() => document.getElementById('photo')?.click()}>
+                                  ছবি আপলোড করুন
+                              </Button>
+                          </div>
+                      </div>
+                </div>
 
-              <div className="flex justify-end pt-4 border-t mt-4">
-                <Button type="submit">সেভ করুন</Button>
+                <div className="flex justify-end pt-4 border-t mt-4">
+                  <Button type="submit">সেভ করুন</Button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-8">
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        {[...Array(9)].map((_, i) => (
+                          <div key={i} className="space-y-2">
+                            <Skeleton className="h-5 w-20" />
+                            <Skeleton className="h-10 w-full" />
+                          </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-48" />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                          <div className="space-y-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-10 w-full" /></div>
+                          <div className="space-y-2 md:col-span-2"><Skeleton className="h-5 w-20" /><Skeleton className="h-20 w-full" /></div>
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <Skeleton className="h-7 w-24" />
+                    <div className="flex items-center gap-4">
+                        <Skeleton className="h-24 w-24 rounded-md" />
+                        <Skeleton className="h-10 w-32" />
+                    </div>
+                </div>
+                <div className="flex justify-end pt-4 border-t mt-4">
+                    <Skeleton className="h-10 w-24" />
+                </div>
               </div>
-            </form>
+            )}
           </CardContent>
         </Card>
       </main>
