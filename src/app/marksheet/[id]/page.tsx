@@ -95,7 +95,7 @@ export default function MarksheetPage() {
 
             // Determine the subjects to display on this student's marksheet
             const subjectsForThisStudent = allSubjectsForGroup.filter(subjectInfo => {
-                if (studentData.group === 'science' || studentData.group === 'arts') {
+                if (studentData.group === 'science' || studentData.group === 'arts' || studentData.group === 'commerce') {
                      if (studentData.optionalSubject === 'উচ্চতর গণিত' && subjectInfo.name === 'কৃষি শিক্ষা') return false;
                      if (studentData.optionalSubject === 'কৃষি শিক্ষা' && subjectInfo.name === 'উচ্চতর গণিত') return false;
                 }
@@ -251,7 +251,7 @@ export default function MarksheetPage() {
                         </table>
                     </section>
                     
-                    <div className="absolute top-28 right-8 w-28">
+                    <div className="absolute top-36 right-8 w-24">
                          <table className="w-full border-collapse border-2 border-black text-xs text-center">
                             <thead className="bg-gray-200">
                                 <tr className="border-b-2 border-black">
