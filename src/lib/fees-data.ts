@@ -66,7 +66,7 @@ const feeCollectionFromDoc = (docSnap: QueryDocumentSnapshot): FeeCollection | n
         // 1. Handle Firestore Timestamp
         if (typeof data.collectionDate.toDate === 'function') {
             collectionDate = data.collectionDate.toDate();
-        } 
+        }
         // 2. Handle object with seconds/nanoseconds (serialized Timestamp)
         else if (typeof data.collectionDate.seconds === 'number' && typeof data.collectionDate.nanoseconds === 'number') {
             collectionDate = new Timestamp(data.collectionDate.seconds, data.collectionDate.nanoseconds).toDate();
@@ -106,7 +106,6 @@ export const getFeeCollectionsForStudent = async (db: Firestore, studentId: stri
 
     return collections.sort((a, b) => b.collectionDate.getTime() - a.collectionDate.getTime());
   } catch (e) {
-    console.error("Error getting fee collections:", e);
     return [];
   }
 };
