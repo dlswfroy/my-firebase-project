@@ -86,37 +86,24 @@ export function Header() {
                 >
                   ড্যাসবোর্ড
                 </Link>
-
-                <Accordion type="multiple" className="w-full -space-y-1">
-                    <AccordionItem value="student-management" className="border-b-0">
-                        <AccordionTrigger className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:no-underline">
-                            <span>শিক্ষার্থী ব্যবস্থাপনা</span>
-                        </AccordionTrigger>
-                        <AccordionContent className="pl-8 pt-1 pb-0 space-y-1">
-                            <Link href="/add-student" className="block rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
-                                নতুন শিক্ষার্থী যোগ
-                            </Link>
-                            <Link href="/student-list" className="block rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
-                                শিক্ষার্থী তালিকা
-                            </Link>
-                        </AccordionContent>
-                    </AccordionItem>
-
-                    <AccordionItem value="attendance" className="border-b-0">
-                        <AccordionTrigger className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:no-underline">
-                            <span>হাজিরা</span>
-                        </AccordionTrigger>
-                        <AccordionContent className="pl-8 pt-1 pb-0 space-y-1">
-                             <Link
-                                href="/attendance"
-                                className="block rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                              >
-                                হাজিরা নিন ও দেখুন
-                              </Link>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-                
+                <Link
+                  href="/add-student"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                >
+                  নতুন শিক্ষার্থী যোগ
+                </Link>
+                <Link
+                  href="/student-list"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                >
+                  শিক্ষার্থী তালিকা
+                </Link>
+                <Link
+                  href="/attendance"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                >
+                  হাজিরা
+                </Link>
                 <Link
                   href="/results"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
