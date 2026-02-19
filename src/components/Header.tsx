@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu } from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -20,11 +21,11 @@ import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useSchoolInfo } from '@/context/SchoolInfoContext';
 import { Label } from "@/components/ui/label";
 import { Skeleton } from './ui/skeleton';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 
 export function Header() {
   const [isClient, setIsClient] = useState(false);
+  const router = useRouter();
   const { selectedYear, setSelectedYear, availableYears } = useAcademicYear();
   const { schoolInfo, isLoading: isSchoolInfoLoading } = useSchoolInfo();
 
@@ -36,7 +37,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-primary px-4 text-primary-foreground shadow-sm sm:px-6 md:px-8">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0 rounded-lg bg-white text-primary hover:bg-gray-100">
+          <ArrowLeft className="h-6 w-6" />
+          <span className="sr-only">Go back</span>
+        </Button>
         {isClient ? (
         <Sheet>
           <SheetTrigger asChild>
@@ -47,9 +52,9 @@ export function Header() {
           </SheetTrigger>
           <SheetContent side="left" className="flex flex-col p-0">
             <SheetHeader className="p-4 border-b">
-                <SheetTitle className="sr-only">নেভিগেশন মেনু</SheetTitle>
+                <SheetTitle className="sr-only"></SheetTitle>
                 <SheetDescription className="sr-only">
-                    অ্যাপ্লিকেশন নেভিগেট করার জন্য লিঙ্কের একটি তালিকা।
+                    
                 </SheetDescription>
               <Link
                 href="/"
@@ -66,7 +71,7 @@ export function Header() {
                  {isClient && availableYears.length > 0 ? (
                     <Select value={selectedYear} onValueChange={setSelectedYear}>
                         <SelectTrigger id="academic-year-select" className="mt-1">
-                            <SelectValue placeholder="শিক্ষাবর্ষ" />
+                            <SelectValue placeholder="" />
                         </SelectTrigger>
                         <SelectContent>
                             {availableYears.map(year => (
