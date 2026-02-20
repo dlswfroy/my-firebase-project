@@ -48,7 +48,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
         const consecutiveClassClashes = new Set<string>();
         const breakClashes = new Set<string>();
         
-        const teacherStats: { [teacher: string]: { total: number, sixthPeriods: number, daily: { [day: string]: string[] }, breakDown: { [day: string]: { before: number, after: number }} } } = {};
+        const teacherStats: { [teacher: string]: { total: number, sixthPeriods: { [day: string]: string[] }, daily: { [day: string]: string[] }, breakDown: { [day: string]: { before: number, after: number }} } } = {};
         const classStats: { [cls: string]: { [subject: string]: number } } = {};
         const allIndividualTeachers = new Set<string>();
 
@@ -75,7 +75,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
         allIndividualTeachers.forEach(t => {
             teacherStats[t] = { 
                 total: 0, 
-                sixthPeriods: 0, 
+                sixthPeriods: { 'রবিবার': [], 'সোমবার': [], 'মঙ্গলবার': [], 'বুধবার': [], 'বৃহস্পতিবার': [] },
                 daily: { 'রবিবার': [], 'সোমবার': [], 'মঙ্গলবার': [], 'বুধবার': [], 'বৃহস্পতিবার': [] },
                 breakDown: { 
                     'রবিবার': { before: 0, after: 0 }, 
@@ -140,8 +140,8 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                                 if (teacherStats[trimmedTeacher]) {
                                     teacherStats[trimmedTeacher].total++;
                                     teacherStats[trimmedTeacher].daily[day].push(`${subject} (${cls} শ্রেণি)`);
-                                    if (periodIdx === 5) {
-                                        teacherStats[trimmedTeacher].sixthPeriods++;
+                                     if (periodIdx === 5) {
+                                        teacherStats[trimmedTeacher].sixthPeriods[day].push(`${subject} (${cls} শ্রেণি)`);
                                     }
                                     if (periodIdx < 3) {
                                         teacherStats[trimmedTeacher].breakDown[day].before++;
@@ -217,7 +217,15 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                                         <TableCell className="border">{(index + 1).toLocaleString('bn-BD')}</TableCell>
                                         <TableCell className="font-medium border">{teacher}</TableCell>
                                         <TableCell className="border">{teacherStats[teacher].total.toLocaleString('bn-BD')}</TableCell>
-                                        <TableCell className="border">{teacherStats[teacher].sixthPeriods.toLocaleString('bn-BD')}</TableCell>
+                                        <TableCell className="border">
+                                             <ul className="list-none p-0 m-0 text-xs">
+                                                {Object.entries(teacherStats[teacher].sixthPeriods)
+                                                    .filter(([, classes]) => (classes as string[]).length > 0)
+                                                    .map(([day]) => (
+                                                        <li key={day}>{day}</li>
+                                                ))}
+                                            </ul>
+                                        </TableCell>
                                         <TableCell className="border">
                                             <ul className="list-disc list-inside text-xs space-y-1">
                                                 {Object.entries(teacherStats[teacher].daily).map(([day, classes]) => {
@@ -258,6 +266,7 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                                     if(subjects.length === 0) return null;
                                     return subjects.map((subject, index) => (
                                         <TableRow key={`${cls}-${subject}`} className="border">
+                                             {index === 0 && <TableCell rowSpan={subjects.length + 1} className="font-medium align-top border"></TableCell>}
                                             <TableCell className="border">{(index + 1).toLocaleString('bn-BD')}</TableCell>
                                             {index === 0 && <TableCell rowSpan={subjects.length} className="font-medium align-top border">{classNamesMap[cls]}</TableCell>}
                                             <TableCell className="border">{subject}</TableCell>
