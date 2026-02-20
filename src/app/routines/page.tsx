@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, forwardRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,45 +13,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getFullRoutine, saveRoutinesBatch, ClassRoutine } from '@/lib/routine-data';
+import { useFirestore } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { FilePen } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
-// Data from the image, mapped to 6 periods by skipping the 4th period and using 1,2,3,5,6,7.
-const routineData: Record<string, Record<string, string[]>> = {
-    '6': {
-        'রবিবার': ['বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়', 'বিজ্ঞান - শান্তি', 'বাও বি - জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'আইসিটি - শারমিন'],
-        'সোমবার': ['কৃষি - জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'আইসিটি - শারমিন', 'বাও বি - জান্নাতুন', 'বাংলা ১ম - ওবায়দা', 'বিজ্ঞান - শান্তি'],
-        'মঙ্গলবার': ['ইংরেজী ১ম - আরিফুর', 'শারীরিক - মাহাবুব', 'ধর্ম - আনিছুর/নীলা', 'ইংরেজী ২য় - যুধিষ্ঠির', 'গণিত - ধনঞ্জয়', 'শারীরিক - ওবায়দা'],
-        'বুধবার': ['কৃষি - জান্নাতুন', 'গণিত - ধনঞ্জয়', 'ধর্ম - আনিছুর/নীলা', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী ১ম - আরিফুর', 'আইসিটি - শারমিন'],
-        'বৃহস্পতিবার': ['বাও বি - জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী ১ম - আরিফুর', 'বাংলা ১ম - ওবায়দা', 'ইংরেজী২য় - যুধিষ্ঠির', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
-    },
-    '7': {
-        'রবিবার': ['ইংরেজী ১ম - আরিফুর', 'শারীরিক - ওবায়দা', 'কৃষি - মাহাবুব', 'ধর্ম - আনিছুর/নীলা', 'বিজ্ঞান - শান্তি', 'ইংরেজী২য় - যুধিষ্ঠির'],
-        'সোমবার': ['গণিত - ধনঞ্জয়', 'আইসিটি - শারমিন', 'বাও বি - আনিছুর', 'কৃষি - মাহাবুব', 'কৃষি - মাহাবুব', 'শারীরিক - ওবায়দা'],
-        'মঙ্গলবার': ['কৃষি - মাহাবুব', 'বাংলা ২য় - যুধিষ্ঠির', 'বিজ্ঞান - শান্তি', 'গণিত - ধনঞ্জয়', 'ধর্ম - মাহাবুব/নীলা', 'বাও বি - আনিছুর'],
-        'বুধবার': ['বাংলা ১ম - ওবায়দা', 'ইংরেজী ১ম - আরিফুর', 'ইংরেজী ২য় - আরিফুর', 'কৃষি - মাহাবুব', 'গণিত - ধনঞ্জয়', 'শারীরিক - ওবায়দা'],
-        'বৃহস্পতিবার': ['গণিত - ধনঞ্জয়', 'বাও বি - আনিছুর', 'ইংরেজী ২য় - আরিফুর', 'বিজ্ঞান - শান্তি', 'ধর্ম - মাহাবুব/নীলা', 'বাংলা ১ম - ওবায়দা'],
-    },
-    '8': {
-        'রবিবার': ['বাংলা ২য় - যুধিষ্ঠির', 'ধর্ম - মাহাবুব/নীলা', 'ইংরেজী ১ম - আরিফুর', 'বিজ্ঞান - শান্তি', 'বাংলা ১ম - ওবায়দা', 'বাও বি - আনিছুর'],
-        'সোমবার': ['বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়', 'বাংলা ২য় - যুধিষ্ঠির', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী২য় - আরিফুর', 'ধর্ম - মাহাবুব/নীলা'],
-        'মঙ্গলবার': ['বাংলা ২য় - যুধিষ্ঠির', 'শারীরিক - নীলা', 'বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়', 'আইসিটি - শারমিন', 'ধর্ম - মাহাবুব/নীলা'],
-        'বুধবার': ['গণিত - ধনঞ্জয়', 'বাংলা ১ম - ওবায়দা', 'কৃষি - মাহাবুব', 'ধর্ম - মাহাবুব/নীলা', 'বাংলা ২য় - যুধিষ্ঠির', 'আইসিটি - শারমিন'],
-        'বৃহস্পতিবার': ['শারীরিক - নীলা', 'কৃষি - মাহাবুব', 'গণিত - ধনঞ্জয়', 'কৃষি - মাহাবুব', 'ইংরেজী ১ম - আরিফুর', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
-    },
-    '9': {
-        'রবিবার': ['গণিত - ধনঞ্জয়', 'জীব/পৌর - শান্তি/জান্নাতুন', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন', 'বাংলা ২য় - যুধিষ্ঠির', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
-        'সোমবার': ['আইসিটি - শারমিন', 'গণিত - ধনঞ্জয়', 'জীব/পৌর - শান্তি/জান্নাতুন', 'ইংরেজী ১ম - আরিফুর', 'গণিত - ধনঞ্জয়', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন'],
-        'মঙ্গলবার': ['গণিত - ধনঞ্জয়', 'বাংলা ১ম - ওবায়দা', 'পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'জীব/পৌর - শান্তি/জান্নাতুন', 'ধর্ম - মাহাবুব/নীলা', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
-        'বুধবার': ['ইংরেজী ২য় - আরিফুর', 'পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'কৃষি - মাহাবুব', 'শারীরিক - মাহাবুব', 'পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'কৃষি - জান্নাতুন'],
-        'বৃহস্পতিবার': ['পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'গণিত - ধনঞ্জয়', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন', 'শারীরিক - মাহাবুব', 'গণিত - ধনঞ্জয়', 'ধর্ম - আনিছুর/নীলা'],
-    },
-    '10': {
-        'রবিবার': ['আইসিটি - শারমিন', 'জীব/পৌর - শান্তি/জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী ১ম - আরিফুর', 'বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়'],
-        'সোমবার': ['আইসিটি - শারমিন', 'ধর্ম - মাহাবুব/নীলা', 'জীব/পৌর - শান্তি/জান্নাতুন', 'বাও বি - জান্নাতুন', 'গণিত - ধনঞ্জয়', 'আইসিটি - শারমিন'],
-        'মঙ্গলবার': ['আইসিটি - শারমিন', 'ইংরেজী ২য় - আরিফুর', 'ধর্ম - মাহাবুব/নীলা', 'ইংরেজী ২য় - যুধিষ্ঠির', 'জীব/পৌর - শান্তি/জান্নাতুন', 'কৃষি - জান্নাতুন'],
-        'বুধবার': ['আইসিটি - শারমিন', 'বাংলা ১ম - ওবায়দা', 'বাংলা ২য় - যুধিষ্ঠির', 'বাংলা ১ম - ওবায়দা', 'ধর্ম - মাহাবুব/নীলা', 'ইংরেজী ১ম - আরিফুর'],
-        'বৃহস্পতিবার': ['বাংলা ১ম - ওবায়দা', 'ইংরেজী ১ম - আরিফুর', 'কৃষি - মাহাবুব', 'বাংলা ২য় - যুধিষ্ঠির', 'ধর্ম - মাহাবুব/নীলা', 'আইসিটি - শারমিন'],
-    },
-};
 
 const parseSubjectTeacher = (cell: string): { subject: string, teacher: string | null } => {
     if (!cell || !cell.includes(' - ')) {
@@ -63,7 +30,7 @@ const parseSubjectTeacher = (cell: string): { subject: string, teacher: string |
     return { subject, teacher };
 };
 
-const useRoutineAnalysis = (routine: typeof routineData) => {
+const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) => {
     const analysis = useMemo(() => {
         const teacherClashes = new Set<string>();
         const consecutiveClassClashes = new Set<string>();
@@ -82,7 +49,9 @@ const useRoutineAnalysis = (routine: typeof routineData) => {
                 if (routine[cls]?.[day]) {
                     routine[cls][day].forEach(cell => {
                         const { teacher } = parseSubjectTeacher(cell);
-                        if (teacher) teachers.add(teacher);
+                        if (teacher) {
+                            teacher.split('/').forEach(t => teachers.add(t.trim()));
+                        }
                     });
                 }
             });
@@ -100,13 +69,16 @@ const useRoutineAnalysis = (routine: typeof routineData) => {
                     if (cell) {
                         const { teacher } = parseSubjectTeacher(cell);
                         if (teacher) {
-                            if (periodTeachers.has(teacher)) {
-                                teacherClashes.add(`${cls}-${day}-${periodIdx}`);
-                                const existingCls = periodTeachers.get(teacher)!;
-                                teacherClashes.add(`${existingCls}-${day}-${periodIdx}`);
-                            } else {
-                                periodTeachers.set(teacher, cls);
-                            }
+                            teacher.split('/').forEach(t => {
+                                const trimmedTeacher = t.trim();
+                                if (periodTeachers.has(trimmedTeacher)) {
+                                    teacherClashes.add(`${cls}-${day}-${periodIdx}`);
+                                    const existingCls = periodTeachers.get(trimmedTeacher)!;
+                                    teacherClashes.add(`${existingCls}-${day}-${periodIdx}`);
+                                } else {
+                                    periodTeachers.set(trimmedTeacher, cls);
+                                }
+                            })
                         }
                     }
                 });
@@ -144,7 +116,7 @@ const useRoutineAnalysis = (routine: typeof routineData) => {
                     consecutivePairs.forEach(([p1, p2]) => {
                         const teacher1 = parseSubjectTeacher(dayRoutine[p1]).teacher;
                         const teacher2 = parseSubjectTeacher(dayRoutine[p2]).teacher;
-                        if (teacher1 && teacher1 === teacher2) {
+                        if (teacher1 && teacher2 && teacher1.split('/')[0].trim() === teacher2.split('/')[0].trim()) {
                             consecutiveClassClashes.add(`${cls}-${day}-${p1}`);
                             consecutiveClassClashes.add(`${cls}-${day}-${p2}`);
                         }
@@ -152,7 +124,7 @@ const useRoutineAnalysis = (routine: typeof routineData) => {
 
                     const teacherBeforeBreak = parseSubjectTeacher(dayRoutine[2]).teacher;
                     const teacherAfterBreak = parseSubjectTeacher(dayRoutine[3]).teacher;
-                    if (teacherBeforeBreak && teacherBeforeBreak === teacherAfterBreak) {
+                    if (teacherBeforeBreak && teacherAfterBreak && teacherBeforeBreak.split('/')[0].trim() === teacherAfterBreak.split('/')[0].trim()) {
                         breakClashes.add(`${cls}-${day}-2`);
                         breakClashes.add(`${cls}-${day}-3`);
                     }
@@ -240,17 +212,18 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
 };
 
 
-const RoutineTable = ({ className, routine, showGroupInfo, conflicts }: { className: string, routine: any, showGroupInfo: boolean, conflicts: any }) => {
+const RoutineTable = ({ className, routineData, conflicts, isEditMode, onCellChange }: { className: string, routineData: any, conflicts: any, isEditMode: boolean, onCellChange: (cls: string, day: string, periodIdx: number, value: string) => void }) => {
     const days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার"];
     const periods = [ { name: "১ম", time: "১০:৩০ - ১১:২০" }, { name: "২য়", time: "১১:২০ - ১২:১০" }, { name: "৩য়", time: "১২:১০ - ০১:০০" } ];
     const postBreakPeriods = [ { name: "৪র্থ", time: "০১:৪০ - ০২:৩০" }, { name: "৫ম", time: "০২:৩০ - ০৩:২০" }, { name: "৬ষ্ঠ", time: "০৩:২০ - ০৪:১০" } ];
     const classNamesMap: { [key: string]: string } = { '6': '৬ষ্ঠ', '7': '৭ম', '8': '৮ম', '9': '৯ম', '10': '১০ম' };
 
+    const routineForClass = routineData[className] || {};
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle>ক্লাস রুটিন (শ্রেণি - {classNamesMap[className] || className})</CardTitle>
-                {showGroupInfo && <CardDescription>দ্রষ্টব্য: ৯ম ও ১০ম শ্রেণির রুটিন সকল গ্রুপের জন্য সম্মিলিতভাবে দেখানো হয়েছে।</CardDescription>}
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
@@ -267,27 +240,15 @@ const RoutineTable = ({ className, routine, showGroupInfo, conflicts }: { classN
                             {days.map(day => (
                                 <TableRow key={day}>
                                     <TableCell className="font-semibold border-r">{day}</TableCell>
-                                    {[...Array(6)].map((_, periodIdx) => {
-                                        const subject = (routine[day] || [])[periodIdx] || '-';
-                                        const key = `${className}-${day}-${periodIdx}`;
-                                        const isTeacherClash = conflicts.teacherClashes.has(key);
-                                        const isConsecutiveClash = conflicts.consecutiveClassClashes.has(key);
-                                        const isBreakClash = conflicts.breakClashes.has(key);
-                                        const isConflict = isTeacherClash || isConsecutiveClash || isBreakClash;
-                                        
-                                        let tooltipContent = '';
-                                        if (isTeacherClash) tooltipContent += 'একই সময়ে এই শিক্ষকের অন্য ক্লাসে ক্লাস রয়েছে। ';
-                                        if (isConsecutiveClash) tooltipContent += 'একই শিক্ষকের এই ক্লাসে পরপর ক্লাস পড়েছে। ';
-                                        if (isBreakClash) tooltipContent += 'বিরতির আগে ও পরে একই শিক্ষকের ক্লাস পড়েছে। ';
-                                        
-                                        if (periodIdx === 3) {
-                                            return <>
-                                                <TableCell key={`${day}-pre-${periodIdx}`} className={cn("border-r text-center", { "bg-red-100 text-red-700": isConflict })} title={tooltipContent}>{subject}</TableCell>
-                                                <TableCell className="border-r text-center bg-muted font-semibold">টিফিন</TableCell>
-                                            </>;
-                                        }
-
-                                        return <TableCell key={`${day}-pre-${periodIdx}`} className={cn("border-r text-center", { "bg-red-100 text-red-700": isConflict })} title={tooltipContent}>{subject}</TableCell>;
+                                    {[...Array(3)].map((_, periodIdx) => {
+                                        const cellContent = (routineForClass[day] || [])[periodIdx] || '';
+                                        return <EditableCell key={`${day}-${periodIdx}`} content={cellContent} isEditMode={isEditMode} onCellChange={(value) => onCellChange(className, day, periodIdx, value)} conflictKey={`${className}-${day}-${periodIdx}`} conflicts={conflicts} />;
+                                    })}
+                                    <TableCell className="border-r text-center bg-muted font-semibold">টিফিন</TableCell>
+                                    {[...Array(3)].map((_, i) => {
+                                        const periodIdx = i + 3;
+                                        const cellContent = (routineForClass[day] || [])[periodIdx] || '';
+                                        return <EditableCell key={`${day}-${periodIdx}`} content={cellContent} isEditMode={isEditMode} onCellChange={(value) => onCellChange(className, day, periodIdx, value)} conflictKey={`${className}-${day}-${periodIdx}`} conflicts={conflicts} />;
                                     })}
                                 </TableRow>
                             ))}
@@ -299,7 +260,7 @@ const RoutineTable = ({ className, routine, showGroupInfo, conflicts }: { classN
     );
 };
 
-const CombinedRoutineTable = ({ conflicts }: { conflicts: any }) => {
+const CombinedRoutineTable = ({ routineData, conflicts, isEditMode, onCellChange }: { routineData: Record<string, Record<string, string[]>>, conflicts: any, isEditMode: boolean, onCellChange: (cls: string, day: string, periodIdx: number, value: string) => void }) => {
     const days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার"];
     const classes = ['6', '7', '8', '9', '10'];
     const periods = [ { name: "১ম", time: "১০:৩০ - ১১:২০" }, { name: "২য়", time: "১১:২০ - ১২:১০" }, { name: "৩য়", time: "১২:১০ - ০১:০০" } ];
@@ -311,7 +272,7 @@ const CombinedRoutineTable = ({ conflicts }: { conflicts: any }) => {
             <CardHeader>
                 <CardTitle>সকল শ্রেণির সম্মিলিত ক্লাস রুটিন</CardTitle>
                 <CardDescription>
-                    অসঙ্গতিপূর্ণ ক্লাসগুলো লাল রঙে হাইলাইট করা হয়েছে। বিস্তারিত জানতে সেলের উপর মাউস রাখুন।
+                    অসঙ্গতিপূর্ণ ক্লাসগুলো লাল রঙে হাইলাইট করা হয়েছে। বিস্তারিত জানতে সেলের উপর মাউস রাখুন। এডিট মোডে প্রতিটি সেলে ক্লিক করে পরিবর্তন করা যাবে।
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -334,36 +295,15 @@ const CombinedRoutineTable = ({ conflicts }: { conflicts: any }) => {
                                              <TableCell className="font-semibold border-r align-middle text-center" rowSpan={classes.length}>{day}</TableCell>
                                         )}
                                         <TableCell className="font-semibold border-r text-center">{classNamesMap[cls]}</TableCell>
-                                        {[...Array(6)].map((_, periodIdx) => {
-                                            const subject = (routineData[cls]?.[day] || [])[periodIdx] || '-';
-                                            const key = `${cls}-${day}-${periodIdx}`;
-                                            const isTeacherClash = conflicts.teacherClashes.has(key);
-                                            const isConsecutiveClash = conflicts.consecutiveClassClashes.has(key);
-                                            const isBreakClash = conflicts.breakClashes.has(key);
-                                            const isConflict = isTeacherClash || isConsecutiveClash || isBreakClash;
-                                            
-                                            let tooltipContent = '';
-                                            if (isTeacherClash) tooltipContent += 'একই সময়ে এই শিক্ষকের অন্য ক্লাসে ক্লাস রয়েছে। ';
-                                            if (isConsecutiveClash) tooltipContent += 'একই শিক্ষকের এই ক্লাসে পরপর ক্লাস পড়েছে। ';
-                                            if (isBreakClash) tooltipContent += 'বিরতির আগে ও পরে একই শিক্ষকের ক্লাস পড়েছে। ';
-
-                                            const cell = (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                             <TableCell className={cn("border-r text-center", { "bg-red-100 text-red-700": isConflict })}>
-                                                                {subject}
-                                                             </TableCell>
-                                                        </TooltipTrigger>
-                                                        {isConflict && <TooltipContent><p>{tooltipContent}</p></TooltipContent>}
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            );
-                                            
-                                            if (periodIdx === 2) {
-                                                return <>{cell}<TableCell className="border-r text-center bg-muted font-semibold">টিফিন</TableCell></>;
-                                            }
-                                            return cell;
+                                        {[...Array(3)].map((_, periodIdx) => {
+                                            const cellContent = (routineData[cls]?.[day] || [])[periodIdx] || '';
+                                            return <EditableCell key={`${day}-${cls}-${periodIdx}`} content={cellContent} isEditMode={isEditMode} onCellChange={(value) => onCellChange(cls, day, periodIdx, value)} conflictKey={`${cls}-${day}-${periodIdx}`} conflicts={conflicts} />;
+                                        })}
+                                        <TableCell className="border-r text-center bg-muted font-semibold">টিফিন</TableCell>
+                                        {[...Array(3)].map((_, i) => {
+                                            const periodIdx = i + 3;
+                                            const cellContent = (routineData[cls]?.[day] || [])[periodIdx] || '';
+                                            return <EditableCell key={`${day}-${cls}-${periodIdx}`} content={cellContent} isEditMode={isEditMode} onCellChange={(value) => onCellChange(cls, day, periodIdx, value)} conflictKey={`${cls}-${day}-${periodIdx}`} conflicts={conflicts} />;
                                         })}
                                     </TableRow>
                                 ))
@@ -376,8 +316,42 @@ const CombinedRoutineTable = ({ conflicts }: { conflicts: any }) => {
     );
 };
 
+const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflicts }: { content: string, isEditMode: boolean, onCellChange: (value: string) => void, conflictKey: string, conflicts: any }) => {
+    const isTeacherClash = conflicts.teacherClashes.has(conflictKey);
+    const isConsecutiveClash = conflicts.consecutiveClassClashes.has(conflictKey);
+    const isBreakClash = conflicts.breakClashes.has(conflictKey);
+    const isConflict = isTeacherClash || isConsecutiveClash || isBreakClash;
 
-const ClassRoutineTab = ({ conflicts }: { conflicts: any }) => {
+    let tooltipContent = '';
+    if (isTeacherClash) tooltipContent += 'একই সময়ে এই শিক্ষকের অন্য ক্লাসে ক্লাস রয়েছে। ';
+    if (isConsecutiveClash) tooltipContent += 'একই শিক্ষকের এই ক্লাসে পরপর ক্লাস পড়েছে। ';
+    if (isBreakClash) tooltipContent += 'বিরতির আগে ও পরে একই শিক্ষকের ক্লাস পড়েছে। ';
+
+    const cellContent = isEditMode ? (
+        <Input
+            value={content}
+            onChange={(e) => onCellChange(e.target.value)}
+            className={cn("w-full h-full p-1 text-xs border-transparent rounded-none focus:bg-amber-100", { "bg-red-100": isConflict })}
+        />
+    ) : (
+        content
+    );
+
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <TableCell className={cn("border-r text-center p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}>
+                        {cellContent}
+                    </TableCell>
+                </TooltipTrigger>
+                {isConflict && <TooltipContent><p>{tooltipContent}</p></TooltipContent>}
+            </Tooltip>
+        </TooltipProvider>
+    );
+};
+
+const ClassRoutineTab = ({ routineData, conflicts, isEditMode, onCellChange }: { routineData: any, conflicts: any, isEditMode: boolean, onCellChange: (cls: string, day: string, periodIdx: number, value: string) => void }) => {
     const [className, setClassName] = useState('all');
     
     return (
@@ -400,13 +374,14 @@ const ClassRoutineTab = ({ conflicts }: { conflicts: any }) => {
             </div>
             
             {className === 'all' ? (
-                <CombinedRoutineTable conflicts={conflicts} />
+                <CombinedRoutineTable routineData={routineData} conflicts={conflicts} isEditMode={isEditMode} onCellChange={onCellChange} />
             ) : (
                 <RoutineTable 
                     className={className} 
-                    routine={routineData[className] || {}}
-                    showGroupInfo={className === '9' || className === '10'}
+                    routineData={routineData}
                     conflicts={conflicts}
+                    isEditMode={isEditMode}
+                    onCellChange={onCellChange}
                 />
             )}
         </div>
@@ -453,11 +428,79 @@ const ExamRoutineTab = () => {
 export default function RoutinesPage() {
     const { selectedYear } = useAcademicYear();
     const [isClient, setIsClient] = useState(false);
-    const { conflicts, stats } = useRoutineAnalysis(routineData);
+    
+    const db = useFirestore();
+    const { toast } = useToast();
+    const [originalRoutineData, setOriginalRoutineData] = useState<Record<string, Record<string, string[]>>>({});
+    const [routineData, setRoutineData] = useState<Record<string, Record<string, string[]>>>({});
+    const [isLoading, setIsLoading] = useState(true);
+    const [isEditMode, setIsEditMode] = useState(false);
+
+    const fetchData = useCallback(async () => {
+        if (!db) return;
+        setIsLoading(true);
+        const routinesFromDb = await getFullRoutine(db, selectedYear);
+        const transformedData: Record<string, Record<string, string[]>> = {};
+        routinesFromDb.forEach(r => {
+            if (!transformedData[r.className]) {
+                transformedData[r.className] = {};
+            }
+            const periods = r.periods || [];
+            while (periods.length < 6) {
+                periods.push('');
+            }
+            transformedData[r.className][r.day] = periods.slice(0, 6);
+        });
+        setRoutineData(transformedData);
+        setOriginalRoutineData(transformedData);
+        setIsLoading(false);
+    }, [db, selectedYear]);
 
     useEffect(() => {
         setIsClient(true);
-    }, []);
+        fetchData();
+    }, [fetchData]);
+
+    const { conflicts, stats } = useRoutineAnalysis(routineData);
+    
+    const handleCellChange = (className: string, day: string, periodIndex: number, value: string) => {
+        setRoutineData(prevData => {
+            const newData = JSON.parse(JSON.stringify(prevData));
+            if (!newData[className]) newData[className] = {};
+            if (!newData[className][day]) newData[className][day] = Array(6).fill('');
+            newData[className][day][periodIndex] = value;
+            return newData;
+        });
+    };
+
+    const handleSaveChanges = () => {
+        if (!db) return;
+        
+        const routinesToSave: ClassRoutine[] = [];
+        Object.keys(routineData).forEach(className => {
+            Object.keys(routineData[className]).forEach(day => {
+                routinesToSave.push({
+                    academicYear: selectedYear,
+                    className,
+                    day,
+                    periods: routineData[className][day]
+                });
+            });
+        });
+
+        saveRoutinesBatch(db, routinesToSave).then(() => {
+            toast({ title: 'রুটিন সেভ হয়েছে' });
+            setIsEditMode(false);
+            setOriginalRoutineData(routineData);
+        }).catch(() => {
+            toast({ variant: 'destructive', title: 'সেভ করা যায়নি' });
+        });
+    };
+
+    const handleCancelEdit = () => {
+        setRoutineData(originalRoutineData);
+        setIsEditMode(false);
+    };
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-fuchsia-50">
@@ -465,11 +508,23 @@ export default function RoutinesPage() {
             <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
                 <Card>
                     <CardHeader>
-                        <CardTitle>রুটিন</CardTitle>
-                        {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <CardTitle>রুটিন</CardTitle>
+                                {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
+                            </div>
+                             {isEditMode ? (
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={handleCancelEdit}>বাতিল</Button>
+                                    <Button onClick={handleSaveChanges}>পরিবর্তন সেভ করুন</Button>
+                                </div>
+                            ) : (
+                                <Button variant="outline" onClick={() => setIsEditMode(true)}><FilePen className="mr-2 h-4 w-4" /> রুটিন এডিট করুন</Button>
+                            )}
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        {isClient ? (
+                        {isClient && !isLoading ? (
                             <Tabs defaultValue="class-routine">
                                 <TabsList className="grid w-full grid-cols-3">
                                     <TabsTrigger value="class-routine">ক্লাস রুটিন</TabsTrigger>
@@ -477,7 +532,7 @@ export default function RoutinesPage() {
                                     <TabsTrigger value="statistics">পরিসংখ্যান</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="class-routine" className="mt-4">
-                                    <ClassRoutineTab conflicts={conflicts} />
+                                    <ClassRoutineTab routineData={routineData} conflicts={conflicts} isEditMode={isEditMode} onCellChange={handleCellChange} />
                                 </TabsContent>
                                 <TabsContent value="exam-routine" className="mt-4">
                                     <ExamRoutineTab />
@@ -488,8 +543,9 @@ export default function RoutinesPage() {
                             </Tabs>
                         ) : (
                            <div className="space-y-4">
-                               <div className="grid w-full grid-cols-2 h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                               <div className="grid w-full grid-cols-3 h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
                                     <div className="inline-flex items-center justify-center rounded-sm bg-background shadow-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                    <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
                                     <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
                                 </div>
                                 <div className="p-4 border rounded-lg">

@@ -1,0 +1,130 @@
+'use client';
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  query,
+  where,
+  Firestore,
+  WriteBatch,
+  writeBatch,
+} from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
+export interface ClassRoutine {
+  id?: string;
+  academicYear: string;
+  className: string;
+  day: string; // রবিবার, সোমবার, etc.
+  periods: string[]; // Array of 6 strings like "Subject - Teacher"
+}
+
+export const ROUTINE_COLLECTION = 'classRoutines';
+
+// This function will create initial data if the routine is empty.
+const createInitialRoutine = async (db: Firestore, academicYear: string): Promise<ClassRoutine[]> => {
+    const hardcodedData: Record<string, Record<string, string[]>> = {
+    '6': {
+        'রবিবার': ['বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়', 'বিজ্ঞান - শান্তি', 'বাও বি - জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'আইসিটি - শারমিন'],
+        'সোমবার': ['কৃষি - জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'আইসিটি - শারমিন', 'বাও বি - জান্নাতুন', 'বাংলা ১ম - ওবায়দা', 'বিজ্ঞান - শান্তি'],
+        'মঙ্গলবার': ['ইংরেজী ১ম - আরিফুর', 'শারীরিক - মাহাবুব', 'ধর্ম - আনিছুর/নীলা', 'ইংরেজী ২য় - যুধিষ্ঠির', 'গণিত - ধনঞ্জয়', 'শারীরিক - ওবায়দা'],
+        'বুধবার': ['কৃষি - জান্নাতুন', 'গণিত - ধনঞ্জয়', 'ধর্ম - আনিছুর/নীলা', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী ১ম - আরিফুর', 'আইসিটি - শারমিন'],
+        'বৃহস্পতিবার': ['বাও বি - জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী ১ম - আরিফুর', 'বাংলা ১ম - ওবায়দা', 'ইংরেজী২য় - যুধিষ্ঠির', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
+    },
+    '7': {
+        'রবিবার': ['ইংরেজী ১ম - আরিফুর', 'শারীরিক - ওবায়দা', 'কৃষি - মাহাবুব', 'ধর্ম - আনিছুর/নীলা', 'বিজ্ঞান - শান্তি', 'ইংরেজী২য় - যুধিষ্ঠির'],
+        'সোমবার': ['গণিত - ধনঞ্জয়', 'আইসিটি - শারমিন', 'বাও বি - আনিছুর', 'কৃষি - মাহাবুব', 'কৃষি - মাহাবুব', 'শারীরিক - ওবায়দা'],
+        'মঙ্গলবার': ['কৃষি - মাহাবুব', 'বাংলা ২য় - যুধিষ্ঠির', 'বিজ্ঞান - শান্তি', 'গণিত - ধনঞ্জয়', 'ধর্ম - মাহাবুব/নীলা', 'বাও বি - আনিছুর'],
+        'বুধবার': ['বাংলা ১ম - ওবায়দা', 'ইংরেজী ১ম - আরিফুর', 'ইংরেজী ২য় - আরিফুর', 'কৃষি - মাহাবুব', 'গণিত - ধনঞ্জয়', 'শারীরিক - ওবায়দা'],
+        'বৃহস্পতিবার': ['গণিত - ধনঞ্জয়', 'বাও বি - আনিছুর', 'ইংরেজী ২য় - আরিফুর', 'বিজ্ঞান - শান্তি', 'ধর্ম - মাহাবুব/নীলা', 'বাংলা ১ম - ওবায়দা'],
+    },
+    '8': {
+        'রবিবার': ['বাংলা ২য় - যুধিষ্ঠির', 'ধর্ম - মাহাবুব/নীলা', 'ইংরেজী ১ম - আরিফুর', 'বিজ্ঞান - শান্তি', 'বাংলা ১ম - ওবায়দা', 'বাও বি - আনিছুর'],
+        'সোমবার': ['বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়', 'বাংলা ২য় - যুধিষ্ঠির', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী২য় - আরিফুর', 'ধর্ম - মাহাবুব/নীলা'],
+        'মঙ্গলবার': ['বাংলা ২য় - যুধিষ্ঠির', 'শারীরিক - নীলা', 'বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়', 'আইসিটি - শারমিন', 'ধর্ম - মাহাবুব/নীলা'],
+        'বুধবার': ['গণিত - ধনঞ্জয়', 'বাংলা ১ম - ওবায়দা', 'কৃষি - মাহাবুব', 'ধর্ম - মাহাবুব/নীলা', 'বাংলা ২য় - যুধিষ্ঠির', 'আইসিটি - শারমিন'],
+        'বৃহস্পতিবার': ['শারীরিক - নীলা', 'কৃষি - মাহাবুব', 'গণিত - ধনঞ্জয়', 'কৃষি - মাহাবুব', 'ইংরেজী ১ম - আরিফুর', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
+    },
+    '9': {
+        'রবিবার': ['গণিত - ধনঞ্জয়', 'জীব/পৌর - শান্তি/জান্নাতুন', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন', 'বাংলা ২য় - যুধিষ্ঠির', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
+        'সোমবার': ['আইসিটি - শারমিন', 'গণিত - ধনঞ্জয়', 'জীব/পৌর - শান্তি/জান্নাতুন', 'ইংরেজী ১ম - আরিফুর', 'গণিত - ধনঞ্জয়', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন'],
+        'মঙ্গলবার': ['গণিত - ধনঞ্জয়', 'বাংলা ১ম - ওবায়দা', 'পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'জীব/পৌর - শান্তি/জান্নাতুন', 'ধর্ম - মাহাবুব/নীলা', 'বাও বি/বিজ্ঞান - আনিছুর/শান্তি'],
+        'বুধবার': ['ইংরেজী ২য় - আরিফুর', 'পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'কৃষি - মাহাবুব', 'শারীরিক - মাহাবুব', 'পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'কৃষি - জান্নাতুন'],
+        'বৃহস্পতিবার': ['পদায/ইতিহাস - ধনঞ্জয়/জান্নাতুন', 'গণিত - ধনঞ্জয়', 'রসায়ন/ভূগোল - ধনঞ্জয়/শারমিন', 'শারীরিক - মাহাবুব', 'গণিত - ধনঞ্জয়', 'ধর্ম - আনিছুর/নীলা'],
+    },
+    '10': {
+        'রবিবার': ['আইসিটি - শারমিন', 'জীব/পৌর - শান্তি/জান্নাতুন', 'বাংলা ২য় - যুধিষ্ঠির', 'ইংরেজী ১ম - আরিফুর', 'বাংলা ১ম - ওবায়দা', 'গণিত - ধনঞ্জয়'],
+        'সোমবার': ['আইসিটি - শারমিন', 'ধর্ম - মাহাবুব/নীলা', 'জীব/পৌর - শান্তি/জান্নাতুন', 'বাও বি - জান্নাতুন', 'গণিত - ধনঞ্জয়', 'আইসিটি - শারমিন'],
+        'মঙ্গলবার': ['আইসিটি - শারমিন', 'ইংরেজী ২য় - আরিফুর', 'ধর্ম - মাহাবুব/নীলা', 'ইংরেজী ২য় - যুধিষ্ঠির', 'জীব/পৌর - শান্তি/জান্নাতুন', 'কৃষি - জান্নাতুন'],
+        'বুধবার': ['আইসিটি - শারমিন', 'বাংলা ১ম - ওবায়দা', 'বাংলা ২য় - যুধিষ্ঠির', 'বাংলা ১ম - ওবায়দা', 'ধর্ম - মাহাবুব/নীলা', 'ইংরেজী ১ম - আরিফুর'],
+        'বৃহস্পতিবার': ['বাংলা ১ম - ওবায়দা', 'ইংরেজী ১ম - আরিফুর', 'কৃষি - মাহাবুব', 'বাংলা ২য় - যুধিষ্ঠির', 'ধর্ম - মাহাবুব/নীলা', 'আইসিটি - শারমিন'],
+    },
+   };
+
+   const routinesToSave: ClassRoutine[] = [];
+   Object.keys(hardcodedData).forEach(className => {
+       Object.keys(hardcodedData[className]).forEach(day => {
+           routinesToSave.push({
+               academicYear: academicYear,
+               className,
+               day,
+               periods: hardcodedData[className][day]
+           });
+       });
+   });
+   
+   await saveRoutinesBatch(db, routinesToSave);
+   return routinesToSave;
+};
+
+
+// Function to get the entire routine for an academic year
+export const getFullRoutine = async (db: Firestore, academicYear: string): Promise<ClassRoutine[]> => {
+  const q = query(collection(db, ROUTINE_COLLECTION), where("academicYear", "==", academicYear));
+  try {
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      // If no routine is found for the year, create it from hardcoded data
+      return await createInitialRoutine(db, academicYear);
+    }
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClassRoutine));
+  } catch (e) {
+    console.error("Error getting full routine:", e);
+    const permissionError = new FirestorePermissionError({
+      path: ROUTINE_COLLECTION,
+      operation: 'list',
+    });
+    errorEmitter.emit('permission-error', permissionError);
+    return [];
+  }
+};
+
+
+// A batch function to save multiple changes
+export const saveRoutinesBatch = async (db: Firestore, routines: ClassRoutine[]) => {
+    const batch: WriteBatch = writeBatch(db);
+
+    routines.forEach(routine => {
+        const { academicYear, className, day } = routine;
+        const docId = `${academicYear}_${className}_${day}`;
+        const docRef = doc(db, ROUTINE_COLLECTION, docId);
+        
+        const dataToSave: any = { ...routine };
+        delete dataToSave.id;
+        
+        batch.set(docRef, dataToSave, { merge: true });
+    });
+
+    return batch.commit().catch(async (serverError) => {
+      console.error("Error saving routines batch:", serverError);
+      const permissionError = new FirestorePermissionError({
+        path: ROUTINE_COLLECTION,
+        operation: 'write',
+        requestResourceData: routines,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
+    });
+}
