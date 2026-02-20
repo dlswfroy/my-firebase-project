@@ -27,6 +27,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAcademicYear } from '@/context/AcademicYearContext';
@@ -121,7 +122,7 @@ export default function StudentListPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <CardTitle>শিক্ষার্থীদের তালিকা</CardTitle>
-                <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
+                {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
               </div>
               <Link href="/add-student">
                 <Button>নতুন শিক্ষার্থী যোগ করুন</Button>
@@ -364,6 +365,13 @@ export default function StudentListPage() {
 
                         </div>
                     </div>
+                     <DialogFooter className="pt-4 border-t">
+                        <Link href={`/documents/testimonial/${studentToView.id}`} target="_blank" legacyBehavior>
+                            <a target="_blank" rel="noopener noreferrer">
+                                <Button type="button">প্রত্যয়ন পত্র</Button>
+                            </a>
+                        </Link>
+                    </DialogFooter>
                 </>
              )}
         </DialogContent>

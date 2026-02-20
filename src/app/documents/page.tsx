@@ -1,7 +1,10 @@
 'use client';
 
 import { Header } from '@/components/Header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 export default function DocumentsPage() {
   return (
@@ -12,11 +15,31 @@ export default function DocumentsPage() {
             <CardHeader>
                 <CardTitle>ডকুমেন্ট</CardTitle>
                 <CardDescription>
-                    এখানে প্রয়োজনীয় ডকুমেন্ট ও ফাইল পরিচালনা করুন।
+                    এখানে প্রয়োজনীয় ডকুমেন্ট ও ফাইল জেনারেট করুন।
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <p>এই সেকশনটি নির্মাণাধীন।</p>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>প্রত্যয়ন পত্র</CardTitle>
+                            <CardDescription>শিক্ষার্থীদের জন্য প্রশংসাপত্র বা প্রত্যয়ন পত্র জেনারেট করুন।</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <p className="text-sm text-muted-foreground">
+                               প্রত্যয়ন পত্র তৈরি করতে, শিক্ষার্থী তালিকা থেকে নির্দিষ্ট শিক্ষার্থীকে বেছে নিন এবং তার প্রোফাইল থেকে "প্রত্যয়ন পত্র" অপশনটি নির্বাচন করুন।
+                           </p>
+                        </CardContent>
+                         <CardFooter>
+                            <Link href="/student-list" className="w-full">
+                                <Button className="w-full">
+                                    শিক্ষার্থী তালিকা দেখুন
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            </Link>
+                        </CardFooter>
+                    </Card>
+                </div>
             </CardContent>
         </Card>
       </main>
