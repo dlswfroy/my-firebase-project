@@ -146,6 +146,7 @@ export default function StudentListPage() {
                             <Table>
                               <TableHeader>
                                 <TableRow>
+                                  <TableHead>ক্রমিক নং</TableHead>
                                   <TableHead>ছবি</TableHead>
                                   <TableHead>রোল</TableHead>
                                   <TableHead>শিক্ষার্থীর নাম</TableHead>
@@ -157,19 +158,20 @@ export default function StudentListPage() {
                               <TableBody>
                                 {isLoading ? (
                                    <TableRow>
-                                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                           লোড হচ্ছে...
                                       </TableCell>
                                    </TableRow>
                                 ) : getStudentsByClass(className).length === 0 ? (
                                    <TableRow>
-                                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                           এই শ্রেণিতে কোনো শিক্ষার্থী নেই।
                                       </TableCell>
                                    </TableRow>
                                 ) : (
-                                  getStudentsByClass(className).map((student) => (
+                                  getStudentsByClass(className).map((student, index) => (
                                   <TableRow key={student.id}>
+                                    <TableCell>{(index + 1).toLocaleString('bn-BD')}</TableCell>
                                     <TableCell>
                                       <Image
                                         src={student.photoUrl}
@@ -246,6 +248,7 @@ export default function StudentListPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead>ক্রমিক নং</TableHead>
                           <TableHead>ছবি</TableHead>
                           <TableHead>রোল</TableHead>
                           <TableHead>শিক্ষার্থীর নাম</TableHead>
@@ -257,6 +260,7 @@ export default function StudentListPage() {
                       <TableBody>
                         {[...Array(5)].map((_, i) => (
                           <TableRow key={i}>
+                            <TableCell><Skeleton className="h-6 w-10" /></TableCell>
                             <TableCell><Skeleton className="h-10 w-10 rounded-full" /></TableCell>
                             <TableCell><Skeleton className="h-6 w-10" /></TableCell>
                             <TableCell><Skeleton className="h-6 w-32" /></TableCell>
