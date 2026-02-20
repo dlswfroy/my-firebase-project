@@ -35,7 +35,7 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
     const [isLoading, setIsLoading] = useState(true);
     const [activeHoliday, setActiveHoliday] = useState<Holiday | undefined>(undefined);
 
-    const isWeekend = dayOfWeek === 5; // Friday is weekend
+    const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Friday & Saturday are weekend
 
     useEffect(() => {
         if (!db) return;
@@ -380,7 +380,7 @@ const AttendanceReportTab = ({ allStudents }: { allStudents: Student[] }) => {
              <div className="flex flex-col sm:flex-row gap-4 mb-4 p-4 border rounded-lg items-end">
                 <div className="w-full space-y-2">
                     <Label>শুরুর তারিখ</Label>
-                    <DatePicker value={startDate} onChange={setStartDate} placeholder="শুরুর তারিখ" />
+                    <DatePicker value={startDate} onChange={setStartDate} placeholder="שুরুর তারিখ" />
                 </div>
                 <div className="w-full space-y-2">
                     <Label>শেষের তারিখ</Label>
