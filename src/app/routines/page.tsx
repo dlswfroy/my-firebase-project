@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Data from the image, mapped to 6 periods by skipping the 4th period and using 1,2,3,5,6,7.
 const routineData: Record<string, Record<string, string[]>> = {
@@ -201,6 +202,11 @@ const ExamRoutineTab = () => {
 
 export default function RoutinesPage() {
     const { selectedYear } = useAcademicYear();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-fuchsia-50">
@@ -209,21 +215,33 @@ export default function RoutinesPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>রুটিন</CardTitle>
-                        <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
+                        {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
                     </CardHeader>
                     <CardContent>
-                        <Tabs defaultValue="class-routine">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="class-routine">ক্লাস রুটিন</TabsTrigger>
-                                <TabsTrigger value="exam-routine">পরীক্ষার রুটিন</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="class-routine" className="mt-4">
-                                <ClassRoutineTab />
-                            </TabsContent>
-                            <TabsContent value="exam-routine" className="mt-4">
-                                <ExamRoutineTab />
-                            </TabsContent>
-                        </Tabs>
+                        {isClient ? (
+                            <Tabs defaultValue="class-routine">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="class-routine">ক্লাস রুটিন</TabsTrigger>
+                                    <TabsTrigger value="exam-routine">পরীক্ষার রুটিন</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="class-routine" className="mt-4">
+                                    <ClassRoutineTab />
+                                </TabsContent>
+                                <TabsContent value="exam-routine" className="mt-4">
+                                    <ExamRoutineTab />
+                                </TabsContent>
+                            </Tabs>
+                        ) : (
+                           <div className="space-y-4">
+                               <div className="grid w-full grid-cols-2 h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                                    <div className="inline-flex items-center justify-center rounded-sm bg-background shadow-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                    <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                </div>
+                                <div className="p-4 border rounded-lg">
+                                    <Skeleton className="h-48 w-full" />
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </main>
