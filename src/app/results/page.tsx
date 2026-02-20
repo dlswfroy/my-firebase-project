@@ -353,7 +353,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
         <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end p-4 border rounded-lg">
                 <div className="space-y-2">
-                    <Label htmlFor="class">শ্রেণি</Label>
+                    <Label htmlFor="class"/>
                     <Select value={className} onValueChange={setClassName}>
                         <SelectTrigger id="class"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -368,7 +368,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
 
                 {showGroupSelector ? (
                     <div className="space-y-2">
-                        <Label htmlFor="group">শাখা/গ্রুপ</Label>
+                        <Label htmlFor="group"/>
                         <Select value={group} onValueChange={setGroup}>
                             <SelectTrigger id="group"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -383,7 +383,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
                 )}
                 
                 <div className="space-y-2">
-                    <Label htmlFor="subject">বিষয়</Label>
+                    <Label htmlFor="subject"/>
                     <Select value={subject} onValueChange={setSubject} disabled={!className}>
                         <SelectTrigger id="subject"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -393,7 +393,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="full-marks">পূর্ণমান</Label>
+                    <Label htmlFor="full-marks"/>
                     <Input 
                         id="full-marks" 
                         type="number" 
@@ -702,7 +702,7 @@ const ResultSheetTab = ({ allStudents }: { allStudents: Student[] }) => {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end p-4 border rounded-lg w-full">
                     <div className="space-y-2">
-                        <Label htmlFor="class-sheet">শ্রেণি</Label>
+                        <Label htmlFor="class-sheet"/>
                         <Select value={className} onValueChange={c => { setClassName(c); setGroup(''); }}>
                             <SelectTrigger id="class-sheet"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -717,7 +717,7 @@ const ResultSheetTab = ({ allStudents }: { allStudents: Student[] }) => {
 
                     {showGroupSelector && (
                         <div className="space-y-2">
-                            <Label htmlFor="group-sheet">শাখা/গ্রুপ</Label>
+                            <Label htmlFor="group-sheet"/>
                             <Select value={group} onValueChange={g => { setGroup(g); }}>
                                 <SelectTrigger id="group-sheet"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -1018,7 +1018,7 @@ const BulkUploadTab = ({ allStudents }: { allStudents: Student[] }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end p-4 border rounded-lg">
             <div className="space-y-2">
-                <Label htmlFor="class-upload">শ্রেণি</Label>
+                <Label htmlFor="class-upload"/>
                 <Select value={className} onValueChange={setClassName}>
                     <SelectTrigger id="class-upload"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1032,7 +1032,7 @@ const BulkUploadTab = ({ allStudents }: { allStudents: Student[] }) => {
             </div>
 
             <div className={`space-y-2 ${showGroupSelector ? '' : 'lg:hidden'}`}>
-                <Label htmlFor="group-upload">শাখা/গ্রুপ</Label>
+                <Label htmlFor="group-upload"/>
                  <Select value={group || 'all'} onValueChange={(val) => setGroup(val === 'all' ? '' : val)} disabled={!showGroupSelector}>
                     <SelectTrigger id="group-upload"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1104,7 +1104,7 @@ export default function ResultsPage() {
                                 <TabsList className="grid w-full grid-cols-3">
                                     <TabsTrigger value="management">নম্বর ব্যবস্থাপনা</TabsTrigger>
                                     <TabsTrigger value="sheet">ফলাফল শিট</TabsTrigger>
-                                    <TabsTrigger value="upload">বাল্ক আপলোড</TabsTrigger>
+                                    <TabsTrigger value="upload">এক্সেল আপলোড</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="management" className="mt-4">
                                      {isLoading ? <p>লোড হচ্ছে...</p> : <MarkManagementTab allStudents={allStudents} />}
