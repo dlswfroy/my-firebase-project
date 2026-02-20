@@ -437,6 +437,7 @@ export default function AccountsPage() {
         <Card>
           <CardHeader>
              <CardTitle>হিসাব শাখা</CardTitle>
+            {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
           </CardHeader>
           <CardContent>
              {isClient ? (

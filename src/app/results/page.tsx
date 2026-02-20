@@ -1067,6 +1067,7 @@ export default function ResultsPage() {
     const [allStudents, setAllStudents] = useState<Student[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const db = useFirestore();
+    const { selectedYear } = useAcademicYear();
 
     useEffect(() => {
         setIsClient(true);
@@ -1097,6 +1098,7 @@ export default function ResultsPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>ফলাফল</CardTitle>
+                        {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
                     </CardHeader>
                     <CardContent>
                         {isClient ? (
