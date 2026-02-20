@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { Button } from '@/components/ui/button';
@@ -70,7 +70,7 @@ const RoutineTable = ({ className, routine, showGroupInfo }: { className: string
         <Card>
             <CardHeader>
                 <CardTitle>ক্লাস রুটিন (শ্রেণি - {classNamesMap[className] || className})</CardTitle>
-                 {showGroupInfo && <p className="text-sm text-muted-foreground">দ্রষ্টব্য: ৯ম ও ১০ম শ্রেণির রুটিন সকল গ্রুপের জন্য সম্মিলিতভাবে দেখানো হয়েছে।</p>}
+                 {showGroupInfo && <CardDescription>দ্রষ্টব্য: ৯ম ও ১০ম শ্রেণির রুটিন সকল গ্রুপের জন্য সম্মিলিতভাবে দেখানো হয়েছে।</CardDescription>}
             </CardHeader>
             <CardContent>
             <div className="overflow-x-auto">
@@ -104,10 +104,72 @@ const RoutineTable = ({ className, routine, showGroupInfo }: { className: string
     );
 };
 
+const CombinedRoutineTable = () => {
+    const days = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার"];
+    const classes = ['6', '7', '8', '9', '10'];
+    const periods = [
+        { name: "১ম", time: "১০:৩০ - ১১:২০" },
+        { name: "২য়", time: "১১:২০ - ১২:১০" },
+        { name: "৩য়", time: "১২:১০ - ০১:০০" },
+    ];
+    const postBreakPeriods = [
+        { name: "৪র্থ", time: "০১:৪০ - ০২:৩০" },
+        { name: "৫ম", time: "০২:৩০ - ০৩:২০" },
+        { name: "৬ষ্ঠ", time: "০৩:২০ - ০৪:১০" },
+    ];
+    const classNamesMap: { [key: string]: string } = {
+        '6': '৬ষ্ঠ', '7': '৭ম', '8': '৮ম', '9': '৯ম', '10': '১০ম',
+    };
+
+    return (
+         <Card>
+            <CardHeader>
+                <CardTitle>সকল শ্রেণির সম্মিলিত ক্লাস রুটিন</CardTitle>
+                <CardDescription>দ্রষ্টব্য: ৯ম ও ১০ম শ্রেণির রুটিন সকল গ্রুপের জন্য সম্মিলিতভাবে দেখানো হয়েছে।</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <div className="overflow-x-auto">
+                    <Table className="border">
+                         <TableHeader>
+                            <TableRow>
+                                <TableHead className="border-r font-bold align-middle text-center min-w-[100px]">বার</TableHead>
+                                <TableHead className="border-r font-bold align-middle text-center min-w-[80px]">শ্রেণি</TableHead>
+                                {periods.map(p => <TableHead key={p.name} className="border-r text-center font-semibold min-w-[150px]">{p.name} পিরিয়ড<br/><span className="font-normal text-xs">{p.time}</span></TableHead>)}
+                                <TableHead className="border-r text-center font-semibold bg-gray-100 min-w-[100px]">বিরতি<br/><span className="font-normal text-xs">০১:০০ - ০১:৪০</span></TableHead>
+                                {postBreakPeriods.map(p => <TableHead key={p.name} className="border-r text-center font-semibold min-w-[150px]">{p.name} পিরিয়ড<br/><span className="font-normal text-xs">{p.time}</span></TableHead>)}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {days.map((day) => (
+                                classes.map((cls, classIndex) => (
+                                    <TableRow key={`${day}-${cls}`}>
+                                        {classIndex === 0 && (
+                                             <TableCell className="font-semibold border-r align-middle text-center" rowSpan={classes.length}>{day}</TableCell>
+                                        )}
+                                        <TableCell className="font-semibold border-r text-center">{classNamesMap[cls]}</TableCell>
+                                        {(routineData[cls]?.[day] || Array(6).fill('-')).slice(0, 3).map((subject: string, i: number) => (
+                                            <TableCell key={`${day}-${cls}-pre-${i}`} className="border-r text-center">{subject}</TableCell>
+                                        ))}
+                                        {classIndex === 0 && (
+                                            <TableCell className="border-r text-center bg-muted font-semibold align-middle" rowSpan={classes.length}>টিফিন</TableCell>
+                                        )}
+                                        {(routineData[cls]?.[day] || Array(6).fill('-')).slice(3, 6).map((subject: string, i: number) => (
+                                            <TableCell key={`${day}-${cls}-post-${i}`} className="border-r text-center">{subject}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ))}
+                        </TableBody>
+                    </Table>
+                 </div>
+            </CardContent>
+        </Card>
+    );
+};
+
 
 const ClassRoutineTab = () => {
     const [className, setClassName] = useState('all');
-    const classes = ['6', '7', '8', '9', '10'];
     
     return (
         <div className="space-y-6">
@@ -129,16 +191,7 @@ const ClassRoutineTab = () => {
             </div>
             
             {className === 'all' ? (
-                <div className="space-y-8">
-                    {classes.map(cls => (
-                        <RoutineTable 
-                            key={cls}
-                            className={cls} 
-                            routine={routineData[cls] || {}}
-                            showGroupInfo={cls === '9' || cls === '10'}
-                        />
-                    ))}
-                </div>
+                <CombinedRoutineTable />
             ) : (
                 <RoutineTable 
                     className={className} 
