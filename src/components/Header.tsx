@@ -14,6 +14,7 @@ import {
   Users2,
   Settings,
   FileText,
+  CalendarClock,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -152,6 +153,13 @@ export function Header() {
                 >
                   <FileText className="h-5 w-5" />
                   ডকুমেন্ট
+                </Link>
+                <Link
+                  href="/routines"
+                  className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-200"
+                >
+                  <CalendarClock className="h-5 w-5" />
+                  রুটিন
                 </Link>
                 <Link
                   href="/settings"

@@ -219,6 +219,41 @@
         "amount",
         "academicYear"
       ]
+    },
+    "classRoutine": {
+      "title": "Class Routine",
+      "description": "Weekly class routine for a specific class and group.",
+      "type": "object",
+      "properties": {
+        "academicYear": { "type": "string" },
+        "className": { "type": "string" },
+        "group": { "type": "string" },
+        "day": { 
+          "type": "string",
+          "enum": ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার"] 
+        },
+        "periods": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of subjects for each period of the day."
+        }
+      },
+      "required": ["academicYear", "className", "day", "periods"]
+    },
+    "examRoutine": {
+      "title": "Exam Routine",
+      "description": "Schedule for a specific examination.",
+      "type": "object",
+      "properties": {
+        "examName": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "className": { "type": "string" },
+        "group": { "type": "string" },
+        "subject": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" }
+      },
+      "required": ["examName", "academicYear", "className", "subject", "date", "time"]
     }
   },
   "auth": {
@@ -258,6 +293,14 @@
         "$ref": "#/entities/transaction"
       },
       "description": "Stores income and expense transaction records."
+    },
+    "/classRoutines/{routineId}": {
+      "schema": { "$ref": "#/entities/classRoutine" },
+      "description": "Stores weekly class routines."
+    },
+    "/examRoutines/{routineId}": {
+      "schema": { "$ref": "#/entities/examRoutine" },
+      "description": "Stores exam schedules."
     }
   }
 }
