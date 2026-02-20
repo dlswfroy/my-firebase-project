@@ -366,10 +366,8 @@ export default function StudentListPage() {
                         </div>
                     </div>
                      <DialogFooter className="pt-4 border-t">
-                        <Link href={`/documents/testimonial/${studentToView.id}`} target="_blank" legacyBehavior>
-                            <a target="_blank" rel="noopener noreferrer">
-                                <Button type="button">প্রত্যয়ন পত্র</Button>
-                            </a>
+                        <Link href={`/documents/testimonial/${studentToView.id}`} target="_blank" rel="noopener noreferrer">
+                          <Button type="button">প্রত্যয়ন পত্র</Button>
                         </Link>
                     </DialogFooter>
                 </>
