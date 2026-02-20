@@ -106,18 +106,39 @@ const RoutineTable = ({ className, routine, showGroupInfo }: { className: string
 
 
 const ClassRoutineTab = () => {
-    const classNames = ['6', '7', '8', '9', '10'];
+    const [className, setClassName] = useState('6');
+    const showGroupInfo = className === '9' || className === '10';
 
+    const selectedRoutine = useMemo(() => {
+        return routineData[className] || {};
+    }, [className]);
+    
     return (
         <div className="space-y-6">
-            {classNames.map(className => (
+             <div className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg items-end">
+                <div className="space-y-2 flex-1">
+                    <Label htmlFor="class-name">শ্রেণি</Label>
+                    <Select value={className} onValueChange={setClassName}>
+                        <SelectTrigger id="class-name"><SelectValue placeholder="শ্রেণি নির্বাচন করুন" /></SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="6">৬ষ্ঠ</SelectItem>
+                           <SelectItem value="7">৭ম</SelectItem>
+                           <SelectItem value="8">৮ম</SelectItem>
+                           <SelectItem value="9">৯ম</SelectItem>
+                           <SelectItem value="10">১০ম</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+            
+            {className && (
                 <RoutineTable 
                     key={className}
                     className={className} 
-                    routine={routineData[className]} 
-                    showGroupInfo={className === '9' || className === '10'}
+                    routine={selectedRoutine} 
+                    showGroupInfo={showGroupInfo}
                 />
-            ))}
+            )}
         </div>
     );
 };
