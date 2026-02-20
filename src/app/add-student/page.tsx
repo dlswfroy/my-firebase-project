@@ -102,15 +102,63 @@ export default function AddStudentPage() {
 
     const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setPhotoPreview(result);
-                handleInputChange('photoUrl', result);
-            };
-            reader.readAsDataURL(file);
+        if (!file) {
+            return;
         }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            toast({
+                variant: "destructive",
+                title: "ফাইল ತುಂಬಾ বড়",
+                description: "অনুগ্রহ করে ৫ মেগাবাইটের কম আকারের ছবি আপলোড করুন।",
+            });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new window.Image();
+            img.src = e.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 512;
+                const MAX_HEIGHT = 512;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height = Math.round(height * (MAX_WIDTH / width));
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width = Math.round(width * (MAX_HEIGHT / height));
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    setPhotoPreview(dataUrl);
+                    handleInputChange('photoUrl', dataUrl);
+                } else {
+                    setPhotoPreview(e.target?.result as string);
+                    handleInputChange('photoUrl', e.target?.result as string);
+                }
+            };
+            img.onerror = () => {
+                toast({
+                    variant: "destructive",
+                    title: "ছবি প্রসেস করা যায়নি",
+                });
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -433,11 +481,11 @@ export default function AddStudentPage() {
                   <h3 className="font-semibold text-lg border-b pb-2">প্রাতিষ্ঠানিক তথ্য</h3>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
                       <div className="space-y-2">
-                          <Label htmlFor="roll">রোল নম্বর</Label>
+                          <Label htmlFor="roll"/>
                           <Input id="roll" name="roll" type="number" required value={student.roll || ''} onChange={e => handleInputChange('roll', e.target.value === '' ? undefined : parseInt(e.target.value, 10))} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="academic-year">শিক্ষাবর্ষ</Label>
+                          <Label htmlFor="academic-year"/>
                           <Select required value={student.academicYear || ''} onValueChange={value => handleInputChange('academicYear', value)}>
                               <SelectTrigger id="academic-year" name="academic-year">
                                   <SelectValue />
@@ -450,7 +498,7 @@ export default function AddStudentPage() {
                           </Select>
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="class">শ্রেণি</Label>
+                          <Label htmlFor="class"/>
                           <Select required value={student.className} onValueChange={value => handleInputChange('className', value)}>
                               <SelectTrigger id="class" name="class">
                                   <SelectValue />
@@ -467,7 +515,7 @@ export default function AddStudentPage() {
                       {(student.className === '9' || student.className === '10') && (
                         <>
                           <div className="space-y-2">
-                              <Label htmlFor="group">গ্রুপ</Label>
+                              <Label htmlFor="group"/>
                               <Select value={student.group || ''} onValueChange={value => handleInputChange('group', value)}>
                                   <SelectTrigger id="group" name="group">
                                       <SelectValue />
@@ -480,7 +528,7 @@ export default function AddStudentPage() {
                               </Select>
                           </div>
                           <div className="space-y-2">
-                              <Label htmlFor="optional-subject">ঐচ্ছিক বিষয় (৪র্থ)</Label>
+                              <Label htmlFor="optional-subject"/>
                               <Select value={student.optionalSubject || ''} onValueChange={value => handleInputChange('optionalSubject', value)} disabled={optionalSubjects.length === 0}>
                                   <SelectTrigger id="optional-subject" name="optional-subject">
                                       <SelectValue />
@@ -501,23 +549,23 @@ export default function AddStudentPage() {
                   <h3 className="font-semibold text-lg border-b pb-2">শিক্ষার্থীর তথ্য</h3>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                       <div className="space-y-2">
-                          <Label htmlFor="student-name-bn">নাম (বাংলা)</Label>
+                          <Label htmlFor="student-name-bn"/>
                           <Input id="student-name-bn" name="student-name-bn" required value={student.studentNameBn} onChange={e => handleInputChange('studentNameBn', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="student-name-en">Name (English)</Label>
+                          <Label htmlFor="student-name-en"/>
                           <Input id="student-name-en" name="student-name-en" value={student.studentNameEn} onChange={e => handleInputChange('studentNameEn', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="dob">জন্ম তারিখ</Label>
+                          <Label htmlFor="dob"/>
                           <DatePicker value={student.dob} onChange={date => handleInputChange('dob', date)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="birth-reg-no">জন্ম নিবন্ধন নম্বর</Label>
+                          <Label htmlFor="birth-reg-no"/>
                           <Input id="birth-reg-no" name="birth-reg-no" value={student.birthRegNo} onChange={e => handleInputChange('birthRegNo', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="gender">লিঙ্গ</Label>
+                          <Label htmlFor="gender"/>
                           <Select value={student.gender || ''} onValueChange={value => handleInputChange('gender', value)}>
                               <SelectTrigger id="gender" name="gender"><SelectValue /></SelectTrigger>
                               <SelectContent>
@@ -528,7 +576,7 @@ export default function AddStudentPage() {
                           </Select>
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="religion">ধর্ম</Label>
+                          <Label htmlFor="religion"/>
                           <Select value={student.religion || ''} onValueChange={value => handleInputChange('religion', value)}>
                               <SelectTrigger id="religion" name="religion"><SelectValue /></SelectTrigger>
                               <SelectContent>
@@ -566,27 +614,27 @@ export default function AddStudentPage() {
                   <h3 className="font-semibold text-lg border-b pb-2">অভিভাবকের তথ্য</h3>
                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                         <div className="space-y-2">
-                          <Label htmlFor="father-name-bn">পিতার নাম (বাংলা)</Label>
+                          <Label htmlFor="father-name-bn"/>
                           <Input id="father-name-bn" name="father-name-bn" required value={student.fatherNameBn} onChange={e => handleInputChange('fatherNameBn', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="father-name-en">Father's Name (English)</Label>
+                          <Label htmlFor="father-name-en"/>
                           <Input id="father-name-en" name="father-name-en" value={student.fatherNameEn} onChange={e => handleInputChange('fatherNameEn', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="father-nid">পিতার NID</Label>
+                            <Label htmlFor="father-nid"/>
                             <Input id="father-nid" name="father-nid" value={student.fatherNid} onChange={e => handleInputChange('fatherNid', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="mother-name-bn">মাতার নাম (বাংলা)</Label>
+                          <Label htmlFor="mother-name-bn"/>
                           <Input id="mother-name-bn" name="mother-name-bn" required value={student.motherNameBn} onChange={e => handleInputChange('motherNameBn', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="mother-name-en">Mother's Name (English)</Label>
+                          <Label htmlFor="mother-name-en"/>
                           <Input id="mother-name-en" name="mother-name-en" value={student.motherNameEn} onChange={e => handleInputChange('motherNameEn', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="mother-nid">মাতার NID</Label>
+                            <Label htmlFor="mother-nid"/>
                             <Input id="mother-nid" name="mother-nid" value={student.motherNid} onChange={e => handleInputChange('motherNid', e.target.value)} />
                         </div>
                    </div>
@@ -596,11 +644,11 @@ export default function AddStudentPage() {
                   <h3 className="font-semibold text-lg border-b pb-2">যোগাযোগের তথ্য</h3>
                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-2">
-                          <Label htmlFor="guardian-mobile">অভিভাবকের মোবাইল নম্বর</Label>
+                          <Label htmlFor="guardian-mobile"/>
                           <Input id="guardian-mobile" name="guardian-mobile" value={student.guardianMobile} onChange={e => handleInputChange('guardianMobile', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="student-mobile">শিক্ষার্থীর মোবাইল নম্বর</Label>
+                          <Label htmlFor="student-mobile"/>
                           <Input id="student-mobile" name="student-mobile" value={student.studentMobile} onChange={e => handleInputChange('studentMobile', e.target.value)} />
                       </div>
                    </div>
@@ -610,24 +658,24 @@ export default function AddStudentPage() {
                   <h3 className="font-semibold text-lg border-b pb-2">বর্তমান ঠিকানা</h3>
                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="present-village">গ্রাম</Label>
+                            <Label htmlFor="present-village"/>
                             <Input id="present-village" name="present-village" value={student.presentVillage} onChange={e => handleInputChange('presentVillage', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="present-union">ইউনিয়ন</Label>
+                            <Label htmlFor="present-union"/>
                             <Input id="present-union" name="present-union" value={student.presentUnion} onChange={e => handleInputChange('presentUnion', e.target.value)} />
                         </div>
                         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="present-post-office">ডাকঘর</Label>
+                                <Label htmlFor="present-post-office"/>
                                 <Input id="present-post-office" name="present-post-office" value={student.presentPostOffice} onChange={e => handleInputChange('presentPostOffice', e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="present-upazila">উপজেলা</Label>
+                                <Label htmlFor="present-upazila"/>
                                 <Input id="present-upazila" name="present-upazila" value={student.presentUpazila} onChange={e => handleInputChange('presentUpazila', e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="present-district">জেলা</Label>
+                                <Label htmlFor="present-district"/>
                                 <Input id="present-district" name="present-district" value={student.presentDistrict} onChange={e => handleInputChange('presentDistrict', e.target.value)} />
                             </div>
                         </div>
@@ -649,24 +697,24 @@ export default function AddStudentPage() {
                     </div>
                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="permanent-village">গ্রাম</Label>
+                            <Label htmlFor="permanent-village"/>
                             <Input id="permanent-village" name="permanent-village" value={student.permanentVillage} onChange={e => handleInputChange('permanentVillage', e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="permanent-union">ইউনিয়ন</Label>
+                            <Label htmlFor="permanent-union"/>
                             <Input id="permanent-union" name="permanent-union" value={student.permanentUnion} onChange={e => handleInputChange('permanentUnion', e.target.value)} />
                         </div>
                          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="permanent-post-office">ডাকঘর</Label>
+                                <Label htmlFor="permanent-post-office"/>
                                 <Input id="permanent-post-office" name="permanent-post-office" value={student.permanentPostOffice} onChange={e => handleInputChange('permanentPostOffice', e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="permanent-upazila">উপজেলা</Label>
+                                <Label htmlFor="permanent-upazila"/>
                                 <Input id="permanent-upazila" name="permanent-upazila" value={student.permanentUpazila} onChange={e => handleInputChange('permanentUpazila', e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="permanent-district">জেলা</Label>
+                                <Label htmlFor="permanent-district"/>
                                 <Input id="permanent-district" name="permanent-district" value={student.permanentDistrict} onChange={e => handleInputChange('permanentDistrict', e.target.value)} />
                             </div>
                         </div>

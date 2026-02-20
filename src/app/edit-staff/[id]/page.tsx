@@ -70,15 +70,63 @@ export default function EditStaffPage() {
 
     const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setPhotoPreview(result);
-                handleInputChange('photoUrl', result);
-            };
-            reader.readAsDataURL(file);
+        if (!file) {
+            return;
         }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            toast({
+                variant: "destructive",
+                title: "ফাইল ತುಂಬಾ বড়",
+                description: "অনুগ্রহ করে ৫ মেগাবাইটের কম আকারের ছবি আপলোড করুন।",
+            });
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new window.Image();
+            img.src = e.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 512;
+                const MAX_HEIGHT = 512;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height = Math.round(height * (MAX_WIDTH / width));
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width = Math.round(width * (MAX_HEIGHT / height));
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    setPhotoPreview(dataUrl);
+                    handleInputChange('photoUrl', dataUrl);
+                } else {
+                    setPhotoPreview(e.target?.result as string);
+                    handleInputChange('photoUrl', e.target?.result as string);
+                }
+            };
+            img.onerror = () => {
+                toast({
+                    variant: "destructive",
+                    title: "ছবি প্রসেস করা যায়নি",
+                });
+            }
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -157,23 +205,23 @@ export default function EditStaffPage() {
                   <h3 className="font-semibold text-lg border-b pb-2">সাধারণ তথ্য</h3>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                       <div className="space-y-2">
-                          <Label htmlFor="employeeId">কর্মচারী আইডি</Label>
+                          <Label htmlFor="employeeId"/>
                           <Input id="employeeId" name="employeeId" required value={staff.employeeId} onChange={e => handleInputChange('employeeId', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="nameBn">নাম (বাংলা)</Label>
+                          <Label htmlFor="nameBn"/>
                           <Input id="nameBn" name="nameBn" required value={staff.nameBn} onChange={e => handleInputChange('nameBn', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="nameEn">Name (English)</Label>
+                          <Label htmlFor="nameEn"/>
                           <Input id="nameEn" name="nameEn" value={staff.nameEn} onChange={e => handleInputChange('nameEn', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="designation">পদবি</Label>
+                          <Label htmlFor="designation"/>
                           <Input id="designation" name="designation" required value={staff.designation} onChange={e => handleInputChange('designation', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="staffType">ধরণ</Label>
+                          <Label htmlFor="staffType"/>
                           <Select required value={staff.staffType} onValueChange={(value: 'teacher' | 'staff') => handleInputChange('staffType', value)}>
                               <SelectTrigger id="staffType" name="staffType"><SelectValue /></SelectTrigger>
                               <SelectContent>
@@ -183,15 +231,15 @@ export default function EditStaffPage() {
                           </Select>
                       </div>
                        <div className="space-y-2">
-                          <Label htmlFor="subject">বিষয়</Label>
+                          <Label htmlFor="subject"/>
                           <Input id="subject" name="subject" value={staff.subject} onChange={e => handleInputChange('subject', e.target.value)} />
                       </div>
                        <div className="space-y-2">
-                          <Label htmlFor="joinDate">যোগদানের তারিখ</Label>
+                          <Label htmlFor="joinDate"/>
                           <DatePicker value={staff.joinDate} onChange={date => handleInputChange('joinDate', date as Date)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="education">শিক্ষাগত যোগ্যতা</Label>
+                          <Label htmlFor="education"/>
                           <Input id="education" name="education" value={staff.education} onChange={e => handleInputChange('education', e.target.value)} />
                       </div>
                       <div className="flex items-center space-x-2">
@@ -205,15 +253,15 @@ export default function EditStaffPage() {
                   <h3 className="font-semibold text-lg border-b pb-2">যোগাযোগ ও অন্যান্য</h3>
                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-2">
-                          <Label htmlFor="mobile">মোবাইল নম্বর</Label>
+                          <Label htmlFor="mobile"/>
                           <Input id="mobile" name="mobile" required value={staff.mobile} onChange={e => handleInputChange('mobile', e.target.value)} />
                       </div>
                       <div className="space-y-2">
-                          <Label htmlFor="email">ইমেইল</Label>
+                          <Label htmlFor="email"/>
                           <Input id="email" name="email" type="email" value={staff.email} onChange={e => handleInputChange('email', e.target.value)} />
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor="address">ঠিকানা</Label>
+                          <Label htmlFor="address"/>
                           <Textarea id="address" name="address" value={staff.address} onChange={e => handleInputChange('address', e.target.value)} />
                       </div>
                    </div>
