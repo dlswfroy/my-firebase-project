@@ -18,7 +18,7 @@ import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { FilePen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { subjectNameNormalization as baseSubjectNameNormalization } from '@/lib/subjects';
+import { subjectNameNormalization as baseSubjectNameNormalization, getSubjects } from '@/lib/subjects';
 
 const subjectNameNormalization = {
     ...baseSubjectNameNormalization,
@@ -45,8 +45,9 @@ const teacherAllocations: Record<string, Record<string, string[]>> = {
     },
     'জান্নাতুন': {
         'বাংলাদেশ ও বিশ্ব পরিচয়': ['6'],
-        'কৃষি শিক্ষা': ['6'],
         'পৌরনীতি ও নাগরিকতা': ['9', '10'],
+        'কৃষি শিক্ষা': ['6'],
+        'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা': ['9', '10']
     },
     'যুধিষ্ঠির': {
         'বাংলা দ্বিতীয়': ['6', '7', '8', '9', '10'],
@@ -71,7 +72,7 @@ const teacherAllocations: Record<string, Record<string, string[]>> = {
         'ভূগোল ও পরিবেশ': ['9', '10']
     },
     'শান্তি': {
-        'সাধারণ বিজ্ঞান': ['6', '7', '8', '9', '10'],
+        'সাধারণ বিজ্ঞান': ['6', '7', '8'],
         'জীব বিজ্ঞান': ['9', '10']
     },
     'মাহাবুব': {
@@ -168,6 +169,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
 
         classes.forEach(cls => {
             classStats[cls] = {};
+            const subjectsInClass = getSubjects(cls);
             days.forEach(day => {
                 const dayRoutine = routine[cls]?.[day];
                 if (dayRoutine) {
@@ -176,15 +178,25 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                     dayRoutine.forEach((cell, periodIdx) => {
                         const { subject, teacher } = parseSubjectTeacher(cell);
                         if(subject) {
-                             const subjectsInCell = subject.split('/').map(s => s.trim());
-                             subjectsInCell.forEach(s => {
-                                const normalizedSubject = subjectNameNormalization[s] || s;
-                                if(normalizedSubject) {
-                                    classStats[cls][normalizedSubject] = (classStats[cls][normalizedSubject] || 0) + 1;
-                                    if (!subjectCountInDay.has(normalizedSubject)) {
-                                       subjectCountInDay.set(normalizedSubject, []);
+                            const subjectsInCell = subject.split('/').map(s => s.trim()).filter(Boolean);
+                            let normalizedSubjectInCell = subjectsInCell.map(s => subjectNameNormalization[s] || s);
+
+                            if(normalizedSubjectInCell.length > 1) { // Handle combined subjects like পদার্থ/ইতিহাস
+                                 const foundSubject = normalizedSubjectInCell.find(ns => subjectsInClass.some(s => s.name === ns));
+                                 if (foundSubject) {
+                                     normalizedSubjectInCell = [foundSubject];
+                                 } else { // if no specific subject found, treat as one combined entry
+                                     normalizedSubjectInCell = [normalizedSubjectInCell.join('/')];
+                                 }
+                            }
+                            
+                             normalizedSubjectInCell.forEach(s => {
+                                if(s) {
+                                    classStats[cls][s] = (classStats[cls][s] || 0) + 1;
+                                    if (!subjectCountInDay.has(s)) {
+                                       subjectCountInDay.set(s, []);
                                     }
-                                    subjectCountInDay.get(normalizedSubject)!.push(periodIdx);
+                                    subjectCountInDay.get(s)!.push(periodIdx);
                                 }
                              });
                         }
@@ -208,18 +220,30 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                             });
                         }
                          if (subject && teacher) {
-                            const subjectsInCell = subject.split('/').map(s => s.trim());
-                            const teachersInCell = teacher.split('/').map(t => t.trim());
+                            const subjectsInCell = subject.split('/').map(s => s.trim()).filter(Boolean);
+                            const teachersInCell = teacher.split('/').map(t => t.trim()).filter(Boolean);
 
                             teachersInCell.forEach(t => {
-                                if (!t) return;
+                                if (!t || !teacherAllocations[t]) {
+                                     teacherSubjectMismatchClashes.add(`${cls}-${day}-${periodIdx}`);
+                                     return;
+                                };
                                 
                                 const isAllocated = subjectsInCell.some(s => {
                                     const normalizedSubject = subjectNameNormalization[s] || s;
                                     const teacherAllocationsForT = teacherAllocations[t];
                                     if (!teacherAllocationsForT) return false;
-                                    const classAllocation = teacherAllocationsForT[normalizedSubject];
-                                    return classAllocation && classAllocation.includes(cls);
+                                    
+                                    const classNumber = cls.split('-')[0]; // For '9-science' etc.
+                                    
+                                    for(const allocatedSubject in teacherAllocationsForT) {
+                                        const normalizedAllocatedSubject = subjectNameNormalization[allocatedSubject] || allocatedSubject;
+                                        if (normalizedAllocatedSubject === normalizedSubject) {
+                                            const classAllocation = teacherAllocationsForT[allocatedSubject];
+                                            return classAllocation && classAllocation.includes(classNumber);
+                                        }
+                                    }
+                                    return false;
                                 });
 
                                 if (!isAllocated) {
@@ -505,7 +529,7 @@ const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflict
             >
                 <TooltipProvider>
                     <Tooltip>
-                        <TooltipTrigger className="w-full h-full">
+                        <TooltipTrigger asChild>
                             {cellContent}
                         </TooltipTrigger>
                         {isConflict && <TooltipContent><p>{tooltipContent}</p></TooltipContent>}
