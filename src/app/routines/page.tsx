@@ -43,7 +43,7 @@ const teacherAllocations: Record<string, Record<string, string[]>> = {
     'নীলা': { 'ধর্ম ও নৈতিক শিক্ষা': ['6', '7', '8', '9', '10'], 'শারীরিক শিক্ষা': ['8'] },
     'জান্নাতুন': { 'বাংলাদেশ ও বিশ্ব পরিচয়': ['6'], 'কৃষি শিক্ষা': ['6', '8'], 'পৌরনীতি ও নাগরিকতা': ['9', '10'], 'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা': ['9', '10'] },
     'যুধিষ্ঠির': { 'বাংলা দ্বিতীয়': ['6', '7', '8', '9', '10'], 'ইংরেজি দ্বিতীয়': ['6', '7'] },
-    'ধনঞ্জয়': { 'গণিত': ['6', '7', '8', '9', '10'], 'রসায়ন': ['9', '10'], 'পদার্থ': ['9', '10'], 'উচ্চতর গণিত': ['9'] },
+    'ধনঞ্জয়': { 'গণিত': ['6', '7', '8', '9', '10'], 'রসায়ন': ['9', '10'], 'পদার্থ': ['9', '10'], 'উচ্চতর গণিত': ['9', '10'] },
     'আরিফুর': { 'ইংরেজি প্রথম': ['6', '7', '8', '9', '10'], 'ইংরেজি দ্বিতীয়': ['8', '9', '10'] },
     'ওবায়দা': { 'বাংলা প্রথম': ['6', '7', '8', '9', '10'], 'শারীরিক শিক্ষা': ['7'] },
     'শারমিন': { 'তথ্য ও যোগাযোগ প্রযুক্তি': ['6', '7', '8', '9', '10'], 'ভূগোল ও পরিবেশ': ['9', '10'] },
@@ -346,12 +346,12 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                             </TableHeader>
                             <TableBody>
                                 {classes.map(cls => {
-                                    const subjectsToExclude = ['হিসাব বিজ্ঞান', 'ফিন্যান্স ও ব্যাংকিং', 'ব্যবসায় উদ্যোগ'];
+                                    const subjectsToExclude = ['ব্যবসায় উদ্যোগ', 'হিসাব বিজ্ঞান', 'ফিন্যান্স ও ব্যাংকিং'];
                                     const subjectsForClass = getSubjects(cls, undefined)
                                         .filter(subject => !subjectsToExclude.includes(subject.name))
                                         .sort((a,b) => parseInt(a.code) - parseInt(b.code));
 
-                                    if(cls === '8' || cls === '7' || cls === '6') {
+                                    if(['6','7','8'].includes(cls)) {
                                         const hasPE = subjectsForClass.some(s => s.name === 'শারীরিক শিক্ষা');
                                         if(!hasPE) {
                                             const pe_subject = { name: 'শারীরিক শিক্ষা', englishName: 'Physical Education', code: '147', practical: false, fullMarks: 100 };
@@ -363,20 +363,14 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                                     
                                     let rowCount = 0;
                                     const rows = subjectsForClass.map((subject, subjectIndex) => {
-                                        const count = Object.entries(classStats[cls] || {}).reduce((acc, [key, value]) => {
-                                            const normalizedKey = subjectNameNormalization[key] || key;
-                                            if (normalizedKey.includes(subject.name) || subject.name.includes(normalizedKey)) {
-                                                return acc + (value as number);
-                                            }
-                                            return acc;
-                                        }, 0);
+                                        const count = classStats[cls]?.[subject.name] || 0;
                                         rowCount++;
                                         return (
                                             <TableRow key={`${cls}-${subject.name}`} className="border">
                                                 {subjectIndex === 0 && <TableCell rowSpan={subjectsForClass.length} className="font-medium align-top border text-center">{classNamesMap[cls]}</TableCell>}
                                                 <TableCell className="border text-center">{(subjectIndex + 1).toLocaleString('bn-BD')}</TableCell>
                                                 <TableCell className="border">{subject.name}</TableCell>
-                                                <TableCell className="border text-center">{Math.round(count).toLocaleString('bn-BD')}</TableCell>
+                                                <TableCell className="border text-center">{count.toLocaleString('bn-BD')}</TableCell>
                                             </TableRow>
                                         );
                                     });
