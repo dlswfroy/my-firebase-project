@@ -9,3 +9,4 @@ runConfig:
   maxInstances: 1
 
 # Forcing a restart of the hosting service to resolve "Site Not Found" issue.
+# Triggering a new deployment to force service restart.
