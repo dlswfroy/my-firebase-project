@@ -373,7 +373,11 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                             <TableBody>
                                 {classes.map(cls => {
                                     const subjectsInClass = getSubjects(cls);
-                                    const subjectsInStats = Object.keys(classStats[cls]).map(s => subjectNameNormalization[s] || s);
+                                    let subjectsInStats: string[] = [];
+
+                                    if (classStats[cls]) {
+                                        subjectsInStats = Object.keys(classStats[cls]).map(s => subjectNameNormalization[s] || s);
+                                    }
                                     
                                     const subjects = subjectsInClass.filter(s => subjectsInStats.includes(s.name));
 
@@ -530,30 +534,23 @@ const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflict
         <div className="p-2 text-xs text-center">{content || <>&nbsp;</>}</div>
     );
 
-    if (isMounted) {
-        return (
-            <TableCell 
-                className={cn("border-r p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}
-                style={!isEditMode && !isConflict && color ? { backgroundColor: color } : {}}
-            >
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            {cellContent}
-                        </TooltipTrigger>
-                        {isConflict && <TooltipContent><p>{tooltipContent}</p></TooltipContent>}
-                    </Tooltip>
-                </TooltipProvider>
-            </TableCell>
-        );
-    }
-
     return (
         <TableCell 
             className={cn("border-r p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}
             style={!isEditMode && !isConflict && color ? { backgroundColor: color } : {}}
         >
-            {cellContent}
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        {cellContent}
+                    </TooltipTrigger>
+                    {isMounted && isConflict && (
+                        <TooltipContent>
+                            <p>{tooltipContent}</p>
+                        </TooltipContent>
+                    )}
+                </Tooltip>
+            </TooltipProvider>
         </TableCell>
     );
 };
