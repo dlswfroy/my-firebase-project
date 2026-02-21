@@ -17,9 +17,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { getFullRoutine, saveRoutinesBatch, ClassRoutine } from '@/lib/routine-data';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { FilePen } from 'lucide-react';
+import { FilePen, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { subjectNameNormalization as baseSubjectNameNormalization, getSubjects } from '@/lib/subjects';
+import { generateRoutine } from '@/ai/flows/generate-routine-flow';
 
 const subjectNameNormalization: { [key: string]: string } = {
     ...baseSubjectNameNormalization,
@@ -649,6 +650,7 @@ export default function RoutinesPage() {
     const [routineData, setRoutineData] = useState<Record<string, Record<string, string[]>>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const fetchData = useCallback(async () => {
         if (!db) return;
@@ -722,6 +724,24 @@ export default function RoutinesPage() {
         setIsEditMode(false);
     };
 
+    const handleGenerateRoutine = async () => {
+        setIsGenerating(true);
+        try {
+            const result = await generateRoutine({ teacherAllocations });
+            
+            setRoutineData(result.routine);
+            setOriginalRoutineData(result.routine); // Also update the original to this new baseline
+            setIsEditMode(false); // Exit edit mode after generating
+            toast({ title: 'নতুন রুটিন সফলভাবে তৈরি হয়েছে!' });
+
+        } catch (error) {
+            console.error("Failed to generate routine:", error);
+            toast({ variant: 'destructive', title: 'রুটিন তৈরি করা যায়নি', description: 'কিছু একটা সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।' });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     return (
         <div className="flex min-h-screen w-full flex-col bg-fuchsia-50">
             <Header />
@@ -733,14 +753,21 @@ export default function RoutinesPage() {
                                 <CardTitle>রুটিন</CardTitle>
                                 {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
                             </div>
-                             {isEditMode ? (
-                                <div className="flex gap-2">
-                                    <Button variant="outline" onClick={handleCancelEdit}>বাতিল</Button>
-                                    <Button onClick={handleSaveChanges}>পরিবর্তন সেভ করুন</Button>
-                                </div>
-                            ) : (
-                                <Button variant="outline" onClick={() => setIsEditMode(true)}><FilePen className="mr-2 h-4 w-4" /> রুটিন এডিট করুন</Button>
-                            )}
+                            <div className="flex gap-2">
+                                {isEditMode ? (
+                                    <>
+                                        <Button variant="outline" onClick={handleCancelEdit}>বাতিল</Button>
+                                        <Button onClick={handleSaveChanges}>পরিবর্তন সেভ করুন</Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button variant="outline" onClick={handleGenerateRoutine} disabled={isGenerating}>
+                                            {isGenerating ? 'তৈরি হচ্ছে...' : <><Sparkles className="mr-2 h-4 w-4" /> নতুন রুটিন তৈরি করুন</>}
+                                        </Button>
+                                        <Button variant="outline" onClick={() => setIsEditMode(true)}><FilePen className="mr-2 h-4 w-4" /> রুটিন এডিট করুন</Button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent>
