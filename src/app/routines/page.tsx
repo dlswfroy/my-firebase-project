@@ -47,8 +47,9 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
         const teacherClashes = new Set<string>();
         const consecutiveClassClashes = new Set<string>();
         const breakClashes = new Set<string>();
+        const subjectRepetitionClashes = new Set<string>();
         
-        const teacherStats: { [teacher: string]: { total: number, sixthPeriods: { [day: string]: string[] }, daily: { [day: string]: string[] }, breakDown: { [day: string]: { before: number, after: number }} } } = {};
+        const teacherStats: { [teacher: string]: { total: number, sixthPeriods: { [day: string]: string[] }, daily: { [day: string]: { classes: string[], before: number, after: number }} } } = {};
         const classStats: { [cls: string]: { [subject: string]: number } } = {};
         const allIndividualTeachers = new Set<string>();
 
@@ -76,13 +77,12 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
             teacherStats[t] = { 
                 total: 0, 
                 sixthPeriods: { 'রবিবার': [], 'সোমবার': [], 'মঙ্গলবার': [], 'বুধবার': [], 'বৃহস্পতিবার': [] },
-                daily: { 'রবিবার': [], 'সোমবার': [], 'মঙ্গলবার': [], 'বুধবার': [], 'বৃহস্পতিবার': [] },
-                breakDown: { 
-                    'রবিবার': { before: 0, after: 0 }, 
-                    'সোমবার': { before: 0, after: 0 }, 
-                    'মঙ্গলবার': { before: 0, after: 0 }, 
-                    'বুধবার': { before: 0, after: 0 }, 
-                    'বৃহস্পতিবার': { before: 0, after: 0 } 
+                daily: { 
+                    'রবিবার': { classes: [], before: 0, after: 0 }, 
+                    'সোমবার': { classes: [], before: 0, after: 0 }, 
+                    'মঙ্গলবার': { classes: [], before: 0, after: 0 }, 
+                    'বুধবার': { classes: [], before: 0, after: 0 }, 
+                    'বৃহস্পতিবার': { classes: [], before: 0, after: 0 } 
                 } 
             };
         });
@@ -123,12 +123,18 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
             days.forEach(day => {
                 const dayRoutine = routine[cls]?.[day];
                 if (dayRoutine) {
+                    const subjectCountInDay = new Map<string, number[]>();
+
                     dayRoutine.forEach((cell, periodIdx) => {
                         const { subject, teacher } = parseSubjectTeacher(cell);
                         if(subject) {
                             const normalizedSubject = subjectNameNormalization[subject] || subject;
                             if (normalizedSubject) {
                                classStats[cls][normalizedSubject] = (classStats[cls][normalizedSubject] || 0) + 1;
+                               if (!subjectCountInDay.has(normalizedSubject)) {
+                                   subjectCountInDay.set(normalizedSubject, []);
+                               }
+                               subjectCountInDay.get(normalizedSubject)!.push(periodIdx);
                             }
                         }
                         if (teacher) {
@@ -138,17 +144,23 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                                 
                                 if (teacherStats[trimmedTeacher]) {
                                     teacherStats[trimmedTeacher].total++;
-                                    teacherStats[trimmedTeacher].daily[day].push(`${subject} (${cls} শ্রেণি)`);
+                                    teacherStats[trimmedTeacher].daily[day].classes.push(`${subject} (${cls} শ্রেণি)`);
                                      if (periodIdx === 5) {
                                         teacherStats[trimmedTeacher].sixthPeriods[day].push(`${subject} (${cls} শ্রেণি)`);
                                     }
                                     if (periodIdx < 3) {
-                                        teacherStats[trimmedTeacher].breakDown[day].before++;
+                                        teacherStats[trimmedTeacher].daily[day].before++;
                                     } else {
-                                        teacherStats[trimmedTeacher].breakDown[day].after++;
+                                        teacherStats[trimmedTeacher].daily[day].after++;
                                     }
                                 }
                             });
+                        }
+                    });
+
+                    subjectCountInDay.forEach((indices) => {
+                        if (indices.length > 1) {
+                            indices.forEach(idx => subjectRepetitionClashes.add(`${cls}-${day}-${idx}`));
                         }
                     });
 
@@ -182,7 +194,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
             });
         });
 
-        return { conflicts: { teacherClashes, consecutiveClassClashes, breakClashes }, stats: { teacherStats, classStats }, teacherColorMap };
+        return { conflicts: { teacherClashes, consecutiveClassClashes, breakClashes, subjectRepetitionClashes }, stats: { teacherStats, classStats }, teacherColorMap };
     }, [routine]);
 
     return analysis;
@@ -227,13 +239,12 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                                         </TableCell>
                                         <TableCell className="border">
                                             <ul className="list-disc list-inside text-xs space-y-1">
-                                                {Object.entries(teacherStats[teacher].daily).map(([day, classes]) => {
-                                                    const breakInfo = teacherStats[teacher].breakDown[day];
-                                                    return (classes as string[]).length > 0 && (
+                                                {Object.entries(teacherStats[teacher].daily).map(([day, dayStats]) => {
+                                                    return (dayStats as any).classes.length > 0 && (
                                                         <li key={day}>
-                                                            <strong>{day}:</strong> {(classes as string[]).length.toLocaleString('bn-BD')}টি 
-                                                            ({`আগে: ${breakInfo.before.toLocaleString('bn-BD')}, `}
-                                                            {`পরে: ${breakInfo.after.toLocaleString('bn-BD')}`})
+                                                            <strong>{day}:</strong> {(dayStats as any).classes.length.toLocaleString('bn-BD')}টি 
+                                                            ({`আগে: ${(dayStats as any).before.toLocaleString('bn-BD')}, `}
+                                                            {`পরে: ${(dayStats as any).after.toLocaleString('bn-BD')}`})
                                                         </li>
                                                     )
                                                 })}
@@ -390,12 +401,14 @@ const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflict
     const isTeacherClash = conflicts.teacherClashes.has(conflictKey);
     const isConsecutiveClash = conflicts.consecutiveClassClashes.has(conflictKey);
     const isBreakClash = conflicts.breakClashes.has(conflictKey);
-    const isConflict = isTeacherClash || isConsecutiveClash || isBreakClash;
+    const isSubjectRepetitionClash = conflicts.subjectRepetitionClashes.has(conflictKey);
+    const isConflict = isTeacherClash || isConsecutiveClash || isBreakClash || isSubjectRepetitionClash;
 
     let tooltipContent = '';
     if (isTeacherClash) tooltipContent += 'একই সময়ে এই শিক্ষকের অন্য ক্লাসে ক্লাস রয়েছে। ';
     if (isConsecutiveClash) tooltipContent += 'একই শিক্ষকের এই ক্লাসে পরপর ক্লাস পড়েছে। ';
     if (isBreakClash) tooltipContent += 'বিরতির আগে ও পরে একই শিক্ষকের ক্লাস পড়েছে। ';
+    if (isSubjectRepetitionClash) tooltipContent += 'একই দিনে এই শ্রেণিতে এই বিষয়টি একাধিকবার রয়েছে। ';
 
     const { teacher } = parseSubjectTeacher(content);
     const firstTeacher = teacher ? teacher.split('/')[0].trim() : null;
