@@ -73,7 +73,7 @@ const teacherAllocations: Record<string, Record<string, string[]>> = {
         'ভূগোল ও পরিবেশ': ['9', '10']
     },
     'শান্তি': {
-        'সাধারণ বিজ্ঞান': ['6', '7', '8'],
+        'সাধারণ বিজ্ঞান': ['6', '7', '8', '9', '10'],
         'জীব বিজ্ঞান': ['9', '10']
     },
     'মাহাবুব': {
@@ -368,10 +368,10 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                             </TableHeader>
                             <TableBody>
                                 {classes.map(cls => {
-                                    const subjectsForClass = getSubjects(cls);
+                                    const subjectsInClass = getSubjects(cls);
                                     const subjectsInStats = Object.keys(classStats[cls]).map(s => subjectNameNormalization[s] || s);
                                     
-                                    const subjects = subjectsForClass.filter(s => subjectsInStats.includes(s.name));
+                                    const subjects = subjectsInClass.filter(s => subjectsInStats.includes(s.name));
 
                                     if(subjects.length === 0) return null;
                                     return subjects.map((subject, subjectIndex) => (
