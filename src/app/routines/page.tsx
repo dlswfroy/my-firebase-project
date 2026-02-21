@@ -738,39 +738,50 @@ export default function RoutinesPage() {
                         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                             <div>
                                 <CardTitle>রুটিন</CardTitle>
-                                {isClient && <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>}
-                            </div>
-                            <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
-                                {isEditMode ? (
-                                    <>
-                                        <Button variant="outline" onClick={handleCancelEdit}>বাতিল</Button>
-                                        <Button onClick={handleSaveChanges}>পরিবর্তন সেভ করুন</Button>
-                                    </>
+                                {isClient ? (
+                                    <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
                                 ) : (
-                                    <>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="outline">
-                                                    <FilePlus className="mr-2 h-4 w-4" /> ফাঁকা রুটিন তৈরি করুন
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        এটি বর্তমান রুটিনের সকল তথ্য মুছে একটি নতুন ফাঁকা রুটিন তৈরি করবে। এই কাজটি ফিরিয়ে আনা যাবে না।
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={handleCreateBlankRoutine}>
-                                                        এগিয়ে যান
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                        <Button variant="outline" onClick={() => setIsEditMode(true)}><FilePen className="mr-2 h-4 w-4" /> রুটিন এডিট করুন</Button>
-                                    </>
+                                    <Skeleton className="h-5 w-32 mt-1" />
+                                )}
+                            </div>
+                             <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
+                                {isClient ? (
+                                    isEditMode ? (
+                                        <>
+                                            <Button variant="outline" onClick={handleCancelEdit}>বাতিল</Button>
+                                            <Button onClick={handleSaveChanges}>পরিবর্তন সেভ করুন</Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="outline">
+                                                        <FilePlus className="mr-2 h-4 w-4" /> ফাঁকা রুটিন তৈরি করুন
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            এটি বর্তমান রুটিনের সকল তথ্য মুছে একটি নতুন ফাঁকা রুটিন তৈরি করবে। এই কাজটি ফিরিয়ে আনা যাবে না।
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handleCreateBlankRoutine}>
+                                                            এগিয়ে যান
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                            <Button variant="outline" onClick={() => setIsEditMode(true)}><FilePen className="mr-2 h-4 w-4" /> রুটিন এডিট করুন</Button>
+                                        </>
+                                    )
+                                ) : (
+                                    <div className="flex items-center justify-end gap-2">
+                                        <Skeleton className="h-9 w-44" />
+                                        <Skeleton className="h-9 w-36" />
+                                    </div>
                                 )}
                             </div>
                         </div>
