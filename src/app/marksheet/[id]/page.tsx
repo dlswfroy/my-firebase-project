@@ -81,7 +81,7 @@ export default function MarksheetPage() {
             }
             
             // Get all available results for those subjects
-            const allSubjectsForGroup = getSubjects(studentData.className, studentData.group || undefined);
+            const allSubjectsForGroup = getSubjects(studentData.className, studentData.group || undefined).filter(s => s.isExamSubject !== false);
             
             // Get all available results for those subjects
             const resultsPromises = allSubjectsForGroup

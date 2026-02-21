@@ -118,7 +118,7 @@ const MarkManagementTab = ({ allStudents }: { allStudents: Student[] }) => {
     const showGroupSelector = useMemo(() => className === '9' || className === '10', [className]);
 
     useEffect(() => {
-        const newSubjects = getSubjects(className, group);
+        const newSubjects = getSubjects(className, group).filter(s => s.isExamSubject !== false);
         setAvailableSubjects(newSubjects);
         if (subject && !newSubjects.some(s => s.name === subject)) {
             setSubject('');
@@ -605,7 +605,7 @@ const ResultSheetTab = ({ allStudents }: { allStudents: Student[] }) => {
             return;
         }
 
-        const allSubjectsForGroup = getSubjects(className, group);
+        const allSubjectsForGroup = getSubjects(className, group).filter(s => s.isExamSubject !== false);
         setSubjects(allSubjectsForGroup);
         
         const resultsBySubjectPromises = allSubjectsForGroup.map(subject => {
@@ -910,7 +910,7 @@ const SpecialPromotionTab = ({ allStudents }: { allStudents: Student[] }) => {
             return;
         }
 
-        const allSubjectsForGroup = getSubjects(className, group);
+        const allSubjectsForGroup = getSubjects(className, group).filter(s => s.isExamSubject !== false);
         const resultsBySubjectPromises = allSubjectsForGroup.map(subject =>
             getResultsForClass(db, selectedYear, className, subject.name, group)
         );
@@ -1178,11 +1178,11 @@ const BulkUploadTab = ({ allStudents }: { allStudents: Student[] }) => {
                 addHeader('কৃষি শিক্ষা/উচ্চতর গণিত', true);
     
             } else {
-                const groupSubjects = getSubjects(className, group);
+                const groupSubjects = getSubjects(className, group).filter(s => s.isExamSubject !== false);
                 groupSubjects.forEach(sub => addHeader(sub.name, sub.practical));
             }
         } else { 
-            const subjectsForTemplate = getSubjects(className);
+            const subjectsForTemplate = getSubjects(className).filter(s => s.isExamSubject !== false);
             subjectsForTemplate.forEach(subject => {
                 addHeader(subject.name, subject.practical);
             });
@@ -1451,7 +1451,7 @@ export default function ResultsPage() {
                     <CardContent>
                         {isClient ? (
                             <Tabs defaultValue="management">
-                                <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-4">
+                                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 sm:h-auto">
                                     <TabsTrigger value="management">নম্বর ব্যবস্থাপনা</TabsTrigger>
                                     <TabsTrigger value="sheet">ফলাফল শিট</TabsTrigger>
                                     <TabsTrigger value="special-promotion">বিশেষ বিবেচনায় পাশ</TabsTrigger>

@@ -357,15 +357,7 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                                     const subjectsForClass = getSubjects(cls, undefined)
                                         .filter(subject => !subjectsToExcludeForCommerce.includes(subject.name))
                                         .sort((a,b) => parseInt(a.code) - parseInt(b.code));
-
-                                    if(['6','7','8'].includes(cls)) {
-                                        const hasPE = subjectsForClass.some(s => s.name === 'শারীরিক শিক্ষা');
-                                        if(!hasPE) {
-                                            const pe_subject = { name: 'শারীরিক শিক্ষা', englishName: 'Physical Education', code: '147', practical: false, fullMarks: 100 };
-                                            subjectsForClass.push(pe_subject);
-                                        }
-                                    }
-
+                                    
                                     if(subjectsForClass.length === 0) return null;
                                     
                                     const rows = subjectsForClass.map((subject, subjectIndex) => {
