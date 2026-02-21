@@ -186,7 +186,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                                  const foundSubject = normalizedSubjectInCell.find(ns => subjectsInClass.some(s => s.name === ns));
                                  if (foundSubject) {
                                      normalizedSubjectInCell = [foundSubject];
-                                 } else { // if no specific subject found, treat as one combined entry
+                                 } else { 
                                      normalizedSubjectInCell = [normalizedSubjectInCell.join('/')];
                                  }
                             }
@@ -235,7 +235,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                                     const teacherAllocationsForT = teacherAllocations[t];
                                     if (!teacherAllocationsForT) return false;
                                     
-                                    const classNumber = cls.split('-')[0]; // For '9-science' etc.
+                                    const classNumber = cls.split('-')[0];
                                     
                                     for(const allocatedSubject in teacherAllocationsForT) {
                                         const normalizedAllocatedSubject = subjectNameNormalization[allocatedSubject] || allocatedSubject;
@@ -254,9 +254,13 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                         }
                     });
 
-                    subjectCountInDay.forEach((indices) => {
+                    subjectCountInDay.forEach((indices, subjectName) => {
                         if (indices.length > 1) {
-                            indices.forEach(idx => subjectRepetitionClashes.add(`${cls}-${day}-${idx}`));
+                           const subjectInfo = subjectsInClass.find(s => s.name === subjectName);
+                           // Allow some subjects to repeat (e.g., Bangla 1st/2nd)
+                           if (subjectInfo && subjectInfo.name !== 'বাংলা প্রথম' && subjectInfo.name !== 'বাংলা দ্বিতীয়' && subjectInfo.name !== 'ইংরেজি প্রথম' && subjectInfo.name !== 'ইংরেজি দ্বিতীয়') {
+                                indices.forEach(idx => subjectRepetitionClashes.add(`${cls}-${day}-${idx}`));
+                           }
                         }
                     });
 
