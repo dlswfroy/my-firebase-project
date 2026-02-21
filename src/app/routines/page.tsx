@@ -44,9 +44,9 @@ const teacherAllocations: Record<string, Record<string, string[]>> = {
         'শারীরিক শিক্ষা': ['8']
     },
     'জান্নাতুন': {
+        'বাংলাদেশ ও বিশ্ব পরিচয়': ['6'],
         'কৃষি শিক্ষা': ['6'],
         'পৌরনীতি ও নাগরিকতা': ['9', '10'],
-        'বাংলাদেশের ইতিহাস ও বিশ্বসভ্যতা': ['9', '10']
     },
     'যুধিষ্ঠির': {
         'বাংলা দ্বিতীয়': ['6', '7', '8', '9', '10'],
@@ -497,12 +497,12 @@ const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflict
         <div className="p-2 text-xs text-center">{content || <>&nbsp;</>}</div>
     );
 
-    return (
-        <TableCell 
-            className={cn("border-r p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}
-            style={!isEditMode && !isConflict && color ? { backgroundColor: color } : {}}
-        >
-            {isMounted ? (
+    if (isMounted) {
+        return (
+            <TableCell 
+                className={cn("border-r p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}
+                style={!isEditMode && !isConflict && color ? { backgroundColor: color } : {}}
+            >
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger className="w-full h-full">
@@ -511,9 +511,16 @@ const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflict
                         {isConflict && <TooltipContent><p>{tooltipContent}</p></TooltipContent>}
                     </Tooltip>
                 </TooltipProvider>
-            ) : (
-                cellContent
-            )}
+            </TableCell>
+        );
+    }
+
+    return (
+        <TableCell 
+            className={cn("border-r p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}
+            style={!isEditMode && !isConflict && color ? { backgroundColor: color } : {}}
+        >
+            {cellContent}
         </TableCell>
     );
 };
@@ -628,9 +635,14 @@ export default function RoutinesPage() {
 
     useEffect(() => {
         setIsClient(true);
-        setIsMounted(true);
         fetchData();
     }, [fetchData]);
+    
+    useEffect(() => {
+        if (isClient) {
+            setIsMounted(true);
+        }
+    }, [isClient]);
 
     const { conflicts, stats, teacherColorMap } = useRoutineAnalysis(routineData);
     
