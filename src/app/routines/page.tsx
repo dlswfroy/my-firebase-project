@@ -182,7 +182,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                             const subjectsInCell = subject.split('/').map(s => s.trim()).filter(Boolean);
                             let normalizedSubjectInCell = subjectsInCell.map(s => subjectNameNormalization[s] || s);
 
-                            if(normalizedSubjectInCell.length > 1) { // Handle combined subjects like পদার্থ/ইতিহাস
+                            if(normalizedSubjectInCell.length > 1) { // Handle combined subjects
                                  const foundSubject = normalizedSubjectInCell.find(ns => subjectsInClass.some(s => s.name === ns));
                                  if (foundSubject) {
                                      normalizedSubjectInCell = [foundSubject];
@@ -190,14 +190,15 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                                      normalizedSubjectInCell = [normalizedSubjectInCell.join('/')];
                                  }
                             }
-                            
+                             
                              normalizedSubjectInCell.forEach(s => {
                                 if(s) {
-                                    classStats[cls][s] = (classStats[cls][s] || 0) + 1;
-                                    if (!subjectCountInDay.has(s)) {
-                                       subjectCountInDay.set(s, []);
+                                    const combinedSubjectKey = normalizedSubjectInCell.length > 1 ? subject : s;
+                                    classStats[cls][combinedSubjectKey] = (classStats[cls][combinedSubjectKey] || 0) + 1;
+                                    if (!subjectCountInDay.has(combinedSubjectKey)) {
+                                       subjectCountInDay.set(combinedSubjectKey, []);
                                     }
-                                    subjectCountInDay.get(s)!.push(periodIdx);
+                                    subjectCountInDay.get(combinedSubjectKey)!.push(periodIdx);
                                 }
                              });
                         }
@@ -257,7 +258,6 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                     subjectCountInDay.forEach((indices, subjectName) => {
                         if (indices.length > 1) {
                            const subjectInfo = subjectsInClass.find(s => s.name === subjectName);
-                           // Allow some subjects to repeat (e.g., Bangla 1st/2nd)
                            if (subjectInfo && subjectInfo.name !== 'বাংলা প্রথম' && subjectInfo.name !== 'বাংলা দ্বিতীয়' && subjectInfo.name !== 'ইংরেজি প্রথম' && subjectInfo.name !== 'ইংরেজি দ্বিতীয়') {
                                 indices.forEach(idx => subjectRepetitionClashes.add(`${cls}-${day}-${idx}`));
                            }
@@ -372,22 +372,25 @@ const RoutineStatistics = ({ stats }: { stats: any }) => {
                             </TableHeader>
                             <TableBody>
                                 {classes.map(cls => {
-                                    const subjectsInClass = getSubjects(cls);
-                                    let subjectsInStats: string[] = [];
+                                    const subjectsForClass = getSubjects(cls);
+                                    let subjectsWithStats = Object.keys(classStats[cls] || {})
+                                        .map(subjectName => {
+                                            const originalSubject = subjectsForClass.find(s => s.name === subjectName || subjectName.startsWith(s.name + ' /'));
+                                            return {
+                                                name: subjectName,
+                                                code: originalSubject?.code || '000',
+                                                count: classStats[cls][subjectName] || 0
+                                            };
+                                        })
+                                        .sort((a,b) => parseInt(a.code) - parseInt(b.code));
 
-                                    if (classStats[cls]) {
-                                        subjectsInStats = Object.keys(classStats[cls]).map(s => subjectNameNormalization[s] || s);
-                                    }
-                                    
-                                    const subjects = subjectsInClass.filter(s => subjectsInStats.includes(s.name));
-
-                                    if(subjects.length === 0) return null;
-                                    return subjects.map((subject, subjectIndex) => (
+                                    if(subjectsWithStats.length === 0) return null;
+                                    return subjectsWithStats.map((subject, subjectIndex) => (
                                         <TableRow key={`${cls}-${subject.name}`} className="border">
-                                            {subjectIndex === 0 && <TableCell rowSpan={subjects.length} className="font-medium align-top border text-center">{classNamesMap[cls]}</TableCell>}
+                                            {subjectIndex === 0 && <TableCell rowSpan={subjectsWithStats.length} className="font-medium align-top border text-center">{classNamesMap[cls]}</TableCell>}
                                             <TableCell className="border text-center">{(subjectIndex + 1).toLocaleString('bn-BD')}</TableCell>
                                             <TableCell className="border">{subject.name}</TableCell>
-                                            <TableCell className="border text-center">{(classStats[cls][subject.name] || 0).toLocaleString('bn-BD')}</TableCell>
+                                            <TableCell className="border text-center">{subject.count.toLocaleString('bn-BD')}</TableCell>
                                         </TableRow>
                                     ));
                                 })}
@@ -534,6 +537,17 @@ const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflict
         <div className="p-2 text-xs text-center">{content || <>&nbsp;</>}</div>
     );
 
+    if (!isMounted || !isConflict) {
+        return (
+            <TableCell 
+                className={cn("border-r p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}
+                style={!isEditMode && !isConflict && color ? { backgroundColor: color } : {}}
+            >
+                {cellContent}
+            </TableCell>
+        );
+    }
+    
     return (
         <TableCell 
             className={cn("border-r p-0", { "bg-red-100 text-red-700": isConflict && !isEditMode })}
@@ -544,11 +558,9 @@ const EditableCell = ({ content, isEditMode, onCellChange, conflictKey, conflict
                     <TooltipTrigger asChild>
                         {cellContent}
                     </TooltipTrigger>
-                    {isMounted && isConflict && (
-                        <TooltipContent>
-                            <p>{tooltipContent}</p>
-                        </TooltipContent>
-                    )}
+                    <TooltipContent>
+                        <p>{tooltipContent}</p>
+                    </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         </TableCell>
