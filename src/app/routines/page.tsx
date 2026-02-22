@@ -17,7 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { getFullRoutine, saveRoutinesBatch, ClassRoutine } from '@/lib/routine-data';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { FilePen, FilePlus } from 'lucide-react';
+import { Copy, Printer, FilePen, FilePlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { subjectNameNormalization as baseSubjectNameNormalization, getSubjects } from '@/lib/subjects';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -192,19 +192,17 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                         if (teacher) {
                             teacher.split('/').forEach(t => {
                                 const trimmedTeacher = t.trim();
-                                if (!trimmedTeacher) return;
+                                if (!trimmedTeacher || !teacherStats[trimmedTeacher]) return;
                                 
-                                if (teacherStats[trimmedTeacher]) {
-                                    teacherStats[trimmedTeacher].total++;
-                                    teacherStats[trimmedTeacher].daily[day].classes.push(`${subject} (${cls} শ্রেণি)`);
-                                     if (periodIdx === 5) {
-                                        teacherStats[trimmedTeacher].sixthPeriods[day].push(`${subject} (${cls} শ্রেণি)`);
-                                    }
-                                    if (periodIdx < 3) {
-                                        teacherStats[trimmedTeacher].daily[day].before++;
-                                    } else {
-                                        teacherStats[trimmedTeacher].daily[day].after++;
-                                    }
+                                teacherStats[trimmedTeacher].total++;
+                                teacherStats[trimmedTeacher].daily[day].classes.push(`${subject} (${cls} শ্রেণি)`);
+                                 if (periodIdx === 5) {
+                                    teacherStats[trimmedTeacher].sixthPeriods[day].push(`${subject} (${cls} শ্রেণি)`);
+                                }
+                                if (periodIdx < 3) {
+                                    teacherStats[trimmedTeacher].daily[day].before++;
+                                } else {
+                                    teacherStats[trimmedTeacher].daily[day].after++;
                                 }
                             });
                         }
@@ -215,15 +213,11 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                             const classNumber = cls.split('-')[0];
 
                             teachersInCell.forEach(t => {
-                                const teacherAllocationsForT = teacherAllocations[t];
-                                if (!teacherAllocationsForT) {
-                                    teacherSubjectMismatchClashes.add(`${cls}-${day}-${periodIdx}`);
-                                    return; 
-                                }
+                                if (!teacherAllocations[t]) return;
                                 
                                 let isAllocated = false;
                                 for (const subj of subjectsInCellNormalized) {
-                                    if (teacherAllocationsForT[subj]?.includes(classNumber)) {
+                                    if (teacherAllocations[t][subj]?.includes(classNumber)) {
                                         isAllocated = true;
                                         break;
                                     }
@@ -626,7 +620,7 @@ const ExamRoutineTab = () => {
 
 
 export default function RoutinesPage() {
-    const { selectedYear } = useAcademicYear();
+    const { selectedYear, availableYears } = useAcademicYear();
     const [isClient, setIsClient] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
     
@@ -636,6 +630,9 @@ export default function RoutinesPage() {
     const [routineData, setRoutineData] = useState<Record<string, Record<string, string[]>>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isEditMode, setIsEditMode] = useState(false);
+
+    const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+    const [targetYear, setTargetYear] = useState('');
 
     const fetchData = useCallback(async () => {
         if (!db) return;
@@ -729,96 +726,194 @@ export default function RoutinesPage() {
         toast({ title: 'ফাঁকা রুটিন তৈরি হয়েছে', description: 'এখন আপনি রুটিনটি পূরণ করতে পারেন।' });
     };
 
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const handleCopyRoutine = async () => {
+        if (!db) return;
+        if (!targetYear) {
+            toast({ variant: 'destructive', title: 'লক্ষ্য শিক্ষাবর্ষ নির্বাচন করুন।' });
+            return;
+        }
+        if (targetYear === selectedYear) {
+            toast({ variant: 'destructive', title: 'উৎস এবং লক্ষ্য শিক্ষাবর্ষ একই হতে পারে না।' });
+            return;
+        }
+        
+        const sourceRoutines = await getFullRoutine(db, selectedYear);
+
+        if (sourceRoutines.length === 0) {
+            toast({ variant: 'destructive', title: `উৎস শিক্ষাবর্ষে (${selectedYear}) কোনো রুটিন পাওয়া যায়নি।` });
+            return;
+        }
+
+        const targetRoutinesData: ClassRoutine[] = sourceRoutines.map(routine => ({
+            academicYear: targetYear,
+            className: routine.className,
+            day: routine.day,
+            periods: routine.periods,
+        }));
+        
+        try {
+            await saveRoutinesBatch(db, targetRoutinesData);
+            toast({ title: 'রুটিন সফলভাবে কপি হয়েছে।', description: `${selectedYear} থেকে ${targetYear} শিক্ষাবর্ষে রুটিন কপি করা হয়েছে।` });
+            setIsCopyDialogOpen(false);
+            setTargetYear('');
+        } catch (error) {
+            // The error is handled by the saveRoutinesBatch function's catch block
+            toast({ variant: 'destructive', title: 'রুটিন কপি করা যায়নি।' });
+        }
+    };
+
     return (
-        <div className="flex min-h-screen w-full flex-col bg-fuchsia-50">
-            <Header />
-            <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                            <div>
-                                <CardTitle>রুটিন</CardTitle>
-                                {isClient ? (
-                                    <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
-                                ) : (
-                                    <Skeleton className="h-5 w-32 mt-1" />
-                                )}
-                            </div>
-                             <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
-                                {isClient ? (
-                                    isEditMode ? (
+        <>
+            <div className="flex min-h-screen w-full flex-col bg-fuchsia-50 no-print">
+                <Header />
+                <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                                <div>
+                                    <CardTitle>রুটিন</CardTitle>
+                                    {isClient ? (
+                                        <p className="text-sm text-muted-foreground">শিক্ষাবর্ষ: {selectedYear.toLocaleString('bn-BD')}</p>
+                                    ) : (
+                                        <Skeleton className="h-5 w-32 mt-1" />
+                                    )}
+                                </div>
+                                <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2">
+                                    {isClient && !isLoading ? (
                                         <>
-                                            <Button variant="outline" onClick={handleCancelEdit}>বাতিল</Button>
-                                            <Button onClick={handleSaveChanges}>পরিবর্তন সেভ করুন</Button>
+                                            {isEditMode ? (
+                                                <>
+                                                    <Button variant="outline" onClick={handleCancelEdit}>বাতিল</Button>
+                                                    <Button onClick={handleSaveChanges}>পরিবর্তন সেভ করুন</Button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                     <Button variant="outline" onClick={handlePrint} className="no-print">
+                                                        <Printer className="mr-2 h-4 w-4" /> রুটিন প্রিন্ট করুন
+                                                    </Button>
+                                                    <AlertDialog open={isCopyDialogOpen} onOpenChange={setIsCopyDialogOpen}>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="outline" className="no-print">
+                                                                <Copy className="mr-2 h-4 w-4" /> রুটিন কপি করুন
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>রুটিন কপি করুন</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    বর্তমান শিক্ষাবর্ষ ({selectedYear.toLocaleString('bn-BD')}) এর রুটিনটি অন্য একটি শিক্ষাবর্ষে কপি করুন।
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <div className="py-4">
+                                                                <Label htmlFor="target-year">লক্ষ্য শিক্ষাবর্ষ</Label>
+                                                                <Select value={targetYear} onValueChange={setTargetYear}>
+                                                                    <SelectTrigger id="target-year">
+                                                                        <SelectValue placeholder="শিক্ষাবর্ষ নির্বাচন করুন" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        {availableYears.filter(y => y !== selectedYear).map(year => (
+                                                                            <SelectItem key={year} value={year}>{year.toLocaleString('bn-BD')}</SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </div>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={handleCopyRoutine}>কপি করুন</AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="outline">
+                                                                <FilePlus className="mr-2 h-4 w-4" /> ফাঁকা রুটিন তৈরি করুন
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    এটি বর্তমান রুটিনের সকল তথ্য মুছে একটি নতুন ফাঁকা রুটিন তৈরি করবে। এই কাজটি ফিরিয়ে আনা যাবে না।
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={handleCreateBlankRoutine}>
+                                                                    এগিয়ে যান
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                    <Button variant="outline" onClick={() => setIsEditMode(true)}><FilePen className="mr-2 h-4 w-4" /> রুটিন এডিট করুন</Button>
+                                                </>
+                                            )}
                                         </>
                                     ) : (
-                                        <>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="outline">
-                                                        <FilePlus className="mr-2 h-4 w-4" /> ফাঁকা রুটিন তৈরি করুন
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            এটি বর্তমান রুটিনের সকল তথ্য মুছে একটি নতুন ফাঁকা রুটিন তৈরি করবে। এই কাজটি ফিরিয়ে আনা যাবে না।
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={handleCreateBlankRoutine}>
-                                                            এগিয়ে যান
-                                                        </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                            <Button variant="outline" onClick={() => setIsEditMode(true)}><FilePen className="mr-2 h-4 w-4" /> রুটিন এডিট করুন</Button>
-                                        </>
-                                    )
-                                ) : (
-                                    <div className="flex items-center justify-end gap-2">
-                                        <Skeleton className="h-9 w-44" />
-                                        <Skeleton className="h-9 w-36" />
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Skeleton className="h-9 w-44" />
+                                            <Skeleton className="h-9 w-36" />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            {isClient && !isLoading ? (
+                                <Tabs defaultValue="class-routine">
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="class-routine">ক্লাস রুটিন</TabsTrigger>
+                                        <TabsTrigger value="exam-routine">পরীক্ষার রুটিন</TabsTrigger>
+                                        <TabsTrigger value="statistics">পরিসংখ্যান</TabsTrigger>
+                                    </TabsList>
+                                    <TabsContent value="class-routine" className="mt-4">
+                                        <ClassRoutineTab routineData={routineData} conflicts={conflicts} isEditMode={isEditMode} onCellChange={handleCellChange} teacherColorMap={teacherColorMap!} isMounted={isMounted} />
+                                    </TabsContent>
+                                    <TabsContent value="exam-routine" className="mt-4">
+                                        <ExamRoutineTab />
+                                    </TabsContent>
+                                    <TabsContent value="statistics" className="mt-4">
+                                        <RoutineStatistics stats={stats} />
+                                    </TabsContent>
+                                </Tabs>
+                            ) : (
+                            <div className="space-y-4">
+                                <div className="grid w-full grid-cols-3 h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                                        <div className="inline-flex items-center justify-center rounded-sm bg-background shadow-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                        <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                        <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
                                     </div>
-                                )}
-                            </div>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        {isClient && !isLoading ? (
-                            <Tabs defaultValue="class-routine">
-                                <TabsList className="grid w-full grid-cols-3">
-                                    <TabsTrigger value="class-routine">ক্লাস রুটিন</TabsTrigger>
-                                    <TabsTrigger value="exam-routine">পরীক্ষার রুটিন</TabsTrigger>
-                                    <TabsTrigger value="statistics">পরিসংখ্যান</TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="class-routine" className="mt-4">
-                                    <ClassRoutineTab routineData={routineData} conflicts={conflicts} isEditMode={isEditMode} onCellChange={handleCellChange} teacherColorMap={teacherColorMap!} isMounted={isMounted} />
-                                </TabsContent>
-                                <TabsContent value="exam-routine" className="mt-4">
-                                    <ExamRoutineTab />
-                                </TabsContent>
-                                <TabsContent value="statistics" className="mt-4">
-                                    <RoutineStatistics stats={stats} />
-                                </TabsContent>
-                            </Tabs>
-                        ) : (
-                           <div className="space-y-4">
-                               <div className="grid w-full grid-cols-3 h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
-                                    <div className="inline-flex items-center justify-center rounded-sm bg-background shadow-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
-                                    <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
-                                    <div className="inline-flex items-center justify-center rounded-sm h-8 w-full"><Skeleton className="h-4 w-24" /></div>
+                                    <div className="p-4 border rounded-lg">
+                                        <Skeleton className="h-48 w-full" />
+                                    </div>
                                 </div>
-                                <div className="p-4 border rounded-lg">
-                                    <Skeleton className="h-48 w-full" />
-                                </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </main>
-        </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </main>
+            </div>
+            <div className="printable-area routine-print-container">
+                {isLoading ? (
+                    <p>লোড হচ্ছে...</p>
+                ) : (
+                    <div>
+                        <h1 style={{textAlign: 'center', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px'}}>
+                            ক্লাস রুটিন - {selectedYear.toLocaleString('bn-BD')}
+                        </h1>
+                        <CombinedRoutineTable 
+                            routineData={routineData}
+                            conflicts={conflicts}
+                            isEditMode={false}
+                            onCellChange={() => {}}
+                            teacherColorMap={teacherColorMap}
+                            isMounted={isMounted}
+                        />
+                    </div>
+                )}
+            </div>
+        </>
     );
 }
