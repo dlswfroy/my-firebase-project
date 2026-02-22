@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, UserX, GraduationCap } from 'lucide-react';
@@ -12,8 +13,12 @@ import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, query, where, FirestoreError } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useAuth } from '@/hooks/useAuth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [totalStudents, setTotalStudents] = useState(0);
   const [presentStudents, setPresentStudents] = useState(0);
   const [absentStudents, setAbsentStudents] = useState(0);
@@ -22,9 +27,14 @@ export default function Home() {
   const db = useFirestore();
   
   useEffect(() => {
-      if (!db) return;
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
 
-      // Students
+  useEffect(() => {
+      if (!db || !user) return;
+
       const studentsQuery = query(collection(db, 'students'), where('academicYear', '==', selectedYear));
       
       const unsubscribeStudents = onSnapshot(studentsQuery, (querySnapshot) => {
@@ -69,7 +79,6 @@ export default function Home() {
         errorEmitter.emit('permission-error', permissionError);
       });
 
-      // Teachers
       const staffQuery = query(collection(db, 'staff'), where('isActive', '==', true), where('staffType', '==', 'teacher'));
       const unsubscribeStaff = onSnapshot(staffQuery, (querySnapshot) => {
         setTotalTeachers(querySnapshot.size);
@@ -87,8 +96,15 @@ export default function Home() {
         unsubscribeStaff();
       };
 
-  }, [selectedYear, db]);
+  }, [selectedYear, db, user]);
 
+  if (authLoading || !user) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-sky-50">
+          <p>লোড হচ্ছে...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-sky-50">

@@ -2,6 +2,7 @@
 import { ReactNode, useMemo } from 'react';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 
 import { firebaseConfig } from './config';
 import { FirebaseProvider } from './provider';
@@ -9,6 +10,7 @@ import { FirebaseProvider } from './provider';
 // Singleton instances to prevent re-initialization
 let app: FirebaseApp | undefined;
 let firestore: Firestore | undefined;
+let auth: Auth | undefined;
 
 // Initialize Firebase on the client-side only
 if (typeof window !== 'undefined') {
@@ -18,20 +20,18 @@ if (typeof window !== 'undefined') {
     app = getApp();
   }
   firestore = getFirestore(app);
+  auth = getAuth(app);
 }
 
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   const instances = useMemo(() => {
-    // During SSR, app and firestore are undefined.
-    if (!app || !firestore) {
+    if (!app || !firestore || !auth) {
         return null;
     }
-    return { app, firestore };
+    return { app, firestore, auth };
   }, []);
 
   if (!instances) {
-    // Render children without the provider on the server
-    // or if initialization somehow failed.
     return <>{children}</>;
   }
 
@@ -39,6 +39,7 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
     <FirebaseProvider
       app={instances.app}
       firestore={instances.firestore}
+      auth={instances.auth}
     >
       {children}
     </FirebaseProvider>

@@ -1,8 +1,82 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function getUserData(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data;
+    }
+
+    function isAdmin() {
+      return isAuthed() && getUserData(request.auth.uid).role == 'admin';
+    }
+    
+    function isTeacher() {
+      return isAuthed() && getUserData(request.auth.uid).role == 'teacher';
+    }
+
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId || isAdmin();
+      allow list: if isAdmin();
+    }
+
+    match /staff/{staffId} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+    
+    match /school/info {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    match /students/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    match /attendance/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    match /results/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    match /feeCollections/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    match /transactions/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    match /holidays/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+
+    match /classRoutines/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
+    
+    match /examRoutines/{document=**} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
     }
   }
 }

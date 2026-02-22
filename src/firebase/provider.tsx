@@ -7,36 +7,42 @@ import {
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
+import { Auth } from 'firebase/auth';
 
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 type FirebaseContextType = {
   app: FirebaseApp | null;
   firestore: Firestore | null;
+  auth: Auth | null;
 };
 
 const FirebaseContext = createContext<FirebaseContextType>({
   app: null,
   firestore: null,
+  auth: null,
 });
 
 type FirebaseProviderProps = {
   children: ReactNode;
   app: FirebaseApp;
   firestore: Firestore;
+  auth: Auth;
 };
 
 export function FirebaseProvider({
   children,
   app,
   firestore,
+  auth,
 }: FirebaseProviderProps) {
   const value = useMemo(
     () => ({
       app,
       firestore,
+      auth,
     }),
-    [app, firestore]
+    [app, firestore, auth]
   );
   return (
     <FirebaseContext.Provider value={value}>
@@ -55,8 +61,7 @@ export function useFirebaseApp() {
 }
 
 export function useAuth() {
-  // Authentication has been removed from this project.
-  return null;
+  return useContext(FirebaseContext)?.auth;
 }
 
 export function useFirestore() {

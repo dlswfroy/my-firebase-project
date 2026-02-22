@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AcademicYearProvider } from '@/context/AcademicYearContext';
 import { SchoolInfoProvider } from '@/context/SchoolInfoContext';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { AuthProvider } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -33,11 +34,13 @@ export default function RootLayout({
     <html lang="bn">
       <body className={cn("font-body antialiased", noto_sans_bengali.variable, pt_sans.variable)}>
         <FirebaseClientProvider>
-          <SchoolInfoProvider>
-            <AcademicYearProvider>
-              {children}
-            </AcademicYearProvider>
-          </SchoolInfoProvider>
+          <AuthProvider>
+            <SchoolInfoProvider>
+              <AcademicYearProvider>
+                {children}
+              </AcademicYearProvider>
+            </SchoolInfoProvider>
+          </AuthProvider>
         </FirebaseClientProvider>
         <Toaster />
       </body>
