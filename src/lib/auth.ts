@@ -21,6 +21,7 @@ import {
   limit
 } from 'firebase/firestore';
 import type { UserRole } from './user';
+import { defaultPermissions } from './permissions';
 
 
 export async function signUp(email: string, password: string): Promise<{ success: boolean; role?: UserRole; error?: string }> {
@@ -55,6 +56,7 @@ export async function signUp(email: string, password: string): Promise<{ success
       uid: user.uid,
       email: user.email,
       role: role,
+      permissions: defaultPermissions[role] || [],
     });
 
     return { success: true, role: role };

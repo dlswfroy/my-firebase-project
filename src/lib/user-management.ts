@@ -6,8 +6,13 @@ import {
   query,
   orderBy,
   Firestore,
+  doc,
+  updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { User, userFromDoc } from './user';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const USERS_COLLECTION_PATH = 'users';
 
@@ -21,4 +26,30 @@ export const getUsers = async (db: Firestore): Promise<User[]> => {
     // Let the global error handler deal with permission errors.
     return [];
   }
+};
+
+
+export const updateUserPermissions = async (db: Firestore, uid: string, permissions: string[]): Promise<void> => {
+    const userRef = doc(db, USERS_COLLECTION_PATH, uid);
+    return updateDoc(userRef, { permissions }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'update',
+            requestResourceData: { permissions },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
+};
+
+export const deleteUserRecord = async (db: Firestore, uid: string): Promise<void> => {
+    const userRef = doc(db, USERS_COLLECTION_PATH, uid);
+    return deleteDoc(userRef).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw permissionError;
+    });
 };

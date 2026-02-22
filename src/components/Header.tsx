@@ -42,7 +42,7 @@ export function Header() {
   const router = useRouter();
   const { selectedYear, setSelectedYear, availableYears } = useAcademicYear();
   const { schoolInfo, isLoading: isSchoolInfoLoading } = useSchoolInfo();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, hasPermission } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
@@ -52,8 +52,6 @@ export function Header() {
     await signOut();
     router.push('/login');
   };
-
-  const isAdmin = user?.role === 'admin';
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b bg-primary px-4 text-primary-foreground shadow-sm sm:px-6 md:px-8">
@@ -107,14 +105,16 @@ export function Header() {
                 </div>
                 <nav className="flex-1 overflow-y-auto">
                   <div className="grid gap-1 p-2 text-base font-medium">
-                    <Link
-                      href="/"
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-sky-100 text-sky-800 hover:bg-sky-200"
-                    >
-                      <LayoutDashboard className="h-5 w-5" />
-                      ড্যাসবোর্ড
-                    </Link>
-                    {isAdmin && (
+                    {hasPermission('view:dashboard') && (
+                      <Link
+                        href="/"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-sky-100 text-sky-800 hover:bg-sky-200"
+                      >
+                        <LayoutDashboard className="h-5 w-5" />
+                        ড্যাসবোর্ড
+                      </Link>
+                    )}
+                    {hasPermission('manage:students') && (
                       <Link
                         href="/add-student"
                         className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
@@ -123,28 +123,34 @@ export function Header() {
                         নতুন শিক্ষার্থী যোগ
                       </Link>
                     )}
-                    <Link
-                      href="/student-list"
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-rose-100 text-rose-800 hover:bg-rose-200"
-                    >
-                      <Users className="h-5 w-5" />
-                      শিক্ষার্থী তালিকা
-                    </Link>
-                    <Link
-                      href="/attendance"
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-amber-100 text-amber-800 hover:bg-amber-200"
-                    >
-                      <CalendarCheck className="h-5 w-5" />
-                      হাজিরা
-                    </Link>
-                    <Link
-                      href="/results"
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-violet-100 text-violet-800 hover:bg-violet-200"
-                    >
-                      <BookMarked className="h-5 w-5" />
-                      ফলাফল
-                    </Link>
-                    {isAdmin && (
+                     {hasPermission('manage:students') && (
+                      <Link
+                        href="/student-list"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-rose-100 text-rose-800 hover:bg-rose-200"
+                      >
+                        <Users className="h-5 w-5" />
+                        শিক্ষার্থী তালিকা
+                      </Link>
+                    )}
+                     {hasPermission('manage:attendance') && (
+                      <Link
+                        href="/attendance"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-amber-100 text-amber-800 hover:bg-amber-200"
+                      >
+                        <CalendarCheck className="h-5 w-5" />
+                        হাজিরা
+                      </Link>
+                    )}
+                     {hasPermission('manage:results') && (
+                      <Link
+                        href="/results"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-violet-100 text-violet-800 hover:bg-violet-200"
+                      >
+                        <BookMarked className="h-5 w-5" />
+                        ফলাফল
+                      </Link>
+                    )}
+                    {hasPermission('manage:accounts') && (
                       <Link
                         href="/accounts"
                         className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-teal-100 text-teal-800 hover:bg-teal-200"
@@ -153,28 +159,34 @@ export function Header() {
                         হিসাব শাখা
                       </Link>
                     )}
-                    <Link
-                      href="/staff"
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-orange-100 text-orange-800 hover:bg-orange-200"
-                    >
-                      <Users2 className="h-5 w-5" />
-                      শিক্ষক ও কর্মচারী
-                    </Link>
-                    <Link
-                      href="/documents"
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-slate-100 text-slate-800 hover:bg-slate-200"
-                    >
-                      <FileText className="h-5 w-5" />
-                      ডকুমেন্ট
-                    </Link>
-                    <Link
-                      href="/routines"
-                      className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-200"
-                    >
-                      <CalendarClock className="h-5 w-5" />
-                      রুটিন
-                    </Link>
-                    {isAdmin && (
+                    {hasPermission('manage:staff') && (
+                      <Link
+                        href="/staff"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-orange-100 text-orange-800 hover:bg-orange-200"
+                      >
+                        <Users2 className="h-5 w-5" />
+                        শিক্ষক ও কর্মচারী
+                      </Link>
+                    )}
+                    {hasPermission('manage:documents') && (
+                      <Link
+                        href="/documents"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-slate-100 text-slate-800 hover:bg-slate-200"
+                      >
+                        <FileText className="h-5 w-5" />
+                        ডকুমেন্ট
+                      </Link>
+                    )}
+                    {hasPermission('manage:routines') && (
+                      <Link
+                        href="/routines"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-fuchsia-100 text-fuchsia-800 hover:bg-fuchsia-200"
+                      >
+                        <CalendarClock className="h-5 w-5" />
+                        রুটিন
+                      </Link>
+                    )}
+                    {hasPermission('manage:settings') && (
                       <Link
                         href="/settings"
                         className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-indigo-100 text-indigo-800 hover:bg-indigo-200"

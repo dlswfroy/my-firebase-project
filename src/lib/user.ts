@@ -7,6 +7,7 @@ export interface User {
   uid: string;
   email: string | null;
   role: UserRole;
+  permissions?: string[];
 }
 
 export const userFromDoc = (doc: DocumentData): User => {
@@ -15,5 +16,6 @@ export const userFromDoc = (doc: DocumentData): User => {
         uid: doc.id,
         email: data.email,
         role: data.role,
+        permissions: data.permissions,
     } as User;
 }

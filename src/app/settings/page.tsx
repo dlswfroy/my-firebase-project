@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -27,9 +27,12 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/lib/user';
-import { getUsers } from '@/lib/user-management';
+import { getUsers, updateUserPermissions, deleteUserRecord } from '@/lib/user-management';
 import { changePassword } from '@/lib/auth';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { availablePermissions, defaultPermissions } from '@/lib/permissions';
 
 
 function SchoolInfoSettings() {
@@ -63,7 +66,7 @@ function SchoolInfoSettings() {
     const handleSaveChanges = () => {
         updateSchoolInfo(info).then(() => {
             toast({
-                title: 'তথ্য সংরক্ষিতক্ষিত হয়েছে',
+                title: 'তথ্য সংরক্ষিত হয়েছে',
             });
         }).catch(() => {
             // Error handled by listener
@@ -318,72 +321,210 @@ function HolidaySettings() {
     );
 }
 
-function UserManagementSettings() {
+function PermissionDialog({ user, open, onOpenChange, onPermissionsUpdate }: { user: User, open: boolean, onOpenChange: (open: boolean) => void, onPermissionsUpdate: () => void }) {
     const db = useFirestore();
-    const [users, setUsers] = useState<User[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+    const [permissions, setPermissions] = useState<Set<string>>(new Set());
 
     useEffect(() => {
+        if (user) {
+            const initialPermissions = user.permissions && user.permissions.length > 0 ? user.permissions : (defaultPermissions[user.role] || []);
+            setPermissions(new Set(initialPermissions));
+        }
+    }, [user]);
+
+    const handlePermissionChange = (permissionId: string, checked: boolean | string) => {
+        setPermissions(prev => {
+            const newPermissions = new Set(prev);
+            if (checked) {
+                newPermissions.add(permissionId);
+            } else {
+                newPermissions.delete(permissionId);
+            }
+            return newPermissions;
+        });
+    };
+
+    const handleSave = async () => {
+        if (!db || !user) return;
+        try {
+            await updateUserPermissions(db, user.uid, Array.from(permissions));
+            toast({ title: 'পারমিশন আপডেট হয়েছে' });
+            onPermissionsUpdate();
+            onOpenChange(false);
+        } catch (error) {
+            // Error is handled by the data function
+        }
+    };
+
+    if (!user) return null;
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>পারমিশন সম্পাদনা করুন</DialogTitle>
+                    <DialogDescription>
+                        {user.email} এর জন্য পারমিশন নির্ধারণ করুন।
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-4">
+                        {availablePermissions.map(permission => (
+                            <div key={permission.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                    id={`perm-${permission.id}`}
+                                    checked={permissions.has(permission.id)}
+                                    onCheckedChange={(checked) => handlePermissionChange(permission.id, checked)}
+                                    disabled={user.role === 'admin'}
+                                />
+                                <label
+                                    htmlFor={`perm-${permission.id}`}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                    {permission.label}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                 <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>বাতিল</Button>
+                    <Button onClick={handleSave} disabled={user.role === 'admin'}>সেভ করুন</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function UserManagementSettings() {
+    const db = useFirestore();
+    const { toast } = useToast();
+    const { user: currentUser } = useAuth();
+    const [users, setUsers] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
+
+    const fetchUsers = useCallback(async () => {
         if (!db) return;
         setIsLoading(true);
-        getUsers(db).then((data) => {
+        try {
+            const data = await getUsers(db);
             setUsers(data);
+        } catch (error) {
+            // Permission errors are handled by the global listener
+        } finally {
             setIsLoading(false);
-        }).catch(() => {
-            const permissionError = new FirestorePermissionError({
-                path: 'users',
-                operation: 'list',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            setIsLoading(false);
-        });
+        }
     }, [db]);
+    
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
+
+    const handleDeleteUser = async (userToDelete: User) => {
+        if (!db || !currentUser || userToDelete.uid === currentUser.uid) return;
+        
+        try {
+            await deleteUserRecord(db, userToDelete.uid);
+            toast({ title: 'ব্যবহারকারী মুছে ফেলা হয়েছে'});
+            fetchUsers(); // Refresh the list
+        } catch (error) {
+             // Error is handled in deleteUserRecord
+        }
+    }
+    
+    const openPermissionDialog = (user: User) => {
+        setSelectedUser(user);
+        setIsPermissionDialogOpen(true);
+    };
 
     const roleMap: { [key: string]: string } = { admin: 'এডমিন', teacher: 'শিক্ষক' };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>ব্যবহারকারী ম্যানেজমেন্ট</CardTitle>
-                <CardDescription>সিস্টেমের সকল ব্যবহারকারীর তালিকা দেখুন।</CardDescription>
-            </CardHeader>
-            <CardContent>
-                 <div className="border rounded-md overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ইমেইল</TableHead>
-                                <TableHead>ভূমিকা (Role)</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                             {isLoading ? (
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>ব্যবহারকারী ম্যানেজমেন্ট</CardTitle>
+                    <CardDescription>সিস্টেমের সকল ব্যবহারকারীর তালিকা ও তাদের পারমিশন পরিচালনা করুন।</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div className="border rounded-md overflow-x-auto">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={2} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
+                                    <TableHead>ইমেইল</TableHead>
+                                    <TableHead>ভূমিকা (Role)</TableHead>
+                                    <TableHead className="text-right">কার্যক্রম</TableHead>
                                 </TableRow>
-                            ) : users.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
-                                        কোনো ব্যবহারকারী পাওয়া যায়নি।
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                users.map(user => (
-                                    <TableRow key={user.uid}>
-                                        <TableCell>{user.email}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>
-                                                {roleMap[user.role] || user.role}
-                                            </Badge>
+                            </TableHeader>
+                            <TableBody>
+                                 {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
+                                    </TableRow>
+                                ) : users.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                                            কোনো ব্যবহারকারী পাওয়া যায়নি।
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                 </div>
-            </CardContent>
-        </Card>
+                                ) : (
+                                    users.map(user => (
+                                        <TableRow key={user.uid}>
+                                            <TableCell>{user.email}</TableCell>
+                                            <TableCell>
+                                                <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>
+                                                    {roleMap[user.role] || user.role}
+                                                </Badge>
+                                            </TableCell>
+                                             <TableCell className="text-right">
+                                                <div className="flex justify-end gap-2">
+                                                     <Button variant="outline" size="sm" onClick={() => openPermissionDialog(user)} disabled={user.role === 'admin'}>
+                                                        পারমিশন
+                                                     </Button>
+                                                     <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="destructive" size="sm" disabled={user.uid === currentUser?.uid}>
+                                                                ডিলিট
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    এই ব্যবহারকারীকে স্থায়ীভাবে মুছে ফেলা হবে। এই কাজটি ফিরিয়ে আনা যাবে না।
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteUser(user)}>
+                                                                    ডিলিট করুন
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                     </div>
+                </CardContent>
+            </Card>
+            {selectedUser && (
+                <PermissionDialog
+                    user={selectedUser}
+                    open={isPermissionDialogOpen}
+                    onOpenChange={setIsPermissionDialogOpen}
+                    onPermissionsUpdate={fetchUsers}
+                />
+            )}
+        </>
     );
 }
 
@@ -486,7 +627,7 @@ export default function SettingsPage() {
                     <CardContent>
                         {isClient ? (
                             <Tabs defaultValue="profile">
-                                <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
+                                <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-1'}`}>
                                     <TabsTrigger value="profile">প্রোফাইল</TabsTrigger>
                                     {isAdmin && <TabsTrigger value="school-info">প্রতিষ্ঠানের তথ্য</TabsTrigger>}
                                     {isAdmin && <TabsTrigger value="holidays">অতিরিক্ত ছুটি</TabsTrigger>}
