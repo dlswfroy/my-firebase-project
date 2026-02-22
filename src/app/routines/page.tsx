@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
@@ -21,6 +20,8 @@ import { Copy, Printer, FilePen, FilePlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { subjectNameNormalization as baseSubjectNameNormalization, getSubjects } from '@/lib/subjects';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useSchoolInfo } from '@/context/SchoolInfoContext';
+import Image from 'next/image';
 
 const subjectNameNormalization: { [key: string]: string } = {
     ...baseSubjectNameNormalization,
@@ -102,7 +103,7 @@ const useRoutineAnalysis = (routine: Record<string, Record<string, string[]>>) =
                             if (teacher) {
                                 teacher.split('/').forEach(t => {
                                     const trimmedTeacher = t.trim();
-                                    if (trimmedTeacher) {
+                                    if (trimmedTeacher && !allIndividualTeachers.has(trimmedTeacher)) {
                                         allIndividualTeachers.add(trimmedTeacher);
                                     }
                                 });
@@ -434,9 +435,9 @@ const CombinedRoutineTable = ({ routineData, conflicts, isEditMode, onCellChange
 
     return (
          <Card>
-            <CardHeader>
+            <CardHeader className="no-print">
                 <CardTitle>সকল শ্রেণির সম্মিলিত ক্লাস রুটিন</CardTitle>
-                <CardDescription>
+                <CardDescription className="no-print">
                     অসঙ্গতিপূর্ণ ক্লাসগুলো লাল রঙে হাইলাইট করা হয়েছে। বিস্তারিত জানতে সেলের উপর মাউস রাখুন। এডিট মোডে প্রতিটি সেলে ক্লিক করে পরিবর্তন করা যাবে।
                 </CardDescription>
             </CardHeader>
@@ -633,6 +634,7 @@ export default function RoutinesPage() {
 
     const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
     const [targetYear, setTargetYear] = useState('');
+    const { schoolInfo, isLoading: isSchoolInfoLoading } = useSchoolInfo();
 
     const fetchData = useCallback(async () => {
         if (!db) return;
@@ -895,25 +897,35 @@ export default function RoutinesPage() {
                     </Card>
                 </main>
             </div>
-            <div className="printable-area routine-print-container">
-                {isLoading ? (
-                    <p>লোড হচ্ছে...</p>
-                ) : (
-                    <div>
-                        <h1 style={{textAlign: 'center', fontSize: '12px', fontWeight: 'bold', marginBottom: '8px'}}>
-                            ক্লাস রুটিন - {selectedYear.toLocaleString('bn-BD')}
-                        </h1>
-                        <CombinedRoutineTable 
-                            routineData={routineData}
-                            conflicts={conflicts}
-                            isEditMode={false}
-                            onCellChange={() => {}}
-                            teacherColorMap={teacherColorMap}
-                            isMounted={isMounted}
-                        />
-                    </div>
-                )}
-            </div>
+            {isClient && (
+                 <div className="printable-area routine-print-container">
+                    {isLoading || isSchoolInfoLoading ? (
+                        <div className="flex items-center justify-center h-full">লোড হচ্ছে...</div>
+                    ) : (
+                        <div className="p-4">
+                             <header className="flex items-center gap-4 mb-2">
+                                {schoolInfo.logoUrl && <Image src={schoolInfo.logoUrl} alt="School Logo" width={50} height={50} className="object-contain" />}
+                                <div className="text-center flex-grow">
+                                    <h1 className="text-xl font-bold">{schoolInfo.name}</h1>
+                                    <p className="text-[10px]">{schoolInfo.address}</p>
+                                    <h2 className="text-base font-semibold mt-1">
+                                        ক্লাস রুটিন - {selectedYear.toLocaleString('bn-BD')}
+                                    </h2>
+                                </div>
+                                <div className="w-[50px]"></div> {/* Spacer */}
+                            </header>
+                            <CombinedRoutineTable 
+                                routineData={routineData}
+                                conflicts={conflicts}
+                                isEditMode={false}
+                                onCellChange={() => {}}
+                                teacherColorMap={teacherColorMap}
+                                isMounted={isMounted}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
         </>
     );
 }

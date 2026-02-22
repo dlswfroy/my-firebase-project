@@ -99,12 +99,23 @@
       print-color-adjust: exact;
       background-color: white;
     }
-    body * {
-      visibility: hidden;
+    .printable-area {
+        display: block !important;
     }
+    .no-print, .no-print * {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    
+    body > *:not(.printable-area) {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
     .printable-area, .printable-area * {
       visibility: visible;
     }
+
     .printable-area {
       position: absolute;
       left: 0;
@@ -116,29 +127,35 @@
       border: none;
       box-shadow: none;
     }
-    .no-print {
-      display: none;
-    }
+
     .no-print-outline {
       outline: none !important;
     }
-
+    
     .routine-print-container {
         page: routine;
-        padding: 1cm;
+        padding: 0.5cm;
         box-sizing: border-box;
     }
     .routine-print-container table {
-        font-size: 7px;
-        line-height: 1.2;
+        font-size: 8px;
+        line-height: 1.1;
+        width: 100%;
+        table-layout: fixed;
     }
-    .routine-print-container th, .routine-print-container td {
-        padding: 1px 2px;
+    .routine-print-container table th,
+    .routine-print-container table td {
+        padding: 1px;
+        overflow-wrap: break-word;
+        text-align: center;
     }
-     .routine-print-container .min-w-\[150px\],
-    .routine-print-container .min-w-\[100px\],
-    .routine-print-container .min-w-\[80px\] {
+    .routine-print-container table .min-w-\[150px\],
+    .routine-print-container table .min-w-\[100px\],
+    .routine-print-container table .min-w-\[80px\] {
         min-width: auto !important;
+    }
+     .routine-print-container [data-radix-tooltip-content] {
+        display: none !important;
     }
   }
 }
