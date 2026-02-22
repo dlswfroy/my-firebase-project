@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -1451,7 +1452,7 @@ export default function ResultsPage() {
                     <CardContent>
                         {isClient ? (
                             <Tabs defaultValue="management">
-                                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 sm:h-auto">
+                                <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
                                     <TabsTrigger value="management">নম্বর ব্যবস্থাপনা</TabsTrigger>
                                     <TabsTrigger value="sheet">ফলাফল শিট</TabsTrigger>
                                     <TabsTrigger value="special-promotion">বিশেষ বিবেচনায় পাশ</TabsTrigger>

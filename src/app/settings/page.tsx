@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -166,6 +167,8 @@ function SchoolInfoSettings() {
 function HolidaySettings() {
     const db = useFirestore();
     const { toast } = useToast();
+    const { hasPermission } = useAuth();
+    const canManageSettings = hasPermission('manage:settings');
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newHolidayDate, setNewHolidayDate] = useState<Date | undefined>(undefined);
@@ -236,29 +239,37 @@ function HolidaySettings() {
     };
     
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>অতিরিক্ত ছুটির দিন</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-8">
-                <div className="flex flex-col sm:flex-row items-end gap-4 p-4 border rounded-lg">
-                    <div className="w-full space-y-2">
-                        <Label htmlFor="holiday-date">তারিখ</Label>
-                        <DatePicker value={newHolidayDate} onChange={setNewHolidayDate} />
+        <div className="space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>নতুন ছুটি যোগ করুন</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col sm:flex-row items-end gap-4">
+                        <div className="w-full space-y-2">
+                            <Label htmlFor="holiday-date">তারিখ</Label>
+                            <DatePicker value={newHolidayDate} onChange={setNewHolidayDate} />
+                        </div>
+                        <div className="w-full space-y-2">
+                            <Label htmlFor="holiday-description">ছুটির কারণ</Label>
+                            <Input
+                                id="holiday-description"
+                                value={newHolidayDescription}
+                                onChange={(e) => setNewHolidayDescription(e.target.value)}
+                            />
+                        </div>
                     </div>
-                    <div className="w-full space-y-2">
-                        <Label htmlFor="holiday-description">ছুটির কারণ</Label>
-                        <Input
-                            id="holiday-description"
-                            value={newHolidayDescription}
-                            onChange={(e) => setNewHolidayDescription(e.target.value)}
-                        />
-                    </div>
-                    <Button onClick={handleAddHoliday} className="w-full sm:w-auto">যোগ করুন</Button>
-                </div>
+                </CardContent>
+                <CardFooter className="border-t pt-6 justify-end">
+                    <Button onClick={handleAddHoliday} disabled={!canManageSettings}>যোগ করুন</Button>
+                </CardFooter>
+            </Card>
 
-                <div>
-                    <h3 className="font-semibold text-lg mb-4">ছুটির তালিকা</h3>
+            <Card>
+                <CardHeader>
+                    <CardTitle>ছুটির তালিকা</CardTitle>
+                </CardHeader>
+                <CardContent>
                     <div className="border rounded-md overflow-x-auto">
                         <Table>
                             <TableHeader>
@@ -287,7 +298,7 @@ function HolidaySettings() {
                                             <TableCell className="text-right">
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button variant="destructive" size="icon">
+                                                        <Button variant="destructive" size="icon" disabled={!canManageSettings}>
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>
                                                     </AlertDialogTrigger>
@@ -313,9 +324,9 @@ function HolidaySettings() {
                             </TableBody>
                         </Table>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
     );
 }
 
@@ -625,7 +636,7 @@ export default function SettingsPage() {
                     <CardContent>
                         {isClient ? (
                             <Tabs defaultValue="profile">
-                                <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-1'}`}>
+                                <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4' : 'grid-cols-1'}`}>
                                     <TabsTrigger value="profile">প্রোফাইল</TabsTrigger>
                                     {isAdmin && <TabsTrigger value="school-info">প্রতিষ্ঠানের তথ্য</TabsTrigger>}
                                     {isAdmin && <TabsTrigger value="holidays">অতিরিক্ত ছুটি</TabsTrigger>}
