@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { deleteStaff, Staff } from '@/lib/staff-data';
+import { deleteStaff, Staff, staffFromDoc } from '@/lib/staff-data';
 import { Eye, FilePen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -60,11 +60,7 @@ export default function StaffListPage() {
     const staffQuery = query(collection(db, "staff"), orderBy("joinDate", "desc"));
 
     const unsubscribe = onSnapshot(staffQuery, (querySnapshot) => {
-      const staffData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        joinDate: doc.data().joinDate?.toDate(),
-      })) as Staff[];
+      const staffData = querySnapshot.docs.map(staffFromDoc);
       setAllStaff(staffData);
       setIsLoading(false);
     }, async (error: FirestoreError) => {
@@ -151,7 +147,7 @@ export default function StaffListPage() {
                                     className="rounded-full object-cover"
                                 />
                                 </TableCell>
-                                <TableCell>{staff.employeeId}</TableCell>
+                                <TableCell>{staff.employeeId || 'N/A'}</TableCell>
                                 <TableCell className="whitespace-nowrap font-medium">{staff.nameBn}</TableCell>
                                 <TableCell className="whitespace-nowrap">{staff.designation}</TableCell>
                                 <TableCell>{staff.subject || '-'}</TableCell>
@@ -267,7 +263,7 @@ export default function StaffListPage() {
                     </DialogHeader>
                     <div className="max-h-[60vh] overflow-y-auto pr-4">
                         <div className="space-y-4 py-4 text-sm">
-                            <p><span className="font-medium text-muted-foreground">কর্মচারী আইডি:</span> {staffToView.employeeId}</p>
+                            <p><span className="font-medium text-muted-foreground">কর্মচারী আইডি:</span> {staffToView.employeeId || 'N/A'}</p>
                             <p><span className="font-medium text-muted-foreground">নাম (ইংরেজি):</span> {staffToView.nameEn || 'N/A'}</p>
                             <p><span className="font-medium text-muted-foreground">বিষয়:</span> {staffToView.subject || 'N/A'}</p>
                             <p><span className="font-medium text-muted-foreground">মোবাইল:</span> {staffToView.mobile}</p>
@@ -285,5 +281,7 @@ export default function StaffListPage() {
     </>
   );
 }
+
+    
 
     

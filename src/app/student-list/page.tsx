@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { deleteStudent, Student } from '@/lib/student-data';
+import { deleteStudent, Student, studentFromDoc } from '@/lib/student-data';
 import { Eye, FilePen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState, useMemo } from 'react';
@@ -64,11 +64,7 @@ export default function StudentListPage() {
     );
 
     const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
-      const studentsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        dob: doc.data().dob?.toDate(),
-      })) as Student[];
+      const studentsData = querySnapshot.docs.map(studentFromDoc);
       setAllStudents(studentsData);
       setIsLoading(false);
     }, async (error: FirestoreError) => {
@@ -391,5 +387,7 @@ export default function StudentListPage() {
     </>
   );
 }
+
+    
 
     

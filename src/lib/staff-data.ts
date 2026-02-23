@@ -127,21 +127,28 @@ export const updateStaff = async (db: Firestore, id: string, staffData: UpdateSt
     updatedAt: serverTimestamp(),
   };
 
-  // Generate ID only if it's missing
   const existingDoc = await getDoc(docRef);
-  if (existingDoc.exists() && !existingDoc.data().employeeId) {
-     const joinDate = staffData.joinDate || existingDoc.data().joinDate?.toDate();
-     if (joinDate) {
+  if (existingDoc.exists()) {
+      const joinDate = staffData.joinDate || existingDoc.data().joinDate?.toDate();
+      if (joinDate) {
         const year = new Date(joinDate).getFullYear();
-        const startOfYear = new Date(year, 0, 1);
-        const endOfYear = new Date(year + 1, 0, 1);
-
-        const q = query(collection(db, 'staff'), where('joinDate', '>=', startOfYear), where('joinDate', '<', endOfYear));
-        const querySnapshot = await getDocs(q);
-        const count = querySnapshot.size;
-        const serial = (count + 1).toString().padStart(2, '0');
-        dataToUpdate.employeeId = `${year}${serial}`;
-     }
+        const existingId = existingDoc.data().employeeId;
+        const idFormatRegex = /^\d{6}$/; // YYYYSS should be 6 digits
+        
+        const oldJoinYear = existingDoc.data().joinDate?.toDate()?.getFullYear();
+        
+        // Regenerate ID if it's missing, badly formatted, or if the join year has changed.
+        if (!existingId || !idFormatRegex.test(existingId) || (oldJoinYear && oldJoinYear !== year)) {
+            const startOfYear = new Date(year, 0, 1);
+            const endOfYear = new Date(year + 1, 0, 1);
+            const q = query(collection(db, 'staff'), where('joinDate', '>=', startOfYear), where('joinDate', '<', endOfYear));
+            const querySnapshot = await getDocs(q);
+            
+            const count = querySnapshot.size;
+            const serial = (count + 1).toString().padStart(2, '0');
+            dataToUpdate.employeeId = `${year}${serial}`;
+        }
+      }
   }
 
   if (staffData.joinDate) {
