@@ -57,7 +57,7 @@ export default function StaffListPage() {
     if (!db) return;
     setIsLoading(true);
 
-    const staffQuery = query(collection(db, "staff"), orderBy("joinDate", "desc"));
+    const staffQuery = query(collection(db, "staff"), orderBy("joinDate", "asc"));
 
     const unsubscribe = onSnapshot(staffQuery, (querySnapshot) => {
       const staffData = querySnapshot.docs.map(staffFromDoc);
