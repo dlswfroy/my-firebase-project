@@ -770,7 +770,7 @@ export default function RoutinesPage() {
 
     return (
         <>
-            <div className="flex min-h-screen w-full flex-col bg-fuchsia-50 no-print">
+            <div className="flex min-h-screen w-full flex-col bg-fuchsia-100 no-print">
                 <Header />
                 <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
                     <Card>

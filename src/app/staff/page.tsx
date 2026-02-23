@@ -36,6 +36,7 @@ import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function StaffListPage() {
   const [allStaff, setAllStaff] = useState<Staff[]>([]);
@@ -44,6 +45,9 @@ export default function StaffListPage() {
   const [staffToView, setStaffToView] = useState<Staff | null>(null);
   const db = useFirestore();
   const [isClient, setIsClient] = useState(false);
+  const { hasPermission } = useAuth();
+  const canManageStaff = hasPermission('manage:staff');
+
 
   useEffect(() => {
     setIsClient(true);
@@ -90,16 +94,18 @@ export default function StaffListPage() {
 
   return (
     <>
-    <div className="flex min-h-screen w-full flex-col bg-orange-50">
+    <div className="flex min-h-screen w-full flex-col bg-orange-100">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <CardTitle>শিক্ষক ও কর্মচারী তালিকা</CardTitle>
-              <Link href="/add-staff">
-                <Button>নতুন যোগ করুন</Button>
-              </Link>
+              {canManageStaff && (
+                <Link href="/add-staff">
+                    <Button>নতুন যোগ করুন</Button>
+                </Link>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -158,34 +164,38 @@ export default function StaffListPage() {
                                     <Button variant="outline" size="icon" onClick={() => setStaffToView(staff)}>
                                     <Eye className="h-4 w-4" />
                                     </Button>
-                                    <Link href={`/edit-staff/${staff.id}`}>
-                                    <Button variant="outline" size="icon" asChild>
-                                        <span className="cursor-pointer">
-                                        <FilePen className="h-4 w-4" />
-                                        </span>
-                                    </Button>
-                                    </Link>
-                                    <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="icon">
-                                        <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                        <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            এই কাজটি ফিরিয়ে আনা যাবে না। এটি তালিকা থেকে স্থায়ীভাবে এই রেকর্ডটি মুছে ফেলবে।
-                                        </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                        <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDeleteStaff(staff.id)}>
-                                            ডিলিট করুন
-                                        </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                    </AlertDialog>
+                                    {canManageStaff && (
+                                        <>
+                                            <Link href={`/edit-staff/${staff.id}`}>
+                                            <Button variant="outline" size="icon" asChild>
+                                                <span className="cursor-pointer">
+                                                <FilePen className="h-4 w-4" />
+                                                </span>
+                                            </Button>
+                                            </Link>
+                                            <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="destructive" size="icon">
+                                                <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    এই কাজটি ফিরিয়ে আনা যাবে না। এটি তালিকা থেকে স্থায়ীভাবে এই রেকর্ডটি মুছে ফেলবে।
+                                                </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteStaff(staff.id)}>
+                                                    ডিলিট করুন
+                                                </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                            </AlertDialog>
+                                        </>
+                                    )}
                                 </div>
                                 </TableCell>
                             </TableRow>
