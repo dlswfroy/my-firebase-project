@@ -102,7 +102,8 @@ const LiveRoutineCard = () => {
                     const adjustedPeriodIndex = periodIndex + (periodIndex >= 3 ? 1 : 0);
                     const periodInfo = periodTimes[adjustedPeriodIndex];
                     return {
-                        className: classNamesMap[r.className] || r.className,
+                        className: r.className, // Keep raw class name for sorting
+                        displayClassName: classNamesMap[r.className] || r.className,
                         teacher: parseTeacherName(periodContent),
                         period: periodInfo.name,
                         time: `${periodInfo.start.h.toString().padStart(2, '0')}:${periodInfo.start.m.toString().padStart(2, '0')} - ${periodInfo.end.h.toString().padStart(2, '0')}:${periodInfo.end.m.toString().padStart(2, '0')}`
@@ -110,7 +111,8 @@ const LiveRoutineCard = () => {
                 }
                 return null;
             })
-            .filter((c): c is NonNullable<typeof c> => c !== null);
+            .filter((c): c is NonNullable<typeof c> => c !== null)
+            .sort((a, b) => parseInt(a.className) - parseInt(b.className));
 
         if (runningClasses.length === 0 && status === 'ক্লাস চলছে') {
             status = 'এখন কোনো ক্লাস চলছে না।';
@@ -151,7 +153,7 @@ const LiveRoutineCard = () => {
                                 <TableRow key={index}>
                                     <TableCell className="text-xs">{rc.time}</TableCell>
                                     <TableCell className="font-medium">{rc.teacher}</TableCell>
-                                    <TableCell>{rc.className}</TableCell>
+                                    <TableCell>{rc.displayClassName}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

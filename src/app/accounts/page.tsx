@@ -457,7 +457,7 @@ export default function AccountsPage() {
           <CardContent>
              {isClient ? (
                 <Tabs defaultValue={tabs[0]?.value || 'cashbook'}>
-                  <TabsList className={`grid w-full grid-cols-2 md:grid-cols-${tabs.length}`}>
+                  <TabsList className="inline-flex h-auto flex-wrap items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
                     {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
                   </TabsList>
                   {canCollectFees && (
