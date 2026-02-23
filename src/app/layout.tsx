@@ -12,6 +12,7 @@ import { defaultSchoolInfo } from '@/lib/school-info';
 export const metadata: Metadata = {
   title: 'School Navigator',
   description: 'A central hub for school management.',
+  manifest: '/manifest.webmanifest',
   icons: {
     icon: defaultSchoolInfo.logoUrl,
     apple: defaultSchoolInfo.logoUrl,

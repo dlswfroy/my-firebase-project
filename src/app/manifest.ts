@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 import { defaultSchoolInfo } from '@/lib/school-info'
 
 // Base URL without width/height params from the defaultSchoolInfo
-const baseIconUrl = defaultSchoolInfo.logoUrl.split('&w=')[0];
+const baseIconUrl = defaultSchoolInfo.logoUrl.split('?')[0];
  
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -16,16 +16,22 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#2f2a8a',
     icons: [
       {
-        src: `${baseIconUrl}&w=192&h=192`,
+        src: `${baseIconUrl}?w=192&h=192&fit=crop&q=80`,
         sizes: '192x192',
         type: 'image/jpeg',
-        purpose: 'any maskable',
+        purpose: 'any',
       },
       {
-        src: `${baseIconUrl}&w=512&h=512`,
+        src: `${baseIconUrl}?w=512&h=512&fit=crop&q=80`,
         sizes: '512x512',
         type: 'image/jpeg',
-        purpose: 'any maskable',
+        purpose: 'any',
+      },
+       {
+        src: `${baseIconUrl}?w=512&h=512&fit=crop&q=80`,
+        sizes: '512x512',
+        type: 'image/jpeg',
+        purpose: 'maskable',
       }
     ],
   }
