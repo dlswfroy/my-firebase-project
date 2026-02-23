@@ -9,14 +9,16 @@ import { AuthProvider } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { defaultSchoolInfo } from '@/lib/school-info';
 
+const iconUrlWithVersion = `${defaultSchoolInfo.logoUrl}?v=3`;
+
 export const metadata: Metadata = {
   title: 'School Navigator',
   description: 'A central hub for school management.',
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: defaultSchoolInfo.logoUrl,
-    shortcut: defaultSchoolInfo.logoUrl,
-    apple: defaultSchoolInfo.logoUrl,
+    icon: iconUrlWithVersion,
+    shortcut: iconUrlWithVersion,
+    apple: iconUrlWithVersion,
   }
 };
 
