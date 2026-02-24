@@ -36,6 +36,21 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        // This path covers the manifest and all common icon formats.
+        source: '/:path*(webmanifest|ico|png|svg|xml|json)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            // This header tells the browser to always check with the server for a new version.
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;
