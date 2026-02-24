@@ -186,6 +186,8 @@ export default function Home() {
   const router = useRouter();
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalTeachers, setTotalTeachers] = useState(0);
+  const [totalPresent, setTotalPresent] = useState(0);
+  const [totalAbsent, setTotalAbsent] = useState(0);
   const [classAttendance, setClassAttendance] = useState<Record<string, { present: number; absent: number; total: number }>>({});
   const [attendanceTaken, setAttendanceTaken] = useState(false);
   const { selectedYear } = useAcademicYear();
@@ -225,6 +227,8 @@ export default function Home() {
         setAttendanceTaken(todaysAttendance.length > 0);
 
         if (todaysAttendance.length > 0) {
+            let totalPresentCount = 0;
+            let totalAbsentCount = 0;
             todaysAttendance.forEach(classAttendanceRecord => {
                 const className = classAttendanceRecord.className;
                 if (classMap[className]) {
@@ -243,8 +247,15 @@ export default function Home() {
                     });
                     classMap[className].present = presentCount;
                     classMap[className].absent = absentCount;
+                    totalPresentCount += presentCount;
+                    totalAbsentCount += absentCount;
                 }
             });
+            setTotalPresent(totalPresentCount);
+            setTotalAbsent(totalAbsentCount);
+        } else {
+            setTotalPresent(0);
+            setTotalAbsent(0);
         }
         
         setClassAttendance(classMap);
@@ -304,7 +315,53 @@ export default function Home() {
             </CardContent>
           </Card>
           
-          <Card className="lg:col-span-2">
+           <Card className="bg-emerald-100 border-emerald-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-emerald-800">
+                মোট উপস্থিত
+              </CardTitle>
+              <Users className="h-4 w-4 text-emerald-700" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-900">{totalPresent.toLocaleString('bn-BD')}</div>
+              <p className="text-xs text-emerald-600">
+                আজকের মোট উপস্থিত শিক্ষার্থী
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-rose-100 border-rose-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-rose-800">
+                মোট অনুপস্থিত
+              </CardTitle>
+              <Users className="h-4 w-4 text-rose-700" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-rose-900">{totalAbsent.toLocaleString('bn-BD')}</div>
+              <p className="text-xs text-rose-600">
+                আজকের মোট অনুপস্থিত শিক্ষার্থী
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-amber-100 border-amber-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-800">
+                মোট শিক্ষক
+              </CardTitle>
+              <GraduationCap className="h-4 w-4 text-amber-700" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-900">{totalTeachers.toLocaleString('bn-BD')}</div>
+              <p className="text-xs text-amber-600">
+                &nbsp;
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+          <Card className="lg:col-span-1">
             <CardHeader>
                 <CardTitle>আজকের হাজিরা</CardTitle>
                 <CardDescription>
@@ -334,23 +391,6 @@ export default function Home() {
                 </Table>
             </CardContent>
           </Card>
-
-          <Card className="bg-amber-100 border-amber-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-amber-800">
-                মোট শিক্ষক
-              </CardTitle>
-              <GraduationCap className="h-4 w-4 text-amber-700" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-amber-900">{totalTeachers.toLocaleString('bn-BD')}</div>
-              <p className="text-xs text-amber-600">
-                &nbsp;
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <LiveRoutineCard />
         </div>
       </main>
