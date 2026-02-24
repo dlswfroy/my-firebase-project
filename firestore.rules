@@ -56,12 +56,12 @@ service cloud.firestore {
 
     match /feeCollections/{document=**} {
       allow read: if isAuthed();
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isTeacher();
     }
 
     match /transactions/{document=**} {
       allow read: if isAuthed();
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isTeacher();
     }
 
     match /holidays/{document=**} {
