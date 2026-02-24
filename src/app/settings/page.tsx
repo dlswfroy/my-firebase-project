@@ -171,7 +171,8 @@ function HolidaySettings() {
     const canManageSettings = hasPermission('manage:settings');
     const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [newHolidayDate, setNewHolidayDate] = useState<Date | undefined>(undefined);
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [newHolidayDescription, setNewHolidayDescription] = useState('');
 
     useEffect(() => {
@@ -193,39 +194,78 @@ function HolidaySettings() {
         return () => unsubscribe();
     }, [db]);
 
-    const handleAddHoliday = () => {
+    const handleAddHolidays = async () => {
         if (!db) return;
-        if (!newHolidayDate || !newHolidayDescription) {
+        if (!startDate || !newHolidayDescription) {
             toast({
                 variant: 'destructive',
                 title: 'তথ্য অসম্পূর্ণ',
+                description: 'অনুগ্রহ করে শুরুর তারিখ এবং ছুটির কারণ পূরণ করুন।',
             });
             return;
         }
 
-        const holidayData: NewHolidayData = {
-            date: format(newHolidayDate, 'yyyy-MM-dd'),
-            description: newHolidayDescription,
-        };
+        const loopEndDate = endDate || startDate;
 
-        addHoliday(db, holidayData).then((result) => {
-            if (result) {
-                toast({
-                    title: 'ছুটি যোগ হয়েছে',
-                });
-                setNewHolidayDate(undefined);
+        if (loopEndDate < startDate) {
+            toast({
+                variant: 'destructive',
+                title: 'তারিখ নির্বাচনে ভুল',
+                description: 'শেষের তারিখ শুরুর তারিখের আগে হতে পারে না।',
+            });
+            return;
+        }
+
+        let currentDate = new Date(startDate);
+        const promises: Promise<any>[] = [];
+
+        while (currentDate <= loopEndDate) {
+            const holidayData: NewHolidayData = {
+                date: format(currentDate, 'yyyy-MM-dd'),
+                description: newHolidayDescription,
+            };
+            promises.push(addHoliday(db, holidayData));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        if (promises.length === 0) return;
+
+        try {
+            const results = await Promise.all(promises);
+            let addedCount = 0;
+            let duplicateCount = 0;
+
+            results.forEach(result => {
+                if (result) {
+                    addedCount++;
+                } else {
+                    duplicateCount++;
+                }
+            });
+
+            let toastTitle = '';
+            let toastDescription = '';
+            
+            if (addedCount > 0) {
+                toastTitle = 'ছুটি যোগ হয়েছে';
+                toastDescription = `${addedCount.toLocaleString('bn-BD')}টি নতুন ছুটি যোগ হয়েছে।`;
+                if (duplicateCount > 0) {
+                    toastDescription += ` ${duplicateCount.toLocaleString('bn-BD')}টি ছুটি ইতিমধ্যে বিদ্যমান থাকায় যোগ করা হয়নি।`;
+                }
+                toast({ title: toastTitle, description: toastDescription });
+                setStartDate(undefined);
+                setEndDate(undefined);
                 setNewHolidayDescription('');
-            } else {
-                toast({
-                    variant: 'destructive',
-                    title: 'ছুটি যোগ করা যায়নি',
-                    description: 'এই তারিখে ইতিমধ্যে একটি ছুটি রয়েছে।',
-                });
+            } else if (duplicateCount > 0) {
+                toastTitle = 'ছুটি যোগ করা যায়নি';
+                toastDescription = `আপনি যে তারিখগুলো দিয়েছেন, সেগুলোতে ইতিমধ্যে ছুটি রয়েছে।`;
+                toast({ title: toastTitle, description: toastDescription, variant: 'destructive' });
             }
-        }).catch(() => {
-            // Error handled by listener
-        });
+        } catch (e) {
+            // Error is handled inside addHoliday and emitted.
+        }
     };
+
 
     const handleDeleteHoliday = (id: string) => {
         if (!db) return;
@@ -245,12 +285,16 @@ function HolidaySettings() {
                     <CardTitle>নতুন ছুটি যোগ করুন</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col sm:flex-row items-end gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 items-end gap-4">
                         <div className="w-full space-y-2">
-                            <Label htmlFor="holiday-date">তারিখ</Label>
-                            <DatePicker value={newHolidayDate} onChange={setNewHolidayDate} />
+                            <Label htmlFor="holiday-start-date">শুরুর তারিখ</Label>
+                            <DatePicker value={startDate} onChange={setStartDate} />
                         </div>
                         <div className="w-full space-y-2">
+                            <Label htmlFor="holiday-end-date">শেষের তারিখ</Label>
+                            <DatePicker value={endDate} onChange={setEndDate} placeholder="শুরুর তারিখের সমান" />
+                        </div>
+                        <div className="w-full sm:col-span-2 space-y-2">
                             <Label htmlFor="holiday-description">ছুটির কারণ</Label>
                             <Input
                                 id="holiday-description"
@@ -261,7 +305,7 @@ function HolidaySettings() {
                     </div>
                 </CardContent>
                 <CardFooter className="border-t pt-6 justify-end">
-                    <Button onClick={handleAddHoliday} disabled={!canManageSettings}>যোগ করুন</Button>
+                    <Button onClick={handleAddHolidays} disabled={!canManageSettings}>যোগ করুন</Button>
                 </CardFooter>
             </Card>
 
