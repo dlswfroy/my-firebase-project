@@ -37,6 +37,11 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
 
     const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Friday & Saturday are weekend
 
+    const now = new Date();
+    const schoolStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 30, 0); // 10:30 AM
+    const schoolEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 10, 0); // 4:10 PM
+    const isSchoolHours = now >= schoolStart && now <= schoolEnd;
+
     useEffect(() => {
         if (!db) return;
         
@@ -66,12 +71,22 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
 
     const handleSaveAttendance = () => {
         if (!db) return;
+        
+        const rightNow = new Date();
+        const schoolStartNow = new Date(rightNow.getFullYear(), rightNow.getMonth(), rightNow.getDate(), 10, 30, 0);
+        const schoolEndNow = new Date(rightNow.getFullYear(), rightNow.getMonth(), rightNow.getDate(), 16, 10, 0);
+        const currentIsSchoolHours = rightNow >= schoolStartNow && rightNow <= schoolEndNow;
+
         if (isWeekend) {
             toast({ variant: "destructive", title: "আজ সাপ্তাহিক ছুটি।" });
             return;
         }
         if (activeHoliday) {
             toast({ variant: "destructive", title: `আজ ${activeHoliday.description} উপলক্ষে ছুটি।` });
+            return;
+        }
+        if (!currentIsSchoolHours) {
+            toast({ variant: "destructive", title: "স্কুলের সময় শেষ", description: "স্কুল চলাকালীন সময়েই কেবল হাজিরা নেওয়া যাবে।" });
             return;
         }
 
@@ -106,7 +121,7 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
     if (activeHoliday) {
         return <p className="text-center text-muted-foreground p-8">আজ {activeHoliday.description} উপলক্ষে ছুটি, তাই হাজিরা বন্ধ আছে।</p>;
     }
-
+    
     if (savedAttendance) {
         const savedMap = new Map(savedAttendance.attendance.map(item => [item.studentId, item.status]));
         const presentCount = savedAttendance.attendance.filter(a => a.status === 'present').length;
@@ -146,6 +161,10 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
                  </div>
             </div>
         );
+    }
+    
+    if (!isSchoolHours) {
+        return <p className="text-center text-muted-foreground p-8">স্কুল চলাকালীন সময়েই (সকাল ১০:৩০ - বিকাল ৪:১০) কেবল হাজিরা নেওয়া যাবে।</p>;
     }
     
     return (
