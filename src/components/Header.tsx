@@ -37,7 +37,7 @@ import { Skeleton } from './ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { signOut } from '@/lib/auth';
 import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, onSnapshot } from 'firebase/firestore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,25 +54,41 @@ export function Header() {
   const { schoolInfo, isLoading: isSchoolInfoLoading } = useSchoolInfo();
   const { user, loading: authLoading, hasPermission } = useAuth();
   const db = useFirestore();
-  const [teacherPhoto, setTeacherPhoto] = useState<string | null>(null);
+  const [displayPhoto, setDisplayPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (user?.role === 'teacher' && user.email && db) {
+    if (!user || !db) {
+        setDisplayPhoto(null);
+        return;
+    }
+
+    let unsubscribe: (() => void) | undefined;
+    
+    if (user.role === 'teacher' && user.email) {
+      // For teachers, photo is in the 'staff' collection. Listen for changes.
       const staffQuery = query(collection(db, 'staff'), where('email', '==', user.email), limit(1));
-      getDocs(staffQuery).then(snapshot => {
+      unsubscribe = onSnapshot(staffQuery, (snapshot) => {
         if (!snapshot.empty) {
-          setTeacherPhoto(snapshot.docs[0].data().photoUrl);
+          setDisplayPhoto(snapshot.docs[0].data().photoUrl);
         } else {
-          setTeacherPhoto(null);
+          setDisplayPhoto(null); // No staff record found for teacher
         }
       });
     } else {
-      setTeacherPhoto(null);
+      // For admin, the photoUrl is on the user object itself.
+      // AuthContext already listens for changes on the user doc.
+      setDisplayPhoto(user.photoUrl || null);
     }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user, db]);
 
   const handleLogout = async () => {
@@ -250,9 +266,7 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Avatar className="h-10 w-10 border-2 border-white cursor-pointer">
-                {teacherPhoto ? (
-                  <AvatarImage src={teacherPhoto} alt={user.email || 'user'} />
-                ) : null}
+                <AvatarImage src={displayPhoto || undefined} alt={user.email || 'user'} />
                 <AvatarFallback>{user.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>

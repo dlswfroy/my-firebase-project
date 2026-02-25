@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, orderBy, FirestoreError } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, FirestoreError, doc, updateDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { availablePermissions, defaultPermissions } from '@/lib/permissions';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 function SchoolInfoSettings() {
@@ -584,10 +585,56 @@ function UserManagementSettings() {
 function ProfileSettings() {
     const { user } = useAuth();
     const { toast } = useToast();
+    const db = useFirestore();
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [isPhotoSaving, setIsPhotoSaving] = useState(false);
+
+    useEffect(() => {
+        setPhotoPreview(user?.photoUrl || null);
+    }, [user]);
+
+    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                toast({
+                    variant: "destructive",
+                    title: "ফাইল ತುಂಬಾ বড়",
+                    description: "অনুগ্রহ করে ২ মেগাবাইটের কম আকারের ছবি আপলোড করুন।",
+                });
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    const handleSavePhoto = async () => {
+        if (!db || !user || !photoPreview) return;
+
+        setIsPhotoSaving(true);
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, { photoUrl: photoPreview });
+            toast({ title: 'প্রোফাইল ছবি আপডেট হয়েছে' });
+        } catch (e) {
+            const permissionError = new FirestorePermissionError({
+                path: `users/${user.uid}`,
+                operation: 'update',
+                requestResourceData: { photoUrl: '...truncated...' },
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } finally {
+            setIsPhotoSaving(false);
+        }
+    }
     
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -615,8 +662,8 @@ function ProfileSettings() {
     }
     
     return (
-        <div className="grid gap-8 md:grid-cols-2">
-            <Card>
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+             <Card>
                 <CardHeader>
                     <CardTitle>প্রোফাইল তথ্য</CardTitle>
                 </CardHeader>
@@ -631,6 +678,31 @@ function ProfileSettings() {
                     </div>
                 </CardContent>
             </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>প্রোফাইল ছবি</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-24 w-24">
+                            <AvatarImage src={photoPreview || ''} alt={user?.email || 'User'} />
+                            <AvatarFallback>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                        </Avatar>
+                        <Input id="photo" name="photo" type="file" className="hidden" onChange={handlePhotoChange} accept="image/*" />
+                        <Button type="button" variant="outline" onClick={() => document.getElementById('photo')?.click()}>
+                            <Upload className="mr-2" />
+                            ছবি পরিবর্তন
+                        </Button>
+                    </div>
+                </CardContent>
+                 <CardFooter>
+                     <Button onClick={handleSavePhoto} disabled={isPhotoSaving || !photoPreview}>
+                        {isPhotoSaving ? 'সেভ হচ্ছে...' : 'ছবি সেভ করুন'}
+                    </Button>
+                </CardFooter>
+            </Card>
+
              <Card>
                 <form onSubmit={handleSubmit}>
                     <CardHeader>
