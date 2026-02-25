@@ -82,7 +82,7 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
             return;
         }
         if (activeHoliday) {
-            toast({ variant: "destructive", title: `আজ ${activeHoliday.description} উপলক্ষে ছুটি।` });
+            toast({ variant: "destructive", title: `আজ ${activeHoliday.description}।` });
             return;
         }
         if (!currentIsSchoolHours) {
@@ -119,7 +119,7 @@ const AttendanceSheet = ({ classId, students }: { classId: string, students: Stu
     }
 
     if (activeHoliday) {
-        return <p className="text-center text-muted-foreground p-8">আজ {activeHoliday.description} উপলক্ষে ছুটি, তাই হাজিরা বন্ধ আছে।</p>;
+        return <p className="text-center text-muted-foreground p-8">আজ {activeHoliday.description}, তাই হাজিরা বন্ধ আছে।</p>;
     }
     
     if (savedAttendance) {

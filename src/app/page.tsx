@@ -76,7 +76,7 @@ const LiveRoutineCard = () => {
         const currentDayName = dayMap[now.getDay()];
 
         if (activeHoliday) {
-            return { status: `আজ ${activeHoliday.description} উপলক্ষে ছুটি।`, runningClasses: [] };
+            return { status: `আজ ${activeHoliday.description}।`, runningClasses: [] };
         }
         
         if (currentDayName === 'শুক্রবার' || currentDayName === 'শনিবার') {
