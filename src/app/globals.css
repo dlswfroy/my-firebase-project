@@ -97,34 +97,32 @@
     body {
       -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
       print-color-adjust: exact !important; /* Firefox */
-      background: white !important;
-      margin: 0;
-      padding: 0;
     }
-
-    .no-print {
+    
+    .no-print,
+    .no-print * {
       display: none !important;
     }
     
-    body > * {
-        visibility: hidden;
-    }
-
-    .printable-area,
-    .printable-area * {
+    body > .printable-area,
+    body > .printable-area * {
         visibility: visible;
+    }
+    
+    body > *:not(.printable-area) {
+        display: none;
     }
 
     .printable-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: auto;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        border: none !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: auto;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      border: none !important;
     }
 
     .no-print-outline {
@@ -156,6 +154,10 @@
     }
      .routine-print-container [data-radix-tooltip-content] {
         display: none !important;
+    }
+    .admit-card {
+        break-inside: avoid;
+        page-break-after: always;
     }
   }
 }

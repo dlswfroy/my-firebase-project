@@ -55,6 +55,25 @@ export default function DocumentsPage() {
                             </Link>
                         </CardFooter>
                     </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>প্রবেশ পত্র</CardTitle>
+                            <CardDescription>পরীক্ষার জন্য শিক্ষার্থীদের প্রবেশ পত্র জেনারেট করুন।</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <p className="text-sm text-muted-foreground">
+                               পরীক্ষা এবং শ্রেণি নির্বাচন করে সকল শিক্ষার্থীর জন্য একসাথে প্রবেশপত্র তৈরি ও প্রিন্ট করুন।
+                           </p>
+                        </CardContent>
+                         <CardFooter>
+                            <Link href="/documents/admit-card" className="w-full">
+                                <Button className="w-full">
+                                    প্রবেশ পত্র তৈরি করুন
+                                    <FilePlus className="ml-2 h-4 w-4" />
+                                </Button>
+                            </Link>
+                        </CardFooter>
+                    </Card>
                 </div>
             </CardContent>
         </Card>

@@ -275,6 +275,21 @@
         "time": { "type": "string" }
       },
       "required": ["examName", "academicYear", "className", "subject", "date", "time"]
+    },
+    "exam": {
+      "title": "Exam",
+      "description": "An examination event like Annual Exam, Half-yearly etc.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the exam, e.g., 'বার্ষিক পরীক্ষা'." },
+        "academicYear": { "type": "string" },
+        "classes": {
+          "type": "array",
+          "description": "List of classes this exam applies to.",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["name", "academicYear"]
     }
   },
   "auth": {
@@ -326,6 +341,10 @@
     "/examRoutines/{routineId}": {
       "schema": { "$ref": "#/entities/examRoutine" },
       "description": "Stores exam schedules."
+    },
+    "/exams/{examId}": {
+      "schema": { "$ref": "#/entities/exam" },
+      "description": "Stores examination events."
     }
   }
 }

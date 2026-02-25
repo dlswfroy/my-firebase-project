@@ -78,5 +78,10 @@ service cloud.firestore {
       allow read: if isAuthed();
       allow write: if isAdmin();
     }
+
+    match /exams/{examId} {
+      allow read: if isAuthed();
+      allow write: if isAdmin();
+    }
   }
 }
