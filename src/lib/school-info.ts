@@ -1,3 +1,4 @@
+
 'use client';
 import { doc, getDoc, setDoc, Firestore } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -19,7 +20,7 @@ export const defaultSchoolInfo: SchoolInfo = {
     eiin: '123456',
     code: '7890',
     address: 'Upazila: Birganj, Post: Birganj, Zila: Dinajpur',
-    logoUrl: 'https://storage.googleapis.com/project-spark-348216.appspot.com/2024-07-27T08:12:08.571Z/user_uploads/b7b9f36b-d897-40f4-8092-dbe1197779de/image.png?v=14'
+    logoUrl: 'https://storage.googleapis.com/project-spark-348216.appspot.com/2024-07-31T17:15:53.682Z/user_uploads/e6900f68-7c87-4b71-af36-a19f6f69a844/school-logo.png?v=15'
 };
 
 const SCHOOL_INFO_DOC_PATH = 'school/info';

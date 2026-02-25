@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next'
 import { defaultSchoolInfo } from '@/lib/school-info'
  
 export default function manifest(): MetadataRoute.Manifest {
-  const iconUrl = 'https://storage.googleapis.com/project-spark-348216.appspot.com/2024-07-27T08:12:08.571Z/user_uploads/b7b9f36b-d897-40f4-8092-dbe1197779de/image.png?v=14';
+  const iconUrl = 'https://storage.googleapis.com/project-spark-348216.appspot.com/2024-07-31T17:15:53.682Z/user_uploads/e6900f68-7c87-4b71-af36-a19f6f69a844/school-logo.png?v=15';
   
   return {
     name: defaultSchoolInfo.name,
