@@ -399,7 +399,7 @@ const AttendanceReportTab = ({ allStudents }: { allStudents: Student[] }) => {
              <div className="flex flex-col sm:flex-row gap-4 mb-4 p-4 border rounded-lg items-end">
                 <div className="w-full space-y-2">
                     <Label>শুরুর তারিখ</Label>
-                    <DatePicker value={startDate} onChange={setStartDate} placeholder="שুরুর তারিখ" />
+                    <DatePicker value={startDate} onChange={setStartDate} placeholder="শুরুর তারিখ" />
                 </div>
                 <div className="w-full space-y-2">
                     <Label>শেষের তারিখ</Label>
