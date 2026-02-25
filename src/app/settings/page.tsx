@@ -327,6 +327,7 @@ function HolidaySettings() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>ক্রমিক নং</TableHead>
                                     <TableHead>তারিখ</TableHead>
                                     <TableHead>কারণ</TableHead>
                                     <TableHead className="text-right">কার্যক্রম</TableHead>
@@ -335,17 +336,18 @@ function HolidaySettings() {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
                                     </TableRow>
                                 ) : holidays.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                                             কোনো অতিরিক্ত ছুটি যোগ করা হয়নি।
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    holidays.map((holiday) => (
+                                    holidays.map((holiday, index) => (
                                         <TableRow key={holiday.id}>
+                                            <TableCell>{(index + 1).toLocaleString('bn-BD')}</TableCell>
                                             <TableCell>{format(new Date(holiday.date.replace(/-/g, '/')), "d MMMM yyyy", { locale: bn })}</TableCell>
                                             <TableCell>{holiday.description}</TableCell>
                                             <TableCell className="text-right">
