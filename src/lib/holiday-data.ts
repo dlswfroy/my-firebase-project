@@ -55,7 +55,7 @@ const createInitialHolidays = async (db: Firestore): Promise<Holiday[]> => {
     const holidayRangesFor2026 = [
         { start: '2026-02-19', end: '2026-03-26', description: 'পবিত্র রমজান, ঈদ-উল-ফিতর ও অন্যান্য ছুটি' },
         { start: '2026-05-24', end: '2026-06-04', description: 'ঈদ-উল-আযহা ও গ্রীষ্মকালীন অবকাশ' },
-        { start: '2026-10-18', end: '2026-10-22', description: 'দুর্গাপূজা' },
+        { start: '2026-10-18', end: '2026-10-22', description: 'দুর্গাপূজা (বিজয়া দশমী সহ)' },
         { start: '2026-12-20', end: '2026-12-29', description: 'শীতকালীন অবকাশ ও বড়দিন' },
     ];
 
