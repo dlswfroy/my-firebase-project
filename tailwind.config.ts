@@ -11,6 +11,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['var(--font-noto-sans-bengali)', 'var(--font-pt-sans)', 'sans-serif'],
+        kalpurush: ['var(--font-noto-sans-bengali)', 'sans-serif'],
         headline: ['var(--font-pt-sans)', 'sans-serif'],
         code: ['monospace'],
       },

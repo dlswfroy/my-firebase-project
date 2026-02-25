@@ -54,7 +54,7 @@ export default function CustomPadPage() {
     const issueDate = toBengaliNumber(format(new Date(), "d MMMM, yyyy", { locale: bn }));
 
     return (
-        <div className="bg-gray-100 p-8 font-body">
+        <div className="bg-gray-100 p-8 font-kalpurush">
             <div className="fixed top-8 right-8 z-50 no-print">
                 <Button onClick={() => window.print()} size="lg" className="shadow-lg">
                     <Printer className="mr-2 h-5 w-5" />
@@ -62,7 +62,7 @@ export default function CustomPadPage() {
                 </Button>
             </div>
 
-            <div className="w-[210mm] h-[297mm] bg-white mx-auto shadow-lg printable-area relative font-['SolaimanLipi'] text-black flex flex-col">
+            <div className="w-[210mm] h-[297mm] bg-white mx-auto shadow-lg printable-area relative text-black flex flex-col">
                 {/* Header Section */}
                 <header 
                     className="h-[100px] p-2 relative text-center bg-white border-b-2 border-gray-300"
@@ -81,7 +81,7 @@ export default function CustomPadPage() {
                         <div className="text-center text-green-800">
                             <p className="text-lg">প্রধান শিক্ষকের কার্যালয়</p>
                             <h1 className="text-4xl font-bold" style={{color: '#2d572c'}}>{schoolInfo.name}</h1>
-                            <p className="text-sm">স্থাপিতঃ ২০১৯ খ্রিঃ</p>
+                            <p className="text-sm"> স্থাপিতঃ ২০১৯ খ্রিঃ</p>
                             <p className="text-xs mt-1">{schoolInfo.address} | মোবাইলঃ ০১৭১৭৫৭৬০৩০</p>
                             <p className="text-xs text-red-600 font-semibold">ই-মেইল: birganjpourohsch2019@gmail.com</p>
                         </div>
