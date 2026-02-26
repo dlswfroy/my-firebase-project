@@ -1,4 +1,3 @@
-
 'use client';
 import {
   getAuth,
@@ -33,10 +32,12 @@ export async function signUp(email: string, password: string): Promise<{ success
     const adminSnapshot = await getDocs(adminQuery);
     
     let role: UserRole;
+    let displayName = '';
 
     if (adminSnapshot.empty) {
       // First user becomes admin
       role = 'admin';
+      displayName = 'Super Admin';
     } else {
       // Check if email exists in staff collection as a teacher
       const staffRef = collection(db, 'staff');
@@ -47,6 +48,8 @@ export async function signUp(email: string, password: string): Promise<{ success
         return { success: false, error: 'আপনার ইমেইলটি শিক্ষক হিসেবে নিবন্ধিত নয়। অনুগ্রহ করে এডমিনের সাথে যোগাযোগ করুন।' };
       }
       role = 'teacher';
+      const staffData = teacherSnapshot.docs[0].data();
+      displayName = staffData.nameBn || '';
     }
 
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -56,6 +59,7 @@ export async function signUp(email: string, password: string): Promise<{ success
       uid: user.uid,
       email: user.email,
       role: role,
+      displayName: displayName,
       permissions: defaultPermissions[role] || [],
     });
 

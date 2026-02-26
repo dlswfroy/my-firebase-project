@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -541,13 +539,13 @@ function UserManagementSettings() {
             <Card>
                 <CardHeader>
                     <CardTitle>ব্যবহারকারী ম্যানেজমেন্ট</CardTitle>
-                    <CardDescription>সিস্টেমের সকল ব্যবহারকারীর তালিকা ও তাদের পারমিশন পরিচালনা করুন।</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <div className="border rounded-md overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>নাম</TableHead>
                                     <TableHead>ইমেইল</TableHead>
                                     <TableHead>ভূমিকা (Role)</TableHead>
                                     <TableHead className="text-right">কার্যক্রম</TableHead>
@@ -556,17 +554,18 @@ function UserManagementSettings() {
                             <TableBody>
                                  {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
                                     </TableRow>
                                 ) : users.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                                             কোনো ব্যবহারকারী পাওয়া যায়নি।
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     users.map(user => (
                                         <TableRow key={user.uid}>
+                                            <TableCell className="font-medium">{user.displayName || '-'}</TableCell>
                                             <TableCell>{user.email}</TableCell>
                                             <TableCell>
                                                 <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>
@@ -707,6 +706,10 @@ function ProfileSettings() {
                     <CardTitle>প্রোফাইল তথ্য</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                     <div>
+                        <Label>নাম</Label>
+                        <p className="text-sm text-muted-foreground">{user?.displayName || '-'}</p>
+                    </div>
                      <div>
                         <Label>ইমেইল</Label>
                         <p className="text-sm text-muted-foreground">{user?.email}</p>
