@@ -30,7 +30,6 @@ export const createInitialExams = async (db: Firestore, academicYear: string): P
     const examsWithIds: Exam[] = [];
 
     for (const exam of defaultExams) {
-        // Use a deterministic ID based on name and year to prevent duplicates
         const examSlug = exam.name.replace(/[^\p{L}\p{N}]+/gu, '-');
         const docId = `${academicYear}_${examSlug}`;
         const docRef = doc(db, EXAMS_COLLECTION, docId);
@@ -47,7 +46,6 @@ export const createInitialExams = async (db: Firestore, academicYear: string): P
         await batch.commit();
         return examsWithIds;
     } catch (e) {
-        console.warn("Could not seed initial exams. This is normal if you are not an admin.");
         return defaultExams.map((e, idx) => ({ id: `temp-${idx}`, ...e, academicYear }));
     }
 }
@@ -56,10 +54,20 @@ export const getExams = async (db: Firestore, academicYear: string): Promise<Exa
     const q = query(collection(db, EXAMS_COLLECTION), where("academicYear", "==", academicYear));
     try {
         const querySnapshot = await getDocs(q);
+        let exams: Exam[] = [];
         if (querySnapshot.empty) {
-            return await createInitialExams(db, academicYear);
+            exams = await createInitialExams(db, academicYear);
+        } else {
+            exams = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Exam));
         }
-        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Exam));
+        
+        // Final safeguard against duplicates based on name
+        const seen = new Set();
+        return exams.filter(exam => {
+            const duplicate = seen.has(exam.name);
+            seen.add(exam.name);
+            return !duplicate;
+        });
     } catch(e) {
         console.error("Error getting exams:", e);
         return [];

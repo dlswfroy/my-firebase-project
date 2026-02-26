@@ -38,9 +38,7 @@ const AdmitCardGeneratorPage = () => {
         if (!db || !isMounted) return;
         setIsFetchingExams(true);
         getExams(db, selectedYear).then(data => {
-            // Remove duplicates just in case they exist in DB
-            const uniqueExams = Array.from(new Map(data.map(item => [item.name, item])).values());
-            setExams(uniqueExams);
+            setExams(data);
             setIsFetchingExams(false);
         }).catch(() => {
             setIsFetchingExams(false);
@@ -105,6 +103,7 @@ const AdmitCardGeneratorPage = () => {
                                     <Label htmlFor="exam-name">পরীক্ষা</Label>
                                     <Select 
                                         disabled={isFetchingExams}
+                                        value={selectedExam?.id || ""}
                                         onValueChange={(examId) => {
                                             const exam = exams.find(e => e.id === examId);
                                             setSelectedExam(exam || null);
@@ -137,30 +136,30 @@ const AdmitCardGeneratorPage = () => {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <Button onClick={handleGenerate} disabled={!selectedExam || !selectedClass || isLoading}>
+                                <Button onClick={handleGenerate} disabled={!selectedExam || !selectedClass || isLoading} className="min-w-[120px]">
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            জেনারেট হচ্ছে...
+                                            ...
                                         </>
                                     ) : 'প্রবেশপত্র দেখুন'}
                                 </Button>
                             </div>
                             
                             {studentsInClass.length > 0 && (
-                                <div className="text-center p-4 bg-muted rounded-lg">
-                                    <p className="mb-4 font-medium text-sm text-muted-foreground">
+                                <div className="text-center p-6 bg-primary/5 rounded-lg border-2 border-dashed border-primary/20">
+                                    <p className="mb-4 font-bold text-lg text-primary">
                                         মোট {studentsInClass.length.toLocaleString('bn-BD')} জন শিক্ষার্থীর প্রবেশপত্র তৈরি হয়েছে।
                                     </p>
-                                     <Button onClick={() => window.print()} size="lg" className="w-full sm:w-auto">
+                                     <Button onClick={() => window.print()} size="lg" className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all">
                                         <Printer className="mr-2 h-5 w-5" />
-                                        সকল প্রবেশপত্র প্রিন্ট করুন
+                                        প্রিন্ট করুন (এক পাতায় ৪টি)
                                     </Button>
                                 </div>
                             )}
 
                             {selectedClass && studentsInClass.length === 0 && !isLoading && (
-                                <p className="text-center text-muted-foreground py-8">
+                                <p className="text-center text-muted-foreground py-12 bg-muted/30 rounded-lg">
                                     এই শ্রেণিতে কোনো শিক্ষার্থীর তথ্য পাওয়া যায়নি।
                                 </p>
                             )}
@@ -170,7 +169,7 @@ const AdmitCardGeneratorPage = () => {
             </div>
             {studentsInClass.length > 0 && selectedExam && (
                 <div className="printable-area bg-white">
-                    <div className="admit-card-grid p-2">
+                    <div className="admit-card-grid">
                         {studentsInClass.map(student => (
                             <AdmitCard key={student.id} student={student} schoolInfo={schoolInfo} examName={selectedExam.name} />
                         ))}

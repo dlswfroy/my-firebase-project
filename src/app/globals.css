@@ -74,43 +74,40 @@
       display: none !important;
     }
     
-    body > .printable-area,
-    body > .printable-area * {
+    body > .printable-area {
         display: block !important;
-        visibility: visible;
+        visibility: visible !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 210mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     body > *:not(.printable-area) {
         display: none !important;
     }
 
-    .printable-area {
-      display: block !important;
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 210mm;
-      height: auto;
-      margin: 0 !important;
-      padding: 0 !important;
-      box-shadow: none !important;
-      border: none !important;
-    }
-
     .admit-card-grid {
       display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 10px !important;
-      width: 100% !important;
+      grid-template-columns: repeat(2, 100mm) !important;
+      grid-auto-rows: 138mm !important;
+      gap: 4mm !important;
+      width: 210mm !important;
+      justify-content: center !important;
+      padding: 2mm !important;
     }
 
     .admit-card {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
       height: 135mm !important;
-      width: 100% !important;
+      width: 100mm !important;
       border: 1.5px solid black !important;
-      margin-bottom: 5px !important;
+      padding: 5mm !important;
+      position: relative !important;
+      box-sizing: border-box !important;
     }
 
     .no-print-outline {
