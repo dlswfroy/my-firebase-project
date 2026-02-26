@@ -8,8 +8,6 @@ import {
   doc,
   writeBatch
 } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 export interface Exam {
   id: string;
@@ -45,13 +43,9 @@ export const createInitialExams = async (db: Firestore, academicYear: string): P
         await batch.commit();
         return examsWithIds;
     } catch (e) {
-        console.error("Error creating initial exams:", e);
-        const permissionError = new FirestorePermissionError({
-            path: EXAMS_COLLECTION,
-            operation: 'write',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        throw permissionError;
+        // Silently fail if not admin - this prevents the black error popup for teachers
+        console.warn("Could not seed initial exams. This is normal if you are not an admin.");
+        return defaultExams.map((e, idx) => ({ id: `temp-${idx}`, ...e, academicYear }));
     }
 }
 

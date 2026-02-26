@@ -31,13 +31,12 @@ export const getSchoolInfo = async (db: Firestore): Promise<SchoolInfo> => {
         if (docSnap.exists()) {
             return { id: docSnap.id, ...defaultSchoolInfo, ...docSnap.data() } as SchoolInfo;
         } else {
-            // If doc doesn't exist, create it with default data
-            await saveSchoolInfo(db, defaultSchoolInfo);
+            // If doc doesn't exist, return default but don't try to save automatically
+            // to avoid permission errors for non-admin users.
             return defaultSchoolInfo;
         }
     } catch (e) {
         console.error("Error getting school info:", e);
-        // On error, return default but don't save. Might be a permissions issue.
         return defaultSchoolInfo;
     }
 };
@@ -45,7 +44,6 @@ export const getSchoolInfo = async (db: Firestore): Promise<SchoolInfo> => {
 export const saveSchoolInfo = async (db: Firestore, info: Partial<SchoolInfo>): Promise<void> => {
   const docRef = doc(db, SCHOOL_INFO_DOC_PATH);
   const dataToSave = { ...info };
-  // Don't save id in the document
   if ('id' in dataToSave) {
     delete dataToSave.id;
   }

@@ -27,7 +27,7 @@ export type FeeBreakdown = {
 };
 
 export type FeeCollection = {
-  id: string; // Firestore doc ID
+  id: string;
   studentId: string;
   academicYear: string;
   collectionDate: Date;
@@ -35,7 +35,7 @@ export type FeeCollection = {
   totalAmount: number;
   collectorName?: string;
   collectorUid?: string;
-  transactionIds: string[]; // To link to cashbook entries
+  transactionIds: string[];
   breakdown: FeeBreakdown;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -65,7 +65,7 @@ const feeCollectionFromDoc = (docSnap: QueryDocumentSnapshot): FeeCollection | n
     }
     
     if (!collectionDate) {
-        return null;
+        collectionDate = new Date(); // Fallback
     }
 
     return {

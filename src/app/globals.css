@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -49,40 +48,6 @@
     --sidebar-border: 210 40% 90%;
     --sidebar-ring: 246 44% 33%;
   }
-  .dark {
-    --background: 220 20% 10%;
-    --foreground: 0 0% 98%;
-    --card: 220 20% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 220 20% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 246 44% 33%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 20% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 220 20% 15%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 135 48% 69%;
-    --accent-foreground: 224 71.4% 4.1%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 20% 20%;
-    --input: 220 20% 20%;
-    --ring: 246 44% 33%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 248 39% 15%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 248 39% 25%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 248 39% 25%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 248 39% 10%;
-    --sidebar-ring: 248 39% 40%;
-  }
 }
 
 @layer base {
@@ -93,10 +58,14 @@
     @apply bg-background text-foreground;
   }
 
+  .printable-area {
+    display: none;
+  }
+
   @media print {
     body {
-      -webkit-print-color-adjust: exact !important; /* Chrome, Safari */
-      print-color-adjust: exact !important; /* Firefox */
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     
     .no-print,
@@ -106,14 +75,16 @@
     
     body > .printable-area,
     body > .printable-area * {
+        display: block !important;
         visibility: visible;
     }
     
     body > *:not(.printable-area) {
-        display: none;
+        display: none !important;
     }
 
     .printable-area {
+      display: block !important;
       position: absolute;
       left: 0;
       top: 0;
@@ -139,9 +110,6 @@
         top: 0;
         left: 0;
     }
-    .routine-print-container div.overflow-x-auto {
-        overflow: visible !important;
-    }
     .routine-print-container table {
         font-size: 7.5px;
         line-height: 1.1;
@@ -151,20 +119,7 @@
     .routine-print-container table th,
     .routine-print-container table td {
         padding: 1px;
-        overflow-wrap: break-word;
         text-align: center;
-    }
-    /* This removes the extra padding from the div inside the table cell */
-    .routine-print-container table td div {
-      padding: 0 !important;
-    }
-    .routine-print-container .min-w-\[150px\],
-    .routine-print-container .min-w-\[100px\],
-    .routine-print-container .min-w-\[80px\] {
-        min-width: auto !important;
-    }
-     .routine-print-container [data-radix-tooltip-content] {
-        display: none !important;
     }
     .admit-card {
         break-inside: avoid;
