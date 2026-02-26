@@ -35,6 +35,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { availablePermissions, defaultPermissions } from '@/lib/permissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Staff, staffFromDoc } from '@/lib/staff-data';
+import { cn } from '@/lib/utils';
 
 
 function SchoolInfoSettings() {
@@ -588,10 +589,14 @@ function UserManagementSettings() {
                                     users.map(u => {
                                         const teacherName = u.email ? staffNameMap.get(u.email.toLowerCase()) : null;
                                         const displayName = teacherName || u.displayName || (u.role === 'admin' ? 'Super Admin' : '-');
+                                        const isCurrentUser = u.uid === currentUser?.uid;
 
                                         return (
-                                            <TableRow key={u.uid}>
-                                                <TableCell className="font-medium">{displayName}</TableCell>
+                                            <TableRow key={u.uid} className={cn(isCurrentUser && "bg-green-50 border-l-4 border-l-green-500")}>
+                                                <TableCell className="font-medium">
+                                                    {displayName}
+                                                    {isCurrentUser && <span className="ml-2 text-xs text-green-600">(আপনি)</span>}
+                                                </TableCell>
                                                 <TableCell>{u.email}</TableCell>
                                                 <TableCell>
                                                     <Badge variant={u.role === 'admin' ? 'destructive' : 'secondary'}>
@@ -605,7 +610,7 @@ function UserManagementSettings() {
                                                         </Button>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
-                                                                <Button variant="destructive" size="sm" disabled={u.uid === currentUser?.uid}>
+                                                                <Button variant="destructive" size="sm" disabled={isCurrentUser}>
                                                                     ডিলিট
                                                                 </Button>
                                                             </AlertDialogTrigger>
