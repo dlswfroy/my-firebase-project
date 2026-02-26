@@ -1,3 +1,4 @@
+
 'use client';
 import type { DocumentData } from 'firebase/firestore';
 
@@ -9,6 +10,7 @@ export interface User {
   role: UserRole;
   photoUrl?: string;
   displayName?: string;
+  isOnline?: boolean;
 }
 
 export const userFromDoc = (doc: DocumentData): User => {
@@ -19,5 +21,6 @@ export const userFromDoc = (doc: DocumentData): User => {
         role: data.role,
         photoUrl: data.photoUrl,
         displayName: data.displayName,
+        isOnline: data.isOnline || false,
     } as User;
 }

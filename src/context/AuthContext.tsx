@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useAuth as useFirebaseAuth } from '@/firebase';
 import { useFirestore } from '@/firebase';
 import { User, userFromDoc } from '@/lib/user';
@@ -36,6 +37,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(fbUser);
       if (fbUser) {
         const userDocRef = doc(db, 'users', fbUser.uid);
+        
+        // Update online status when session is detected
+        updateDoc(userDocRef, { isOnline: true }).catch(() => {});
+
         const unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const userData = userFromDoc(docSnap);

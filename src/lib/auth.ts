@@ -1,3 +1,4 @@
+
 'use client';
 import {
   getAuth,
@@ -17,7 +18,8 @@ import {
   getDocs,
   query,
   where,
-  limit
+  limit,
+  updateDoc
 } from 'firebase/firestore';
 import type { UserRole } from './user';
 import { defaultPermissions } from './permissions';
@@ -60,6 +62,7 @@ export async function signUp(email: string, password: string): Promise<{ success
       email: user.email,
       role: role,
       displayName: displayName,
+      isOnline: true,
       permissions: defaultPermissions[role] || [],
     });
 
@@ -88,6 +91,9 @@ export async function signIn(email: string, password: string, role: UserRole): P
       return { success: false, error: 'আপনার ভূমিকা (role) সঠিক নয় অথবা ব্যবহারকারী পাওয়া যায়নি।' };
     }
 
+    // Set online status
+    await updateDoc(userDocRef, { isOnline: true });
+
     return { success: true };
   } catch (error: any) {
      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
@@ -99,6 +105,18 @@ export async function signIn(email: string, password: string, role: UserRole): P
 
 export async function signOut() {
   const auth = getAuth();
+  const db = getFirestore();
+  const user = auth.currentUser;
+  
+  if (user) {
+    const userDocRef = doc(db, 'users', user.uid);
+    try {
+      await updateDoc(userDocRef, { isOnline: false });
+    } catch (e) {
+      console.error("Error setting offline status on logout:", e);
+    }
+  }
+  
   return firebaseSignOut(auth);
 }
 

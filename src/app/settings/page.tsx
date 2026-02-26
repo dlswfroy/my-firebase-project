@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, Upload } from 'lucide-react';
+import { Trash2, Upload, Circle } from 'lucide-react';
 import { format } from "date-fns";
 import { bn } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
@@ -506,9 +506,12 @@ function UserManagementSettings() {
         if (!db) return;
         setIsLoading(true);
         try {
-            // Fetch users
-            const usersData = await getUsers(db);
-            setUsers(usersData);
+            // Fetch users with real-time updates for status
+            const usersRef = collection(db, 'users');
+            const unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
+                const usersData = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as User));
+                setUsers(usersData.sort((a, b) => (a.email || '').localeCompare(b.email || '')));
+            });
 
             // Fetch staff to map names
             const staffQuery = query(collection(db, 'staff'));
@@ -516,6 +519,7 @@ function UserManagementSettings() {
             const staffData = staffSnap.docs.map(staffFromDoc);
             setAllStaff(staffData);
 
+            return () => unsubscribeUsers();
         } catch (error) {
             // Permission errors are handled by the global listener
         } finally {
@@ -571,17 +575,18 @@ function UserManagementSettings() {
                                     <TableHead>নাম</TableHead>
                                     <TableHead>ইমেইল</TableHead>
                                     <TableHead>ভূমিকা (Role)</TableHead>
+                                    <TableHead>অবস্থা (Status)</TableHead>
                                     <TableHead className="text-right">কার্যক্রম</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                 {isLoading ? (
+                                 {isLoading && users.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
+                                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
                                     </TableRow>
                                 ) : users.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                                             কোনো ব্যবহারকারী পাওয়া যায়নি।
                                         </TableCell>
                                     </TableRow>
@@ -602,6 +607,16 @@ function UserManagementSettings() {
                                                     <Badge variant={u.role === 'admin' ? 'destructive' : 'secondary'}>
                                                         {roleMap[u.role] || u.role}
                                                     </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {u.isOnline ? (
+                                                        <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 flex items-center w-fit gap-1">
+                                                            <Circle className="h-2 w-2 fill-green-600 border-none" />
+                                                            অনলাইন
+                                                        </Badge>
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground">অফলাইন</span>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
