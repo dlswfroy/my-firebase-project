@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -38,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (fbUser) {
         const userDocRef = doc(db, 'users', fbUser.uid);
         
-        // Use setDoc with merge to ensure the record exists and mark online
+        // Mark user as online when they connect
         setDoc(userDocRef, { isOnline: true }, { merge: true }).catch(() => {});
 
         const unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {

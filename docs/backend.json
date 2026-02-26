@@ -1,9 +1,8 @@
-
 {
   "entities": {
     "user": {
       "title": "User",
-      "description": "Represents an application user with a role.",
+      "description": "Represents an application user with a role and online status.",
       "type": "object",
       "properties": {
         "uid": { "type": "string", "description": "The user's unique ID from Firebase Auth." },
@@ -317,7 +316,7 @@
   "firestore": {
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/user" },
-      "description": "Stores user profile information, including their role."
+      "description": "Stores user profile information, including their role and online status."
     },
     "/emailLogs/{id}": {
       "schema": { "$ref": "#/entities/emailLog" },

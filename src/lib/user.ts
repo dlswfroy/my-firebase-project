@@ -1,4 +1,3 @@
-
 'use client';
 import type { DocumentData } from 'firebase/firestore';
 

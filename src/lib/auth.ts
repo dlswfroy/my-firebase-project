@@ -1,4 +1,3 @@
-
 'use client';
 import {
   getAuth,
@@ -18,8 +17,7 @@ import {
   getDocs,
   query,
   where,
-  limit,
-  updateDoc
+  limit
 } from 'firebase/firestore';
 import type { UserRole } from './user';
 import { defaultPermissions } from './permissions';
@@ -41,7 +39,7 @@ export async function signUp(email: string, password: string): Promise<{ success
       displayName = 'Super Admin';
     } else {
       const staffRef = collection(db, 'staff');
-      const teacherQuery = query(staffRef, where('email', '==', email.toLowerCase()), where('staffType', '==', 'teacher'), limit(1));
+      const teacherQuery = query(staffRef, where('email', '==', email.toLowerCase()), limit(1));
       const teacherSnapshot = await getDocs(teacherQuery);
 
       if (teacherSnapshot.empty) {
