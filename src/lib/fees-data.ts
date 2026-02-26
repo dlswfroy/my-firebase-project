@@ -1,24 +1,13 @@
 'use client';
 import {
   collection,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp,
   Timestamp,
   Firestore,
-  DocumentData,
-  WithFieldValue,
   getDocs,
   query,
   where,
-  orderBy,
-  writeBatch,
   QueryDocumentSnapshot
 } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 export type FeeBreakdown = {
   tuitionCurrent?: number;
@@ -65,16 +54,14 @@ const feeCollectionFromDoc = (docSnap: QueryDocumentSnapshot): FeeCollection | n
     let collectionDate: Date | null = null;
 
     if (data.collectionDate) {
-        // 1. Handle Firestore Timestamp
+        // Handle various date formats from Firestore
         if (typeof data.collectionDate.toDate === 'function') {
             collectionDate = data.collectionDate.toDate();
-        }
-        // 2. Handle object with seconds/nanoseconds (serialized Timestamp)
-        else if (typeof data.collectionDate.seconds === 'number' && typeof data.collectionDate.nanoseconds === 'number') {
-            collectionDate = new Timestamp(data.collectionDate.seconds, data.collectionDate.nanoseconds).toDate();
-        }
-        // 3. Handle ISO date string or number (milliseconds)
-        else if (typeof data.collectionDate === 'string' || typeof data.collectionDate === 'number') {
+        } else if (data.collectionDate instanceof Timestamp) {
+            collectionDate = data.collectionDate.toDate();
+        } else if (data.collectionDate.seconds !== undefined) {
+            collectionDate = new Timestamp(data.collectionDate.seconds, data.collectionDate.nanoseconds || 0).toDate();
+        } else {
             const parsed = new Date(data.collectionDate);
             if (!isNaN(parsed.getTime())) {
                 collectionDate = parsed;
@@ -83,7 +70,6 @@ const feeCollectionFromDoc = (docSnap: QueryDocumentSnapshot): FeeCollection | n
     }
     
     if (!collectionDate) {
-        // Silently skip documents with invalid or missing dates.
         return null;
     }
 
@@ -95,7 +81,6 @@ const feeCollectionFromDoc = (docSnap: QueryDocumentSnapshot): FeeCollection | n
 }
 
 export const getFeeCollectionsForStudent = async (db: Firestore, studentId: string, academicYear: string): Promise<FeeCollection[]> => {
-  // Removed server-side orderBy to avoid composite index requirements for prototyping.
   const q = query(
     collection(db, FEE_COLLECTION_PATH),
     where("studentId", "==", studentId),
@@ -106,7 +91,7 @@ export const getFeeCollectionsForStudent = async (db: Firestore, studentId: stri
     const collections = querySnapshot.docs
         .map(feeCollectionFromDoc)
         .filter((item): item is FeeCollection => item !== null)
-        .sort((a, b) => b.collectionDate.getTime() - a.collectionDate.getTime()); // Sort client-side
+        .sort((a, b) => b.collectionDate.getTime() - a.collectionDate.getTime());
 
     return collections;
   } catch (e) {

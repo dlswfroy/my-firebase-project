@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, where, orderBy, FirestoreError } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -121,8 +121,6 @@ const CollectionReportTab = ({ allStudents }: { allStudents: Student[] }) => {
     useEffect(() => {
         if (!db) return;
         setIsLoading(true);
-        // Removed server-side orderBy to avoid composite index requirements for MVP prototyping.
-        // We will sort client-side.
         const q = query(
             collection(db, 'feeCollections'),
             where('academicYear', '==', selectedYear)
@@ -131,12 +129,22 @@ const CollectionReportTab = ({ allStudents }: { allStudents: Student[] }) => {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => {
                 const d = doc.data();
+                let collectionDate = new Date();
+                if (d.collectionDate) {
+                    if (typeof d.collectionDate.toDate === 'function') collectionDate = d.collectionDate.toDate();
+                    else if (d.collectionDate instanceof Timestamp) collectionDate = d.collectionDate.toDate();
+                    else if (d.collectionDate.seconds !== undefined) collectionDate = new Timestamp(d.collectionDate.seconds, d.collectionDate.nanoseconds || 0).toDate();
+                    else {
+                        const p = new Date(d.collectionDate);
+                        if (!isNaN(p.getTime())) collectionDate = p;
+                    }
+                }
                 return {
                     id: doc.id,
                     ...d,
-                    collectionDate: d.collectionDate?.toDate() || new Date()
+                    collectionDate: collectionDate
                 } as FeeCollection;
-            }).sort((a, b) => b.collectionDate.getTime() - a.collectionDate.getTime()); // Client-side sort
+            }).sort((a, b) => b.collectionDate.getTime() - a.collectionDate.getTime());
             
             setCollections(data);
             setIsLoading(false);
@@ -528,7 +536,7 @@ export default function AccountsPage() {
   const fetchStudents = useCallback(() => {
     if (!db) return;
     setIsLoadingStudents(true);
-    const studentsQuery = query(collection(db, "students"), orderBy("roll"));
+    const studentsQuery = query(collection(db, "students"));
     const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
         const studentsData = querySnapshot.docs.map(doc => ({
             id: doc.id,
