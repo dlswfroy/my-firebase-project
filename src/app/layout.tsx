@@ -12,9 +12,12 @@ import { APP_ICON_URL, defaultSchoolInfo } from '@/lib/school-info';
 export const metadata: Metadata = {
   title: defaultSchoolInfo.name,
   description: 'A central hub for school management.',
-  manifest: `/manifest.webmanifest?v=20`,
+  manifest: `/manifest.webmanifest?v=21`, // Updated version for cache busting
   icons: {
-    icon: APP_ICON_URL,
+    icon: [
+      { url: APP_ICON_URL, sizes: 'any' },
+      { url: APP_ICON_URL, type: 'image/png', sizes: '32x32' }
+    ],
     shortcut: APP_ICON_URL,
     apple: APP_ICON_URL,
   }
