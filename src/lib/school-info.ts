@@ -13,7 +13,8 @@ export interface SchoolInfo {
   logoUrl: string;
 }
 
-// আপনার অ্যাপের আইকন পরিবর্তন করতে নিচের লিঙ্কটি পরিবর্তন করুন
+// আপনার অ্যাপের আইকন পরিবর্তন করতে নিচের লিঙ্কটি পরিবর্তন করুন। 
+// অবশ্যই সরাসরি ছবির লিঙ্ক (Direct Image Link) ব্যবহার করুন।
 export const APP_ICON_URL = 'https://ibb.co.com/5hfyXHWq';
 
 export const defaultSchoolInfo: SchoolInfo = {
