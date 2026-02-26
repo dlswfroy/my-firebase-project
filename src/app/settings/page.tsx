@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, orderBy, FirestoreError, doc, updateDoc, where, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, FirestoreError, doc, updateDoc, where, limit, getDocs } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -33,6 +34,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Checkbox } from '@/components/ui/checkbox';
 import { availablePermissions, defaultPermissions } from '@/lib/permissions';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Staff, staffFromDoc } from '@/lib/staff-data';
 
 
 function SchoolInfoSettings() {
@@ -493,17 +495,26 @@ function UserManagementSettings() {
     const { toast } = useToast();
     const { user: currentUser } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
+    const [allStaff, setAllStaff] = useState<Staff[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
 
-    const fetchUsers = useCallback(async () => {
+    const fetchData = useCallback(async () => {
         if (!db) return;
         setIsLoading(true);
         try {
-            const data = await getUsers(db);
-            setUsers(data);
+            // Fetch users
+            const usersData = await getUsers(db);
+            setUsers(usersData);
+
+            // Fetch staff to map names
+            const staffQuery = query(collection(db, 'staff'));
+            const staffSnap = await getDocs(staffQuery);
+            const staffData = staffSnap.docs.map(staffFromDoc);
+            setAllStaff(staffData);
+
         } catch (error) {
             // Permission errors are handled by the global listener
         } finally {
@@ -512,8 +523,19 @@ function UserManagementSettings() {
     }, [db]);
     
     useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
+        fetchData();
+    }, [fetchData]);
+
+    // Create a lookup map for email to staff name
+    const staffNameMap = useMemo(() => {
+        const map = new Map<string, string>();
+        allStaff.forEach(s => {
+            if (s.email) {
+                map.set(s.email.toLowerCase(), s.nameBn);
+            }
+        });
+        return map;
+    }, [allStaff]);
 
     const handleDeleteUser = async (userToDelete: User) => {
         if (!db || !currentUser || userToDelete.uid === currentUser.uid) return;
@@ -521,7 +543,7 @@ function UserManagementSettings() {
         try {
             await deleteUserRecord(db, userToDelete.uid);
             toast({ title: 'ব্যবহারকারী মুছে ফেলা হয়েছে'});
-            fetchUsers(); // Refresh the list
+            fetchData(); // Refresh the list
         } catch (error) {
              // Error is handled in deleteUserRecord
         }
@@ -563,45 +585,50 @@ function UserManagementSettings() {
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    users.map(user => (
-                                        <TableRow key={user.uid}>
-                                            <TableCell className="font-medium">{user.displayName || '-'}</TableCell>
-                                            <TableCell>{user.email}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'}>
-                                                    {roleMap[user.role] || user.role}
-                                                </Badge>
-                                            </TableCell>
-                                             <TableCell className="text-right">
-                                                <div className="flex justify-end gap-2">
-                                                     <Button variant="outline" size="sm" onClick={() => openPermissionDialog(user)} disabled={user.role === 'admin'}>
-                                                        পারমিশন
-                                                     </Button>
-                                                     <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button variant="destructive" size="sm" disabled={user.uid === currentUser?.uid}>
-                                                                ডিলিট
-                                                            </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    এই ব্যবহারকারীকে স্থায়ীভাবে মুছে ফেলা হবে। এই কাজটি ফিরিয়ে আনা যাবে না।
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                                                <AlertDialogAction onClick={() => handleDeleteUser(user)}>
-                                                                    ডিলিট করুন
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
+                                    users.map(u => {
+                                        const teacherName = u.email ? staffNameMap.get(u.email.toLowerCase()) : null;
+                                        const displayName = teacherName || u.displayName || (u.role === 'admin' ? 'Super Admin' : '-');
+
+                                        return (
+                                            <TableRow key={u.uid}>
+                                                <TableCell className="font-medium">{displayName}</TableCell>
+                                                <TableCell>{u.email}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={u.role === 'admin' ? 'destructive' : 'secondary'}>
+                                                        {roleMap[u.role] || u.role}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button variant="outline" size="sm" onClick={() => openPermissionDialog(u)} disabled={u.role === 'admin'}>
+                                                            পারমিশন
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button variant="destructive" size="sm" disabled={u.uid === currentUser?.uid}>
+                                                                    ডিলিট
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        এই ব্যবহারকারীকে স্থায়ীভাবে মুছে ফেলা হবে। এই কাজটি ফিরিয়ে আনা যাবে না।
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                                    <AlertDialogAction onClick={() => handleDeleteUser(u)}>
+                                                                        ডিলিট করুন
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
                                 )}
                             </TableBody>
                         </Table>
@@ -613,7 +640,7 @@ function UserManagementSettings() {
                     user={selectedUser}
                     open={isPermissionDialogOpen}
                     onOpenChange={setIsPermissionDialogOpen}
-                    onPermissionsUpdate={fetchUsers}
+                    onPermissionsUpdate={fetchData}
                 />
             )}
         </>
