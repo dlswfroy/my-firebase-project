@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, orderBy, FirestoreError, doc, updateDoc, where, limit, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, FirestoreError, doc, updateDoc, where, limit, getDocs, setDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -539,6 +539,16 @@ function UserManagementSettings() {
         return map;
     }, [allStaff]);
 
+    const staffPhotoMap = useMemo(() => {
+        const map = new Map<string, string>();
+        allStaff.forEach(s => {
+            if (s.email && s.photoUrl) {
+                map.set(s.email.toLowerCase(), s.photoUrl);
+            }
+        });
+        return map;
+    }, [allStaff]);
+
     const handleDeleteUser = async (userToDelete: User) => {
         if (!db || !currentUser || userToDelete.uid === currentUser.uid) return;
         
@@ -567,6 +577,7 @@ function UserManagementSettings() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead>ছবি</TableHead>
                                     <TableHead>নাম</TableHead>
                                     <TableHead>ইমেইল</TableHead>
                                     <TableHead>ভূমিকা (Role)</TableHead>
@@ -577,22 +588,30 @@ function UserManagementSettings() {
                             <TableBody>
                                  {isLoading && users.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
+                                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
                                     </TableRow>
                                 ) : users.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                                             কোনো ব্যবহারকারী পাওয়া যায়নি।
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     users.map(u => {
-                                        const teacherName = u.email ? staffNameMap.get(u.email.toLowerCase()) : null;
+                                        const userEmail = u.email?.toLowerCase() || '';
+                                        const teacherName = staffNameMap.get(userEmail);
+                                        const teacherPhoto = staffPhotoMap.get(userEmail);
                                         const displayName = teacherName || u.displayName || (u.role === 'admin' ? 'Super Admin' : '-');
                                         const isCurrentUser = u.uid === currentUser?.uid;
 
                                         return (
                                             <TableRow key={u.uid} className={cn(isCurrentUser && "bg-green-50 border-l-4 border-l-green-500")}>
+                                                <TableCell>
+                                                    <Avatar className="h-8 w-8 border">
+                                                        <AvatarImage src={teacherPhoto || u.photoUrl || ''} alt={displayName} />
+                                                        <AvatarFallback>{u.email ? u.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                                                    </Avatar>
+                                                </TableCell>
                                                 <TableCell className="font-medium">
                                                     {displayName}
                                                     {isCurrentUser && <span className="ml-2 text-xs text-green-600">(আপনি)</span>}
@@ -674,23 +693,27 @@ function ProfileSettings() {
     const [isPhotoSaving, setIsPhotoSaving] = useState(false);
     const [displayName, setDisplayName] = useState<string | null>(null);
 
+    const isAdmin = user?.role === 'admin';
+
     useEffect(() => {
-        setPhotoPreview(user?.photoUrl || null);
+        if (!user || !db) return;
         
-        if (user && db) {
-          if (user.role === 'teacher' && user.email) {
+        if (user.role === 'teacher' && user.email) {
             const staffQuery = query(collection(db, 'staff'), where('email', '==', user.email.toLowerCase()), limit(1));
             const unsubscribe = onSnapshot(staffQuery, (snapshot) => {
-              if (!snapshot.empty) {
-                setDisplayName(snapshot.docs[0].data().nameBn);
-              } else {
-                setDisplayName(user.displayName || null);
-              }
+                if (!snapshot.empty) {
+                    const staffData = snapshot.docs[0].data();
+                    setDisplayName(staffData.nameBn);
+                    setPhotoPreview(staffData.photoUrl);
+                } else {
+                    setDisplayName(user.displayName || null);
+                    setPhotoPreview(user.photoUrl || null);
+                }
             });
             return () => unsubscribe();
-          } else {
+        } else {
             setDisplayName(user.displayName || 'Super Admin');
-          }
+            setPhotoPreview(user.photoUrl || null);
         }
     }, [user, db]);
 
@@ -763,6 +786,14 @@ function ProfileSettings() {
                     <CardTitle>প্রোফাইল তথ্য</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                     {(!isAdmin && photoPreview) && (
+                        <div className="flex justify-center mb-4">
+                            <Avatar className="h-24 w-24 border">
+                                <AvatarImage src={photoPreview} alt={displayName || 'User'} />
+                                <AvatarFallback>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                            </Avatar>
+                        </div>
+                     )}
                      <div>
                         <Label>নাম</Label>
                         <p className="text-sm text-muted-foreground">{displayName || '-'}</p>
@@ -778,29 +809,31 @@ function ProfileSettings() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>প্রোফাইল ছবি</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-24 w-24">
-                            <AvatarImage src={photoPreview || ''} alt={user?.email || 'User'} />
-                            <AvatarFallback>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                        </Avatar>
-                        <Input id="photo" name="photo" type="file" className="hidden" onChange={handlePhotoChange} accept="image/*" />
-                        <Button type="button" variant="outline" onClick={() => document.getElementById('photo')?.click()}>
-                            <Upload className="mr-2" />
-                            ছবি পরিবর্তন
+            {isAdmin && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>প্রোফাইল ছবি</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center gap-4">
+                            <Avatar className="h-24 w-24 border">
+                                <AvatarImage src={photoPreview || ''} alt={user?.email || 'User'} />
+                                <AvatarFallback>{user?.email ? user.email.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+                            </Avatar>
+                            <Input id="photo" name="photo" type="file" className="hidden" onChange={handlePhotoChange} accept="image/*" />
+                            <Button type="button" variant="outline" onClick={() => document.getElementById('photo')?.click()}>
+                                <Upload className="mr-2" />
+                                ছবি পরিবর্তন
+                            </Button>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <Button onClick={handleSavePhoto} disabled={isPhotoSaving || !photoPreview}>
+                            {isPhotoSaving ? 'সেভ হচ্ছে...' : 'ছবি সেভ করুন'}
                         </Button>
-                    </div>
-                </CardContent>
-                 <CardFooter>
-                     <Button onClick={handleSavePhoto} disabled={isPhotoSaving || !photoPreview}>
-                        {isPhotoSaving ? 'সেভ হচ্ছে...' : 'ছবি সেভ করুন'}
-                    </Button>
-                </CardFooter>
-            </Card>
+                    </CardFooter>
+                </Card>
+            )}
 
              <Card>
                 <form onSubmit={handleSubmit}>
