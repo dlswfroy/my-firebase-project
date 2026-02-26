@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
@@ -13,7 +14,7 @@ import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useFirestore } from '@/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { NewTransactionData } from '@/lib/transactions-data';
-import { collection, doc, writeBatch, serverTimestamp, Timestamp, WithFieldValue, DocumentData } from 'firebase/firestore';
+import { collection, doc, writeBatch, serverTimestamp, Timestamp, WithFieldValue, DocumentData, query, where, getDocs, limit } from 'firebase/firestore';
 import { FilePen, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { bn } from 'date-fns/locale';
@@ -64,14 +65,37 @@ function FeeCollectionForm({ student, onSave, existingCollection, open, onOpenCh
     const db = useFirestore();
     const { toast } = useToast();
     const { selectedYear } = useAcademicYear();
+    const { user } = useAuth();
+    
     const [collectionDate, setCollectionDate] = useState<Date | undefined>(new Date());
     const [description, setDescription] = useState('');
     const [breakdown, setBreakdown] = useState<FeeBreakdown>(emptyBreakdown);
+    const [collectorName, setCollectorName] = useState<string>('');
 
     const bengaliMonths = useMemo(() => [
         'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
         'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
     ], []);
+
+    useEffect(() => {
+        if (!db || !user) return;
+
+        const fetchCollectorName = async () => {
+            if (user.role === 'teacher' && user.email) {
+                const staffQuery = query(collection(db, 'staff'), where('email', '==', user.email), limit(1));
+                const staffSnap = await getDocs(staffQuery);
+                if (!staffSnap.empty) {
+                    setCollectorName(staffSnap.docs[0].data().nameBn);
+                } else {
+                    setCollectorName(user.email || 'Admin');
+                }
+            } else {
+                setCollectorName('Admin');
+            }
+        };
+
+        fetchCollectorName();
+    }, [db, user]);
 
     useEffect(() => {
         if (open) {
@@ -100,7 +124,7 @@ function FeeCollectionForm({ student, onSave, existingCollection, open, onOpenCh
     }, [breakdown]);
 
      const handleSave = async () => {
-        if (!db || !student || !collectionDate) {
+        if (!db || !student || !collectionDate || !user) {
             toast({ variant: 'destructive', title: 'প্রয়োজনীয় তথ্য পূরণ করুন' });
             return;
         }
@@ -160,6 +184,8 @@ function FeeCollectionForm({ student, onSave, existingCollection, open, onOpenCh
             totalAmount,
             breakdown,
             transactionIds: newTransactionIds,
+            collectorName: collectorName || user.email || 'System',
+            collectorUid: user.uid,
             updatedAt: serverTimestamp(),
         };
 
@@ -235,6 +261,9 @@ function FeeCollectionForm({ student, onSave, existingCollection, open, onOpenCh
                                 </div>
                             ))}
                         </div>
+                    </div>
+                    <div className="bg-muted p-3 rounded-md text-xs text-muted-foreground">
+                        আদায়কারী: {collectorName || 'লোড হচ্ছে...'}
                     </div>
                 </div>
 
@@ -354,18 +383,20 @@ export function StudentFeeDialog({ student, open, onOpenChange, onFeeCollected }
                                         <TableHead>আদায়ের তারিখ</TableHead>
                                         <TableHead>বিবরণ</TableHead>
                                         <TableHead className="text-right">মোট টাকা</TableHead>
+                                        <TableHead>আদায়কারী</TableHead>
                                         {canManageTransactions && <TableHead className="text-right">কার্যক্রম</TableHead>}
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {feeCollections.length === 0 ? (
-                                        <TableRow><TableCell colSpan={4} className="text-center h-24">কোনো ফি আদায় করা হয়নি।</TableCell></TableRow>
+                                        <TableRow><TableCell colSpan={5} className="text-center h-24">কোনো ফি আদায় করা হয়নি।</TableCell></TableRow>
                                     ) : (
                                         feeCollections.map(collection => (
                                             <TableRow key={collection.id}>
                                                 <TableCell>{format(collection.collectionDate, "PP", { locale: bn })}</TableCell>
                                                 <TableCell>{collection.description || 'N/A'}</TableCell>
                                                 <TableCell className="text-right font-medium">{collection.totalAmount.toLocaleString('bn-BD')} ৳</TableCell>
+                                                <TableCell className="text-sm text-muted-foreground">{collection.collectorName || '-'}</TableCell>
                                                 {canManageTransactions && (
                                                     <TableCell className="text-right">
                                                         <div className="flex gap-2 justify-end">

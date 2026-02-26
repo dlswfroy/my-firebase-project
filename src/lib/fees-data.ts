@@ -1,3 +1,4 @@
+
 'use client';
 import {
   collection,
@@ -44,6 +45,8 @@ export type FeeCollection = {
   collectionDate: Date;
   description: string;
   totalAmount: number;
+  collectorName?: string;
+  collectorUid?: string;
   transactionIds: string[]; // To link to cashbook entries
   breakdown: FeeBreakdown;
   createdAt?: Timestamp;

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "user": {
@@ -146,6 +147,8 @@
         "collectionDate": { "type": "string", "format": "date" },
         "description": { "type": "string", "description": "A brief description of the collection, e.g., 'Tuition Fee for January & February'" },
         "totalAmount": { "type": "number" },
+        "collectorName": { "type": "string", "description": "The name of the staff member who collected the fee." },
+        "collectorUid": { "type": "string", "description": "The UID of the staff member who collected the fee." },
         "transactionIds": {
             "type": "array",
             "items": { "type": "string" },
