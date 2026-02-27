@@ -84,8 +84,13 @@ export default function MessagingPage() {
         }
     };
 
-    const handleSendDirectSMS = (mobile: string, content: string) => {
-        if (!mobile) {
+    const handleSendDirectSMS = (mobiles: string | string[], content: string) => {
+        const numbers = Array.isArray(mobiles) ? mobiles : [mobiles];
+        const cleanNumbers = numbers
+            .map(num => num.replace(/[^\d+]/g, ''))
+            .filter(Boolean);
+
+        if (cleanNumbers.length === 0) {
             toast({ variant: 'destructive', title: 'মোবাইল নম্বর নেই' });
             return;
         }
@@ -94,14 +99,15 @@ export default function MessagingPage() {
             return;
         }
 
-        // Sanitize number: keep only digits and +
-        const cleanMobile = mobile.replace(/[^\d+]/g, '');
-        const encodedContent = encodeURIComponent(content);
-
         // Cross-platform SMS URI detection
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const separator = isIOS ? '&' : '?';
-        const smsUrl = `sms:${cleanMobile}${separator}body=${encodedContent}`;
+        // iOS usually expects comma, Android usually expects semicolon for multiple recipients
+        const recipientSeparator = isIOS ? ',' : ';';
+        
+        const recipients = cleanNumbers.join(recipientSeparator);
+        const encodedContent = encodeURIComponent(content);
+        const smsUrl = `sms:${recipients}${separator}body=${encodedContent}`;
 
         // Attempt to open the SMS app
         try {
@@ -131,12 +137,15 @@ export default function MessagingPage() {
 
             toast({ title: 'মেসেজ রেকর্ড করা হয়েছে', description: `মোট ${recipientsCount.toLocaleString('bn-BD')} জন শিক্ষার্থীর জন্য লগ তৈরি করা হয়েছে।` });
             
-            // For individual, if only one selected, offer direct send
-            if (type === 'individual' && selectedStudentIds.size === 1) {
-                const studentId = Array.from(selectedStudentIds)[0];
-                const student = allStudents.find(s => s.id === studentId);
-                if (student?.guardianMobile || student?.studentMobile) {
-                    handleSendDirectSMS(student.guardianMobile || student.studentMobile || '', messageContent);
+            // For individual and absent, support bulk sending via SIM if students are selected
+            if ((type === 'individual' || type === 'absent') && selectedStudentIds.size > 0) {
+                const mobiles = Array.from(selectedStudentIds).map(id => {
+                    const student = allStudents.find(s => s.id === id);
+                    return student?.guardianMobile || student?.studentMobile || '';
+                }).filter(Boolean);
+
+                if (mobiles.length > 0) {
+                    handleSendDirectSMS(mobiles, messageContent);
                 }
             }
 
@@ -349,7 +358,7 @@ export default function MessagingPage() {
                                             disabled={isLoading || selectedStudentIds.size === 0}
                                             onClick={() => handleLogAndSimulateMessage('individual', selectedStudentIds.size)}
                                         >
-                                            <Send className="mr-2 h-5 w-5" /> লগে সেভ করুন {selectedStudentIds.size > 0 && `(${selectedStudentIds.size.toLocaleString('bn-BD')} জন)`}
+                                            <Send className="mr-2 h-5 w-5" /> সিম থেকে পাঠান {selectedStudentIds.size > 0 && `(${selectedStudentIds.size.toLocaleString('bn-BD')} জন)`}
                                         </Button>
                                     </TabsContent>
 
@@ -418,7 +427,7 @@ export default function MessagingPage() {
                                             disabled={isLoading || selectedStudentIds.size === 0}
                                             onClick={() => handleLogAndSimulateMessage('absent', selectedStudentIds.size)}
                                         >
-                                            <Send className="mr-2 h-5 w-5" /> লগে সেভ করুন (অনুপস্থিত {selectedStudentIds.size.toLocaleString('bn-BD')} জন)
+                                            <Send className="mr-2 h-5 w-5" /> সিম থেকে পাঠান (অনুপস্থিত {selectedStudentIds.size.toLocaleString('bn-BD')} জন)
                                         </Button>
                                     </TabsContent>
                                 </div>
