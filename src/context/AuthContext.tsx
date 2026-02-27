@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { useAuth as useFirebaseAuth } from '@/firebase';
 import { useFirestore } from '@/firebase';
 import { User, userFromDoc } from '@/lib/user';
@@ -32,13 +33,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!auth || !db) return;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
       if (fbUser) {
         const userDocRef = doc(db, 'users', fbUser.uid);
         
-        // Mark user as online immediately
-        setDoc(userDocRef, { isOnline: true }, { merge: true }).catch(() => {});
+        // Ensure user document exists or mark online
+        try {
+            const userSnap = await getDoc(userDocRef);
+            if (!userSnap.exists()) {
+                // If doc doesn't exist (should happen during signup, but as backup)
+                // we don't set here to avoid role/permission conflicts, 
+                // the login/signup logic handles creation.
+            } else {
+                await setDoc(userDocRef, { isOnline: true }, { merge: true });
+            }
+        } catch (e) {
+            console.error("Error updating user status:", e);
+        }
 
         const unsubscribeSnapshot = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -48,12 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             setUser(userData);
           } else {
-            // Document doesn't exist yet, signup logic will create it
             setUser(null);
           }
           setLoading(false);
         }, (error) => {
-            console.error("Error fetching user document:", error);
+            console.error("Error fetching user document snapshot:", error);
             setLoading(false);
         });
 
@@ -71,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (loading || !user) {
       return false;
     }
+    // Admins always have permission
+    if (user.role === 'admin') return true;
     return user.permissions?.includes(permissionId) ?? false;
   }, [user, loading]);
 

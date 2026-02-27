@@ -1,3 +1,4 @@
+
 'use client';
 import {
   collection,
@@ -82,6 +83,8 @@ const createInitialRoutine = async (db: Firestore, academicYear: string): Promis
 
 // Function to get the entire routine for an academic year
 export const getFullRoutine = async (db: Firestore, academicYear: string): Promise<ClassRoutine[]> => {
+  if (!db) return [];
+  
   const q = query(collection(db, ROUTINE_COLLECTION), where("academicYear", "==", academicYear));
   try {
     const querySnapshot = await getDocs(q);
@@ -90,13 +93,16 @@ export const getFullRoutine = async (db: Firestore, academicYear: string): Promi
       return await createInitialRoutine(db, academicYear);
     }
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClassRoutine));
-  } catch (e) {
+  } catch (e: any) {
     console.error("Error getting full routine:", e);
-    const permissionError = new FirestorePermissionError({
-      path: ROUTINE_COLLECTION,
-      operation: 'list',
-    });
-    errorEmitter.emit('permission-error', permissionError);
+    // Only emit error if it's actually a permission issue and not just empty or network
+    if (e.code === 'permission-denied') {
+        const permissionError = new FirestorePermissionError({
+            path: ROUTINE_COLLECTION,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }
     return [];
   }
 };
