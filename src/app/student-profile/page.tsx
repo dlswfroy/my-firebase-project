@@ -28,6 +28,10 @@ const BENGALI_MONTHS = [
     'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
 ];
 
+const classNamesMap: { [key: string]: string } = {
+    '6': '৬ষ্ঠ', '7': '৭ম', '8': '৮ম', '9': '৯ম', '10': '১০ম',
+};
+
 export default function StudentProfileSearchPage() {
     const db = useFirestore();
     const { selectedYear } = useAcademicYear();
@@ -149,13 +153,6 @@ export default function StudentProfileSearchPage() {
                     description: 'প্রয়োজনীয় ইনডেক্সটি বর্তমানে ফায়ারবেসে তৈরি হচ্ছে। এটি সক্রিয় হতে সাধারণত ৩-৫ মিনিট সময় লাগে। দয়া করে কিছুক্ষণ পর আবার চেষ্টা করুন।',
                     duration: 8000,
                 });
-            } else if (error.code === 'failed-precondition' || error.message?.includes('index')) {
-                toast({
-                    variant: 'destructive',
-                    title: 'ইন্ডেক্স তৈরি করা প্রয়োজন',
-                    description: 'এই ফিচারের জন্য ফায়ারবেসে একটি ইনডেক্স প্রয়োজন। অনুগ্রহ করে চ্যাট হিস্টোরিতে দেওয়া লিঙ্কে ক্লিক করে ইনডেক্সটি তৈরি করুন।',
-                    duration: 10000,
-                });
             } else {
                 toast({ variant: 'destructive', title: 'অনুসন্ধান ব্যর্থ হয়েছে', description: 'সার্ভারে সংযোগ করতে সমস্যা হচ্ছে, আবার চেষ্টা করুন।' });
             }
@@ -201,7 +198,7 @@ export default function StudentProfileSearchPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="roll">রোল নম্বর</Label>
-                                    <Input id="roll" placeholder="উদা: ১" type="number" value={roll} onChange={e => setRoll(e.target.value)} required />
+                                    <Input id="roll" type="number" value={roll} onChange={e => setRoll(e.target.value)} required />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="class">শ্রেণি</Label>
@@ -265,7 +262,7 @@ export default function StudentProfileSearchPage() {
                                     <div className="text-center md:text-left space-y-1">
                                         <DialogTitle className="text-3xl font-bold text-primary">{studentData.studentNameBn}</DialogTitle>
                                         <p className="text-lg font-medium text-muted-foreground">
-                                            রোল: {studentData.roll.toLocaleString('bn-BD')} | শ্রেণি: {studentData.className}-য়
+                                            রোল: {studentData.roll.toLocaleString('bn-BD')} | {classNamesMap[studentData.className] || studentData.className} শ্রেণি
                                         </p>
                                         <DialogDescription className="text-md">
                                             শিক্ষাবর্ষ: {studentData.academicYear.toLocaleString('bn-BD')}
