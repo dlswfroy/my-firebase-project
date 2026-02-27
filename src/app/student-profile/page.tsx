@@ -77,12 +77,7 @@ export default function StudentProfileSearchPage() {
                 where('className', '==', className),
                 where('roll', '==', parseInt(roll, 10))
             );
-            const studentSnap = await getDocs(studentQuery).catch(err => {
-                if (err.code === 'permission-denied') {
-                    errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'students', operation: 'list' }));
-                }
-                throw err;
-            });
+            const studentSnap = await getDocs(studentQuery);
 
             if (studentSnap.empty) {
                 toast({ variant: 'destructive', title: 'শিক্ষার্থী পাওয়া যায়নি।', description: 'অনুগ্রহ করে রোল ও শ্রেণি পরীক্ষা করুন।' });
