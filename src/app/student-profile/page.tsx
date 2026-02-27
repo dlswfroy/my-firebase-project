@@ -16,7 +16,7 @@ import { DailyAttendance } from '@/lib/attendance-data';
 import { FeeCollection, feeCollectionFromDoc } from '@/lib/fees-data';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Search, CheckCircle2, XCircle, User, Banknote, CalendarCheck, AlertTriangle } from 'lucide-react';
+import { Search, CheckCircle2, XCircle, User, Banknote, CalendarCheck, AlertTriangle, Printer } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -101,23 +101,8 @@ export default function StudentProfileSearchPage() {
                 where('date', '<=', endDate)
             );
             
-            let attRecords: DailyAttendance[] = [];
-            try {
-                const attSnap = await getDocs(attQuery);
-                attRecords = attSnap.docs.map(doc => doc.data() as DailyAttendance);
-            } catch (err: any) {
-                if (err.code === 'failed-precondition' || err.message?.includes('index')) {
-                    toast({
-                        variant: 'destructive',
-                        title: 'ইন্ডেক্স তৈরি করা নেই',
-                        description: 'এই ফিচারের জন্য ফায়ারবেসে একটি ইনডেক্স প্রয়োজন। অনুগ্রহ করে আপনার চ্যাট হিস্টোরিতে দেওয়া লিঙ্কে ক্লিক করে ইনডেক্সটি তৈরি করুন।',
-                        duration: 10000,
-                    });
-                } else {
-                    errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'attendance', operation: 'list' }));
-                }
-                throw err;
-            }
+            const attSnap = await getDocs(attQuery);
+            const attRecords = attSnap.docs.map(doc => doc.data() as DailyAttendance);
 
             let presentCount = 0;
             let totalCount = 0;
@@ -158,6 +143,16 @@ export default function StudentProfileSearchPage() {
             setShowProfile(true);
         } catch (error: any) {
             console.error("Search Error:", error);
+            if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+                toast({
+                    variant: 'destructive',
+                    title: 'ইন্ডেক্স তৈরি করা প্রয়োজন',
+                    description: 'এই ফিচারের জন্য ফায়ারবেসে একটি ইনডেক্স প্রয়োজন। অনুগ্রহ করে চ্যাট হিস্টোরিতে দেওয়া লিঙ্কে ক্লিক করে ইনডেক্সটি তৈরি করুন।',
+                    duration: 10000,
+                });
+            } else {
+                toast({ variant: 'destructive', title: 'অনুসন্ধান ব্যর্থ হয়েছে', description: 'আবার চেষ্টা করুন।' });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -250,8 +245,8 @@ export default function StudentProfileSearchPage() {
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     {studentData && (
                         <>
-                            <DialogHeader>
-                                <div className="flex flex-col md:flex-row items-center gap-6 pb-4">
+                            <DialogHeader className="no-print">
+                                <div className="flex flex-col md:flex-row items-center gap-6 pb-4 border-b">
                                     <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-full border-4 border-primary/20 shadow-lg">
                                         {studentData.photoUrl ? (
                                             <Image src={studentData.photoUrl} alt={studentData.studentNameBn} fill className="object-cover" />
@@ -331,6 +326,12 @@ export default function StudentProfileSearchPage() {
                                         })}
                                     </div>
                                 </section>
+                                
+                                <div className="flex justify-end pt-4 no-print border-t">
+                                    <Button variant="outline" onClick={() => window.print()} className="gap-2">
+                                        <Printer className="h-4 w-4" /> প্রিন্ট করুন
+                                    </Button>
+                                </div>
                             </div>
                         </>
                     )}
