@@ -955,7 +955,7 @@ export default function SettingsPage() {
                                     {isAdmin && <TabsTrigger value="school-info">প্রতিষ্ঠানের তথ্য</TabsTrigger>}
                                     {isAdmin && <TabsTrigger value="holidays">অতিরিক্ত ছুটি</TabsTrigger>}
                                     {isAdmin && <TabsTrigger value="user-management">ব্যবহারকারী</TabsTrigger>}
-                                    <TabsTrigger value="system-info">সিস্টেম তথ্য</TabsTrigger>
+                                    {isAdmin && <TabsTrigger value="system-info">সিস্টেম তথ্য</TabsTrigger>}
                                 </TabsList>
                                 <TabsContent value="profile" className="pt-4">
                                     <ProfileSettings />
@@ -971,11 +971,11 @@ export default function SettingsPage() {
                                         <TabsContent value="user-management" className="pt-4">
                                             <UserManagementSettings />
                                         </TabsContent>
+                                        <TabsContent value="system-info" className="pt-4">
+                                            <SystemUsageInfo />
+                                        </TabsContent>
                                     </>
                                 )}
-                                <TabsContent value="system-info" className="pt-4">
-                                    <SystemUsageInfo />
-                                </TabsContent>
                             </Tabs>
                         ) : (
                             <div className="space-y-4">
