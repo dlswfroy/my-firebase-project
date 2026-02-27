@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -17,6 +18,7 @@ import {
   CalendarClock,
   LogOut,
   UserSearch,
+  MessageSquare,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -202,6 +204,15 @@ export function Header() {
                       >
                         < BookMarked className="h-5 w-5" />
                         ফলাফল
+                      </Link>
+                    )}
+                    {hasPermission('manage:messaging') && (
+                      <Link
+                        href="/messaging"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-lime-100 text-lime-800 hover:bg-lime-200"
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                        মেসেজ
                       </Link>
                     )}
                     {hasPermission('view:accounts') && (

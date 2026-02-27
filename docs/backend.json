@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "user": {
@@ -32,6 +33,21 @@
         "recipientType": { "type": "string" }
       },
       "required": ["to", "subject", "body", "sentAt", "senderUid"]
+    },
+    "messageLog": {
+      "title": "Message Log",
+      "description": "Logs of messages sent to students/parents via the system.",
+      "type": "object",
+      "properties": {
+        "recipientsCount": { "type": "number" },
+        "type": { "type": "string", "enum": ["all", "class", "individual", "absent"] },
+        "className": { "type": "string" },
+        "content": { "type": "string" },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "senderUid": { "type": "string" },
+        "senderName": { "type": "string" }
+      },
+      "required": ["recipientsCount", "type", "content", "sentAt", "senderUid"]
     },
     "student": {
       "title": "Student",
@@ -321,6 +337,10 @@
     "/emailLogs/{id}": {
       "schema": { "$ref": "#/entities/emailLog" },
       "description": "Stores logs of sent emails."
+    },
+    "/messageLogs/{id}": {
+      "schema": { "$ref": "#/entities/messageLog" },
+      "description": "Stores logs of sent messages."
     },
     "/students/{studentId}": {
       "schema": { "$ref": "#/entities/student" },
