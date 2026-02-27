@@ -66,16 +66,22 @@ const NoticeBoard = () => {
     const [newNotice, setNewNotice] = useState({ title: '', content: '', priority: 'normal' as Notice['priority'] });
 
     const fetchNotices = async () => {
-        if (!db) return;
+        if (!db || !user) return;
         setIsLoading(true);
-        const data = await getNotices(db);
-        setNotices(data);
+        try {
+            const data = await getNotices(db);
+            setNotices(data);
+        } catch (e) {
+            console.error(e);
+        }
         setIsLoading(false);
     };
 
     useEffect(() => {
-        fetchNotices();
-    }, [db]);
+        if (user) {
+            fetchNotices();
+        }
+    }, [db, user]);
 
     const handleAddNotice = async () => {
         if (!db || !user) return;
@@ -228,6 +234,7 @@ const NoticeBoard = () => {
 
 const LiveRoutineCard = () => {
     const db = useFirestore();
+    const { user } = useAuth();
     const { selectedYear } = useAcademicYear();
     const [fullRoutine, setFullRoutine] = useState<ClassRoutine[]>([]);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -235,20 +242,24 @@ const LiveRoutineCard = () => {
     const [activeHoliday, setActiveHoliday] = useState<Holiday | undefined>(undefined);
 
     useEffect(() => {
-        if (!db) return;
+        if (!db || !user) return;
         setIsLoading(true);
         const fetchData = async () => {
-            const todayStr = format(new Date(), 'yyyy-MM-dd');
-            const [routineData, holidayInfo] = await Promise.all([
-                getFullRoutine(db, selectedYear),
-                isHoliday(db, todayStr),
-            ]);
-            setFullRoutine(routineData);
-            setActiveHoliday(holidayInfo);
+            try {
+                const todayStr = format(new Date(), 'yyyy-MM-dd');
+                const [routineData, holidayInfo] = await Promise.all([
+                    getFullRoutine(db, selectedYear),
+                    isHoliday(db, todayStr),
+                ]);
+                setFullRoutine(routineData);
+                setActiveHoliday(holidayInfo);
+            } catch (e) {
+                console.error(e);
+            }
             setIsLoading(false);
         };
         fetchData();
-    }, [db, selectedYear]);
+    }, [db, selectedYear, user]);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -417,49 +428,53 @@ export default function Home() {
         });
 
         const todayStr = format(new Date(), 'yyyy-MM-dd');
-        const todaysAttendance = await getAttendanceForDate(db, todayStr, selectedYear);
-        setAttendanceTaken(todaysAttendance.length > 0);
+        try {
+            const todaysAttendance = await getAttendanceForDate(db, todayStr, selectedYear);
+            setAttendanceTaken(todaysAttendance.length > 0);
 
-        if (todaysAttendance.length > 0) {
-            let totalPresentCount = 0;
-            let totalAbsentCount = 0;
-            todaysAttendance.forEach(classAttendanceRecord => {
-                const className = classAttendanceRecord.className;
-                if (classMap[className]) {
-                    let presentCount = 0;
-                    let absentCount = 0;
-                    
-                    classAttendanceRecord.attendance.forEach(studentAttendance => {
-                        const studentExistsInYear = studentsForYear.some(s => s.id === studentAttendance.studentId && s.className === className);
-                        if (studentExistsInYear) {
-                            if (studentAttendance.status === 'present') {
-                                presentCount++;
-                            } else {
-                                absentCount++;
+            if (todaysAttendance.length > 0) {
+                let totalPresentCount = 0;
+                let totalAbsentCount = 0;
+                todaysAttendance.forEach(classAttendanceRecord => {
+                    const className = classAttendanceRecord.className;
+                    if (classMap[className]) {
+                        let presentCount = 0;
+                        let absentCount = 0;
+                        
+                        classAttendanceRecord.attendance.forEach(studentAttendance => {
+                            const studentExistsInYear = studentsForYear.some(s => s.id === studentAttendance.studentId && s.className === className);
+                            if (studentExistsInYear) {
+                                if (studentAttendance.status === 'present') {
+                                    presentCount++;
+                                } else {
+                                    absentCount++;
+                                }
                             }
-                        }
-                    });
-                    classMap[className].present = presentCount;
-                    classMap[className].absent = absentCount;
-                    totalPresentCount += presentCount;
-                    totalAbsentCount += absentCount;
-                }
-            });
-            setTotalPresent(totalPresentCount);
-            setTotalAbsent(totalAbsentCount);
-        } else {
-            setTotalPresent(0);
-            setTotalAbsent(0);
-        }
+                        });
+                        classMap[className].present = presentCount;
+                        classMap[className].absent = absentCount;
+                        totalPresentCount += presentCount;
+                        totalAbsentCount += absentCount;
+                    }
+                });
+                setTotalPresent(totalPresentCount);
+                setTotalAbsent(totalAbsentCount);
+            } else {
+                setTotalPresent(0);
+                setTotalAbsent(0);
+            }
+        } catch (e) {}
         
         setClassAttendance(classMap);
       },
       async (error: FirestoreError) => {
-        const permissionError = new FirestorePermissionError({
-          path: 'students',
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        if (error.code !== 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: 'students',
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
       });
 
       const staffQuery = query(collection(db, 'staff'), where('isActive', '==', true), where('staffType', '==', 'teacher'));
@@ -467,11 +482,13 @@ export default function Home() {
         setTotalTeachers(querySnapshot.size);
       },
       async (error: FirestoreError) => {
-        const permissionError = new FirestorePermissionError({
-          path: 'staff',
-          operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        if (error.code !== 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: 'staff',
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
       });
 
       return () => {

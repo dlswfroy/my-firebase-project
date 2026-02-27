@@ -1,3 +1,4 @@
+
 // It is RECOMMENDED that you do not manually edit this file.
 // This file is generated automatically by Firebase Studio.
 // Visit https://console.firebase.google.com/ to make changes.
