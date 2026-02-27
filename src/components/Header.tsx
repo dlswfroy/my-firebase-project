@@ -16,6 +16,7 @@ import {
   FileText,
   CalendarClock,
   LogOut,
+  UserSearch,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,6 @@ export function Header() {
     let unsubscribe: (() => void) | undefined;
     
     if (user.role === 'teacher' && user.email) {
-      // For teachers, fetch photo and name from the 'staff' collection.
       const staffQuery = query(collection(db, 'staff'), where('email', '==', user.email), limit(1));
       unsubscribe = onSnapshot(staffQuery, (snapshot) => {
         if (!snapshot.empty) {
@@ -84,7 +84,6 @@ export function Header() {
         }
       });
     } else {
-      // For admin
       setDisplayPhoto(user.photoUrl || null);
       setDisplayName(user.displayName || 'Super Admin');
     }
@@ -121,9 +120,7 @@ export function Header() {
               <SheetContent side="left" className="flex flex-col p-0">
                 <SheetHeader className="p-4 border-b bg-red-100">
                     <SheetTitle className="sr-only"></SheetTitle>
-                    <SheetDescription className="sr-only">
-                        
-                    </SheetDescription>
+                    <SheetDescription className="sr-only"></SheetDescription>
                   <Link
                     href="/"
                     className="flex items-center gap-2 text-lg font-semibold text-foreground"
@@ -160,6 +157,15 @@ export function Header() {
                       >
                         <LayoutDashboard className="h-5 w-5" />
                         ড্যাসবোর্ড
+                      </Link>
+                    )}
+                    {hasPermission('view:student-profile') && (
+                      <Link
+                        href="/student-profile"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-indigo-100 text-indigo-800 hover:bg-indigo-200"
+                      >
+                        <UserSearch className="h-5 w-5" />
+                        শিক্ষার্থী প্রোফাইল
                       </Link>
                     )}
                     {hasPermission('manage:students') && (
@@ -237,7 +243,7 @@ export function Header() {
                     {hasPermission('manage:settings') && (
                       <Link
                         href="/settings"
-                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-indigo-100 text-indigo-800 hover:bg-indigo-200"
+                        className="flex items-center gap-3 rounded-lg border px-3 py-2 transition-all bg-gray-100 text-gray-800 hover:bg-gray-200"
                       >
                         <Settings className="h-5 w-5" />
                         সেটিং
