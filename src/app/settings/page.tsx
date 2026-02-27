@@ -337,6 +337,7 @@ function HolidaySettings() {
                                 <TableRow>
                                     <TableHead>ক্রমিক নং</TableHead>
                                     <TableHead>তারিখ</TableHead>
+                                    <TableHead>বার</TableHead>
                                     <TableHead>কারণ</TableHead>
                                     <TableHead className="text-right">কার্যক্রম</TableHead>
                                 </TableRow>
@@ -344,45 +345,49 @@ function HolidaySettings() {
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
+                                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">লোড হচ্ছে...</TableCell>
                                     </TableRow>
                                 ) : holidays.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                                             কোনো অতিরিক্ত ছুটি যোগ করা হয়নি।
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    holidays.map((holiday, index) => (
-                                        <TableRow key={holiday.id}>
-                                            <TableCell>{(index + 1).toLocaleString('bn-BD')}</TableCell>
-                                            <TableCell>{format(new Date(holiday.date.replace(/-/g, '/')), "d MMMM yyyy", { locale: bn })}</TableCell>
-                                            <TableCell>{holiday.description}</TableCell>
-                                            <TableCell className="text-right">
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                        <Button variant="destructive" size="icon" disabled={!canManageSettings}>
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                এই ছুটিটি তালিকা থেকে স্থায়ীভাবে মুছে যাবে।
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>বাতিল</AlertDialogCancel>
-                                                            <AlertDialogAction onClick={() => handleDeleteHoliday(holiday.id)}>
-                                                                মুছে ফেলুন
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
+                                    holidays.map((holiday, index) => {
+                                        const hDate = new Date(holiday.date.replace(/-/g, '/'));
+                                        return (
+                                            <TableRow key={holiday.id}>
+                                                <TableCell>{(index + 1).toLocaleString('bn-BD')}</TableCell>
+                                                <TableCell>{format(hDate, "d MMMM yyyy", { locale: bn })}</TableCell>
+                                                <TableCell>{format(hDate, "EEEE", { locale: bn })}</TableCell>
+                                                <TableCell>{holiday.description}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="destructive" size="icon" disabled={!canManageSettings}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    এই ছুটিটি তালিকা থেকে স্থায়ীভাবে মুছে যাবে।
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteHoliday(holiday.id)}>
+                                                                    মুছে ফেলুন
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
                                 )}
                             </TableBody>
                         </Table>
