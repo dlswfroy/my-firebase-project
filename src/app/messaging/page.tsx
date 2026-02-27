@@ -16,7 +16,7 @@ import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { Student, studentFromDoc } from '@/lib/student-data';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Send, Users, User, Clock, Trash2, History } from 'lucide-react';
+import { MessageSquare, Send, Users, User, Clock, History } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logMessage, getMessageLogs, MessageLog } from '@/lib/messaging-data';
 import { format } from 'date-fns';
@@ -107,7 +107,7 @@ export default function MessagingPage() {
             setSelectedStudentIds(new Set());
             fetchLogs();
         } catch (e) {
-            // Error handled by Firebase listener
+            console.error(e);
         } finally {
             setIsLoading(false);
         }
@@ -142,8 +142,12 @@ export default function MessagingPage() {
             } else {
                 toast({ title: `${absentIds.length.toLocaleString('bn-BD')} জন অনুপস্থিত পাওয়া গেছে।` });
             }
-        } catch (e) {
-            toast({ variant: 'destructive', title: 'তথ্য আনা সম্ভব হয়নি' });
+        } catch (e: any) {
+            if (e.message?.includes('index')) {
+                toast({ variant: 'destructive', title: 'ইনডেক্স তৈরি করা হয়নি', description: 'দয়া করে অনুপস্থিত শিক্ষার্থী খোঁজার জন্য ইনডেক্স তৈরি করুন।' });
+            } else {
+                toast({ variant: 'destructive', title: 'তথ্য আনা সম্ভব হয়নি' });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -158,10 +162,10 @@ export default function MessagingPage() {
                 <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
                     <Card className="md:col-span-2 lg:col-span-3">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <MessageSquare className="h-6 w-6" /> মেসেজ পাঠান
+                            <CardTitle className="flex items-center gap-2 text-2xl font-bold">
+                                <MessageSquare className="h-6 w-6 text-primary" /> মেসেজ সেন্টার
                             </CardTitle>
-                            <CardDescription>একসাথে বা আলাদাভাবে শিক্ষার্থীদের মেসেজ পাঠান</CardDescription>
+                            <CardDescription>শিক্ষার্থী ও অভিভাবকদের কাছে জরুরি বার্তা পাঠান</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Tabs defaultValue="bulk" onValueChange={() => { setSelectedStudentIds(new Set()); setMessageContent(''); }}>
@@ -173,17 +177,16 @@ export default function MessagingPage() {
                                 </TabsList>
 
                                 <div className="mt-6 space-y-6">
-                                    {/* Content for Bulk/All */}
                                     <TabsContent value="bulk" className="space-y-4">
                                         <div className="p-4 bg-lime-100 border border-lime-200 rounded-lg flex items-center gap-4">
                                             <Users className="h-10 w-10 text-lime-700" />
                                             <div>
                                                 <p className="font-bold text-lime-900">সকল শিক্ষার্থী</p>
-                                                <p className="text-sm text-lime-700">মোট {allStudents.length.toLocaleString('bn-BD')} জন শিক্ষার্থীর কাছে মেসেজ যাবে।</p>
+                                                <p className="text-sm text-lime-700">পুরো স্কুলের {allStudents.length.toLocaleString('bn-BD')} জন শিক্ষার্থীর কাছে মেসেজ যাবে।</p>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>মেসেজ বডি</Label>
+                                            <Label>বার্তার বিষয়বস্তু</Label>
                                             <Textarea 
                                                 placeholder="আপনার বার্তা এখানে লিখুন..." 
                                                 className="min-h-[150px]"
@@ -192,28 +195,25 @@ export default function MessagingPage() {
                                             />
                                         </div>
                                         <Button 
-                                            className="w-full" 
+                                            className="w-full h-12 text-lg" 
                                             disabled={isLoading || allStudents.length === 0}
                                             onClick={() => handleSendMessage('all', allStudents.length)}
                                         >
-                                            <Send className="mr-2 h-4 w-4" /> সকল শিক্ষার্থীকে মেসেজ পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> সকল শিক্ষার্থীকে পাঠান
                                         </Button>
                                     </TabsContent>
 
-                                    {/* Content for Class-wise */}
                                     <TabsContent value="class" className="space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>শ্রেণি নির্বাচন করুন</Label>
-                                                <Select value={selectedClass} onValueChange={setSelectedClass}>
-                                                    <SelectTrigger><SelectValue placeholder="শ্রেণি" /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {['6', '7', '8', '9', '10'].map(c => (
-                                                            <SelectItem key={c} value={c}>{classNamesMap[c]} শ্রেণি</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                        <div className="space-y-2">
+                                            <Label>শ্রেণি নির্বাচন করুন</Label>
+                                            <Select value={selectedClass} onValueChange={setSelectedClass}>
+                                                <SelectTrigger><SelectValue placeholder="শ্রেণি" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {['6', '7', '8', '9', '10'].map(c => (
+                                                        <SelectItem key={c} value={c}>{classNamesMap[c]} শ্রেণি</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         {selectedClass && (
                                             <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
@@ -222,37 +222,34 @@ export default function MessagingPage() {
                                             </div>
                                         )}
                                         <div className="space-y-2">
-                                            <Label>মেসেজ বডি</Label>
+                                            <Label>বার্তার বিষয়বস্তু</Label>
                                             <Textarea 
-                                                placeholder="আপনার বার্তা এখানে লিখুন..." 
+                                                placeholder="শ্রেণির জন্য বার্তা লিখুন..." 
                                                 className="min-h-[150px]"
                                                 value={messageContent}
                                                 onChange={e => setMessageContent(e.target.value)}
                                             />
                                         </div>
                                         <Button 
-                                            className="w-full" 
+                                            className="w-full h-12 text-lg" 
                                             disabled={isLoading || !selectedClass || studentsInClass.length === 0}
                                             onClick={() => handleSendMessage('class', studentsInClass.length)}
                                         >
-                                            <Send className="mr-2 h-4 w-4" /> শ্রেণির সকল শিক্ষার্থীকে মেসেজ পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> এই শ্রেণির সবাইকে পাঠান
                                         </Button>
                                     </TabsContent>
 
-                                    {/* Content for Individual */}
                                     <TabsContent value="individual" className="space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>শ্রেণি</Label>
-                                                <Select value={selectedClass} onValueChange={c => { setSelectedClass(c); setSelectedStudentIds(new Set()); }}>
-                                                    <SelectTrigger><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {['6', '7', '8', '9', '10'].map(c => (
-                                                            <SelectItem key={c} value={c}>{classNamesMap[c]} শ্রেণি</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                        <div className="space-y-2">
+                                            <Label>শ্রেণি নির্বাচন করুন</Label>
+                                            <Select value={selectedClass} onValueChange={c => { setSelectedClass(c); setSelectedStudentIds(new Set()); }}>
+                                                <SelectTrigger><SelectValue placeholder="শ্রেণি" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {['6', '7', '8', '9', '10'].map(c => (
+                                                        <SelectItem key={c} value={c}>{classNamesMap[c]} শ্রেণি</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         {selectedClass && (
                                             <div className="border rounded-md max-h-[300px] overflow-y-auto">
@@ -266,13 +263,13 @@ export default function MessagingPage() {
                                                                 />
                                                             </TableHead>
                                                             <TableHead>রোল</TableHead>
-                                                            <TableHead>নাম</TableHead>
+                                                            <TableHead>শিক্ষার্থীর নাম</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
                                                         {studentsInClass.map(s => (
-                                                            <TableRow key={s.id}>
-                                                                <TableCell>
+                                                            <TableRow key={s.id} className="cursor-pointer" onClick={() => handleToggleStudent(s.id)}>
+                                                                <TableCell onClick={e => e.stopPropagation()}>
                                                                     <Checkbox 
                                                                         checked={selectedStudentIds.has(s.id)}
                                                                         onCheckedChange={() => handleToggleStudent(s.id)}
@@ -287,29 +284,28 @@ export default function MessagingPage() {
                                             </div>
                                         )}
                                         <div className="space-y-2">
-                                            <Label>মেসেজ বডি</Label>
+                                            <Label>বার্তার বিষয়বস্তু</Label>
                                             <Textarea 
-                                                placeholder="আপনার বার্তা এখানে লিখুন..." 
+                                                placeholder="ব্যক্তিগত বার্তা লিখুন..." 
                                                 value={messageContent}
                                                 onChange={e => setMessageContent(e.target.value)}
                                             />
                                         </div>
                                         <Button 
-                                            className="w-full" 
+                                            className="w-full h-12 text-lg" 
                                             disabled={isLoading || selectedStudentIds.size === 0}
                                             onClick={() => handleSendMessage('individual', selectedStudentIds.size)}
                                         >
-                                            <Send className="mr-2 h-4 w-4" /> {selectedStudentIds.size.toLocaleString('bn-BD')} জন শিক্ষার্থীকে মেসেজ পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> {selectedStudentIds.size.toLocaleString('bn-BD')} জনকে পাঠান
                                         </Button>
                                     </TabsContent>
 
-                                    {/* Content for Absent */}
                                     <TabsContent value="absent" className="space-y-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                                             <div className="space-y-2">
                                                 <Label>শ্রেণি</Label>
                                                 <Select value={selectedClass} onValueChange={setSelectedClass}>
-                                                    <SelectTrigger><SelectValue placeholder="শ্রেণি" /></SelectTrigger>
+                                                    <SelectTrigger><SelectValue placeholder="শ্রেণি নির্বাচন" /></SelectTrigger>
                                                     <SelectContent>
                                                         {['6', '7', '8', '9', '10'].map(c => (
                                                             <SelectItem key={c} value={c}>{classNamesMap[c]} শ্রেণি</SelectItem>
@@ -317,31 +313,31 @@ export default function MessagingPage() {
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <Button variant="outline" onClick={fetchAbsentStudents} disabled={!selectedClass || isLoading}>
-                                                অনুপস্থিত তালিকা খুঁজুন
+                                            <Button variant="outline" onClick={fetchAbsentStudents} disabled={!selectedClass || isLoading} className="h-10">
+                                                আজকের অনুপস্থিত শিক্ষার্থী খুঁজুন
                                             </Button>
                                         </div>
                                         {selectedStudentIds.size > 0 && (
                                             <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
-                                                <p className="font-bold text-red-900">অনুপস্থিত শিক্ষার্থী</p>
-                                                <p className="text-sm text-red-700">আজকের অনুপস্থিত শিক্ষার্থীর সংখ্যা: {selectedStudentIds.size.toLocaleString('bn-BD')} জন।</p>
+                                                <p className="font-bold text-red-900">অনুপস্থিত শিক্ষার্থী চিহ্নিত করা হয়েছে</p>
+                                                <p className="text-sm text-red-700">আজকের অনুপস্থিত সংখ্যা: {selectedStudentIds.size.toLocaleString('bn-BD')} জন।</p>
                                             </div>
                                         )}
                                         <div className="space-y-2">
-                                            <Label>মেসেজ বডি</Label>
+                                            <Label>সতর্কবার্তা</Label>
                                             <Textarea 
-                                                placeholder="অভিভাবক মহোদয়, আপনার সন্তান আজ স্কুলে অনুপস্থিত..." 
+                                                placeholder="সম্মানিত অভিভাবক, আপনার সন্তান আজ বিদ্যালয়ে অনুপস্থিত..." 
                                                 value={messageContent}
                                                 onChange={e => setMessageContent(e.target.value)}
                                             />
                                         </div>
                                         <Button 
-                                            className="w-full" 
+                                            className="w-full h-12 text-lg" 
                                             variant="destructive"
                                             disabled={isLoading || selectedStudentIds.size === 0}
                                             onClick={() => handleSendMessage('absent', selectedStudentIds.size)}
                                         >
-                                            <Send className="mr-2 h-4 w-4" /> অনুপস্থিত অভিভাবকগণকে মেসেজ পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> অনুপস্থিতদের অভিভাবকদের পাঠান
                                         </Button>
                                     </TabsContent>
                                 </div>
@@ -349,15 +345,14 @@ export default function MessagingPage() {
                         </CardContent>
                     </Card>
 
-                    {/* History Column */}
-                    <Card className="md:col-span-1 lg:col-span-1">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-lg">
-                                <History className="h-5 w-5" /> মেসেজ হিস্ট্রি
+                    <Card className="md:col-span-1 lg:col-span-1 border-primary/20 shadow-lg">
+                        <CardHeader className="bg-primary/5 rounded-t-lg">
+                            <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                                <History className="h-5 w-5 text-primary" /> মেসেজ হিস্ট্রি
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="max-h-[600px] overflow-y-auto">
+                            <div className="max-h-[650px] overflow-y-auto">
                                 {isLoadingLogs ? (
                                     <div className="p-4 space-y-4">
                                         <Skeleton className="h-20 w-full" />
@@ -365,22 +360,22 @@ export default function MessagingPage() {
                                         <Skeleton className="h-20 w-full" />
                                     </div>
                                 ) : messageLogs.length === 0 ? (
-                                    <p className="p-8 text-center text-sm text-muted-foreground">কোনো মেসেজ হিস্ট্রি নেই।</p>
+                                    <p className="p-8 text-center text-sm text-muted-foreground italic">এখনও কোনো মেসেজ পাঠানো হয়নি।</p>
                                 ) : (
                                     <div className="divide-y">
                                         {messageLogs.map(log => (
-                                            <div key={log.id} className="p-4 hover:bg-muted/50 transition-colors">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <Badge variant="outline" className="text-[10px] uppercase">
+                                            <div key={log.id} className="p-4 hover:bg-primary/5 transition-colors">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <Badge variant="secondary" className="text-[10px] py-0 px-2 h-5">
                                                         {log.type === 'all' ? 'সকল' : log.type === 'class' ? 'শ্রেণি' : log.type === 'individual' ? 'একক' : 'অনুপস্থিত'}
                                                     </Badge>
-                                                    <span className="text-[10px] text-muted-foreground flex items-center">
+                                                    <span className="text-[10px] text-muted-foreground flex items-center bg-muted px-1.5 py-0.5 rounded">
                                                         <Clock className="h-3 w-3 mr-1" />
                                                         {format(log.sentAt, 'PPp', { locale: bn })}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm font-medium line-clamp-2 mb-1">{log.content}</p>
-                                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                                <p className="text-sm font-medium line-clamp-3 mb-2 text-foreground">{log.content}</p>
+                                                <div className="flex justify-between text-[10px] font-semibold text-muted-foreground pt-2 border-t border-dashed">
                                                     <span>প্রাপক: {log.recipientsCount.toLocaleString('bn-BD')} জন</span>
                                                     <span>প্রেরক: {log.senderName}</span>
                                                 </div>
