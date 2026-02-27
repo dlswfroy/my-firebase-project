@@ -146,7 +146,7 @@ export default function MessagingPage() {
                 }
             }
 
-            setMessageContent('');
+            setMessageContent(type === 'absent' ? 'সম্মানিত অভিভাবক, আপনার সন্তান আজ বিদ্যালয়ে অনুপস্থিত আছে। বিপৌউবি' : '');
             setSelectedStudentIds(new Set());
             fetchLogs();
         } catch (e: any) {
@@ -204,6 +204,16 @@ export default function MessagingPage() {
         }
     };
 
+    const handleTabChange = (val: string) => {
+        setSelectedStudentIds(new Set());
+        setSelectedClass('');
+        if (val === 'absent') {
+            setMessageContent('সম্মানিত অভিভাবক, আপনার সন্তান আজ বিদ্যালয়ে অনুপস্থিত আছে। বিপৌউবি');
+        } else {
+            setMessageContent('');
+        }
+    };
+
     if (!isClient) return null;
 
     return (
@@ -219,7 +229,7 @@ export default function MessagingPage() {
                             <CardDescription>শিক্ষার্থী ও অভিভাবকদের কাছে সরাসরি মেসেজ পাঠান</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Tabs defaultValue="bulk" onValueChange={() => { setSelectedStudentIds(new Set()); setMessageContent(''); setSelectedClass(''); }}>
+                            <Tabs defaultValue="bulk" onValueChange={handleTabChange}>
                                 <TabsList className="grid w-full grid-cols-4">
                                     <TabsTrigger value="bulk">সকলকে</TabsTrigger>
                                     <TabsTrigger value="class">শ্রেণিভিত্তিক</TabsTrigger>
@@ -412,7 +422,7 @@ export default function MessagingPage() {
                                         <div className="space-y-2">
                                             <Label>সতর্কবার্তা</Label>
                                             <Textarea 
-                                                placeholder="সম্মানিত অভিভাবক, আপনার সন্তান আজ বিদ্যালয়ে অনুপস্থিত..." 
+                                                placeholder="সম্মানিত অভিভাবক, আপনার সন্তান আজ বিদ্যালয়ে অনুপস্থিত আছে। বিপৌউবি" 
                                                 value={messageContent}
                                                 onChange={e => setMessageContent(e.target.value)}
                                             />
