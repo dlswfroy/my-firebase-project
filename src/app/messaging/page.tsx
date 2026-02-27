@@ -16,7 +16,7 @@ import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { Student, studentFromDoc } from '@/lib/student-data';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Send, Users, User, Clock, History } from 'lucide-react';
+import { MessageSquare, Send, Users, User, Clock, History, Smartphone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logMessage, getMessageLogs, MessageLog } from '@/lib/messaging-data';
 import { format } from 'date-fns';
@@ -84,7 +84,20 @@ export default function MessagingPage() {
         }
     };
 
-    const handleSendMessage = async (type: 'all' | 'class' | 'individual' | 'absent', recipientsCount: number) => {
+    const handleSendDirectSMS = (mobile: string, content: string) => {
+        if (!mobile) {
+            toast({ variant: 'destructive', title: 'মোবাইল নম্বর নেই' });
+            return;
+        }
+        if (!content.trim()) {
+            toast({ variant: 'destructive', title: 'মেসেজ লিখুন' });
+            return;
+        }
+        const encodedContent = encodeURIComponent(content);
+        window.location.href = `sms:${mobile}?body=${encodedContent}`;
+    };
+
+    const handleLogAndSimulateMessage = async (type: 'all' | 'class' | 'individual' | 'absent', recipientsCount: number) => {
         if (!db || !user) return;
         if (!messageContent.trim()) {
             toast({ variant: 'destructive', title: 'মেসেজ লিখুন' });
@@ -102,7 +115,17 @@ export default function MessagingPage() {
                 senderName: user.displayName || user.email || 'Admin'
             });
 
-            toast({ title: 'মেসেজ পাঠানো সফল হয়েছে', description: `মোট ${recipientsCount.toLocaleString('bn-BD')} জনকে মেসেজ পাঠানো হয়েছে (সিমুলেটেড)।` });
+            toast({ title: 'মেসেজ রেকর্ড করা হয়েছে', description: `মোট ${recipientsCount.toLocaleString('bn-BD')} জনের জন্য মেসেজ লগ তৈরি করা হয়েছে।` });
+            
+            // For individual, if only one selected, offer direct send
+            if (type === 'individual' && selectedStudentIds.size === 1) {
+                const studentId = Array.from(selectedStudentIds)[0];
+                const student = allStudents.find(s => s.id === studentId);
+                if (student?.guardianMobile || student?.studentMobile) {
+                    handleSendDirectSMS(student.guardianMobile || student.studentMobile || '', messageContent);
+                }
+            }
+
             setMessageContent('');
             setSelectedStudentIds(new Set());
             fetchLogs();
@@ -165,7 +188,7 @@ export default function MessagingPage() {
                             <CardTitle className="flex items-center gap-2 text-2xl font-bold">
                                 <MessageSquare className="h-6 w-6 text-primary" /> মেসেজ সেন্টার
                             </CardTitle>
-                            <CardDescription>শিক্ষার্থী ও অভিভাবকদের কাছে জরুরি বার্তা পাঠান</CardDescription>
+                            <CardDescription>শিক্ষার্থী ও অভিভাবকদের কাছে সরাসরি মেসেজ পাঠান</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Tabs defaultValue="bulk" onValueChange={() => { setSelectedStudentIds(new Set()); setMessageContent(''); }}>
@@ -182,7 +205,7 @@ export default function MessagingPage() {
                                             <Users className="h-10 w-10 text-lime-700" />
                                             <div>
                                                 <p className="font-bold text-lime-900">সকল শিক্ষার্থী</p>
-                                                <p className="text-sm text-lime-700">পুরো স্কুলের {allStudents.length.toLocaleString('bn-BD')} জন শিক্ষার্থীর কাছে মেসেজ যাবে।</p>
+                                                <p className="text-sm text-lime-700">পুরো স্কুলের {allStudents.length.toLocaleString('bn-BD')} জন শিক্ষার্থীর জন্য লগ তৈরি হবে।</p>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -197,10 +220,11 @@ export default function MessagingPage() {
                                         <Button 
                                             className="w-full h-12 text-lg" 
                                             disabled={isLoading || allStudents.length === 0}
-                                            onClick={() => handleSendMessage('all', allStudents.length)}
+                                            onClick={() => handleLogAndSimulateMessage('all', allStudents.length)}
                                         >
-                                            <Send className="mr-2 h-5 w-5" /> সকল শিক্ষার্থীকে পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> রেকর্ড করুন ও পাঠান (Simulation)
                                         </Button>
+                                        <p className="text-[10px] text-muted-foreground text-center italic">বাল্ক মেসেজ পাঠানোর জন্য গেটওয়ে প্রয়োজন। বর্তমানে এটি শুধুমাত্র সিস্টেমে রেকর্ড রাখবে।</p>
                                     </TabsContent>
 
                                     <TabsContent value="class" className="space-y-4">
@@ -233,9 +257,9 @@ export default function MessagingPage() {
                                         <Button 
                                             className="w-full h-12 text-lg" 
                                             disabled={isLoading || !selectedClass || studentsInClass.length === 0}
-                                            onClick={() => handleSendMessage('class', studentsInClass.length)}
+                                            onClick={() => handleLogAndSimulateMessage('class', studentsInClass.length)}
                                         >
-                                            <Send className="mr-2 h-5 w-5" /> এই শ্রেণির সবাইকে পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> রেকর্ড করুন ও পাঠান
                                         </Button>
                                     </TabsContent>
 
@@ -263,7 +287,9 @@ export default function MessagingPage() {
                                                                 />
                                                             </TableHead>
                                                             <TableHead>রোল</TableHead>
-                                                            <TableHead>শিক্ষার্থীর নাম</TableHead>
+                                                            <TableHead>নাম</TableHead>
+                                                            <TableHead>মোবাইল</TableHead>
+                                                            <TableHead className="text-right">সরাসরি</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -277,6 +303,18 @@ export default function MessagingPage() {
                                                                 </TableCell>
                                                                 <TableCell>{s.roll.toLocaleString('bn-BD')}</TableCell>
                                                                 <TableCell>{s.studentNameBn}</TableCell>
+                                                                <TableCell className="text-xs text-muted-foreground">{s.guardianMobile || '-'}</TableCell>
+                                                                <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        size="icon" 
+                                                                        title="নিজের সিম থেকে পাঠান"
+                                                                        onClick={() => handleSendDirectSMS(s.guardianMobile || s.studentMobile || '', messageContent)}
+                                                                        disabled={!messageContent.trim() || (!s.guardianMobile && !s.studentMobile)}
+                                                                    >
+                                                                        <Smartphone className="h-4 w-4 text-blue-600" />
+                                                                    </Button>
+                                                                </TableCell>
                                                             </TableRow>
                                                         ))}
                                                     </TableBody>
@@ -294,9 +332,9 @@ export default function MessagingPage() {
                                         <Button 
                                             className="w-full h-12 text-lg" 
                                             disabled={isLoading || selectedStudentIds.size === 0}
-                                            onClick={() => handleSendMessage('individual', selectedStudentIds.size)}
+                                            onClick={() => handleLogAndSimulateMessage('individual', selectedStudentIds.size)}
                                         >
-                                            <Send className="mr-2 h-5 w-5" /> {selectedStudentIds.size.toLocaleString('bn-BD')} জনকে পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> লগে সেভ করুন {selectedStudentIds.size > 0 && `(${selectedStudentIds.size.toLocaleString('bn-BD')} জন)`}
                                         </Button>
                                     </TabsContent>
 
@@ -318,9 +356,37 @@ export default function MessagingPage() {
                                             </Button>
                                         </div>
                                         {selectedStudentIds.size > 0 && (
-                                            <div className="p-4 bg-red-50 border border-red-100 rounded-lg">
-                                                <p className="font-bold text-red-900">অনুপস্থিত শিক্ষার্থী চিহ্নিত করা হয়েছে</p>
-                                                <p className="text-sm text-red-700">আজকের অনুপস্থিত সংখ্যা: {selectedStudentIds.size.toLocaleString('bn-BD')} জন।</p>
+                                            <div className="border rounded-md max-h-[250px] overflow-y-auto">
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>রোল</TableHead>
+                                                            <TableHead>নাম</TableHead>
+                                                            <TableHead>মোবাইল</TableHead>
+                                                            <TableHead className="text-right">একশন</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {studentsInClass.filter(s => selectedStudentIds.has(s.id)).map(s => (
+                                                            <TableRow key={s.id}>
+                                                                <TableCell>{s.roll.toLocaleString('bn-BD')}</TableCell>
+                                                                <TableCell>{s.studentNameBn}</TableCell>
+                                                                <TableCell className="text-xs">{s.guardianMobile}</TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <Button 
+                                                                        variant="outline" 
+                                                                        size="sm" 
+                                                                        className="h-7 px-2 text-[10px]"
+                                                                        onClick={() => handleSendDirectSMS(s.guardianMobile || s.studentMobile || '', messageContent)}
+                                                                        disabled={!messageContent.trim()}
+                                                                    >
+                                                                        <Smartphone className="h-3 w-3 mr-1" /> সিম থেকে পাঠান
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
                                             </div>
                                         )}
                                         <div className="space-y-2">
@@ -335,9 +401,9 @@ export default function MessagingPage() {
                                             className="w-full h-12 text-lg" 
                                             variant="destructive"
                                             disabled={isLoading || selectedStudentIds.size === 0}
-                                            onClick={() => handleSendMessage('absent', selectedStudentIds.size)}
+                                            onClick={() => handleLogAndSimulateMessage('absent', selectedStudentIds.size)}
                                         >
-                                            <Send className="mr-2 h-5 w-5" /> অনুপস্থিতদের অভিভাবকদের পাঠান
+                                            <Send className="mr-2 h-5 w-5" /> লগে সেভ করুন (অনুপস্থিত {selectedStudentIds.size.toLocaleString('bn-BD')} জন)
                                         </Button>
                                     </TabsContent>
                                 </div>
