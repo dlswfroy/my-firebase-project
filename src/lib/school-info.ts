@@ -18,11 +18,11 @@ export interface SchoolInfo {
 export const APP_ICON_URL = 'https://i.postimg.cc/zvsNP6qY/IMG-20260218-WA0002.jpg';
 
 export const defaultSchoolInfo: SchoolInfo = {
-    name: 'বীরগঞ্জ পৌর উচ্চ বিদ্যালয়',
-    nameEn: 'Birganj Pouro High School',
-    eiin: '123456',
-    code: '7890',
-    address: 'Upazila: Birganj, Post: Birganj, Zila: Dinajpur',
+    name: 'টপ গ্রেড টিউটোরিয়ালস',
+    nameEn: 'Top Grade Tutorials',
+    eiin: '000000',
+    code: '0000',
+    address: 'আপনার প্রতিষ্ঠানের ঠিকানা এখানে লিখুন',
     logoUrl: APP_ICON_URL
 };
 
