@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAcademicYear } from '@/context/AcademicYearContext';
 import { useFirestore } from '@/firebase';
-import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, Timestamp, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -521,7 +521,8 @@ export default function AccountsPage() {
   const fetchStudents = useCallback(() => {
     if (!db) return;
     setIsLoadingStudents(true);
-    const studentsQuery = query(collection(db, "students"));
+    // Added orderBy("roll") to ensure students are sorted serially
+    const studentsQuery = query(collection(db, "students"), orderBy("roll"));
     const unsubscribe = onSnapshot(studentsQuery, (querySnapshot) => {
         const studentsData = querySnapshot.docs.map(doc => ({
             id: doc.id,
