@@ -85,7 +85,7 @@ export function Header() {
       });
     } else {
       setDisplayPhoto(user.photoUrl || null);
-      setDisplayName(user.displayName || 'Super Admin');
+      setDisplayName(user.displayName || 'Admin');
     }
 
     return () => {
@@ -284,7 +284,7 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
-                    <span>{displayName || 'ব্যবহারকারী'}</span>
+                    <span>{displayName || 'Admin'}</span>
                     <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
                   </div>
                 </DropdownMenuLabel>

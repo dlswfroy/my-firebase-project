@@ -600,7 +600,7 @@ function UserManagementSettings() {
                                         const userEmail = u.email?.toLowerCase() || '';
                                         const teacherName = staffNameMap.get(userEmail);
                                         const teacherPhoto = staffPhotoMap.get(userEmail);
-                                        const displayName = teacherName || u.displayName || (u.role === 'admin' ? 'Super Admin' : '-');
+                                        const displayName = teacherName || u.displayName || (u.role === 'admin' ? 'Admin' : '-');
                                         const isCurrentUser = u.uid === currentUser?.uid;
 
                                         return (
@@ -711,7 +711,7 @@ function ProfileSettings() {
             });
             return () => unsubscribe();
         } else {
-            setDisplayName(user.displayName || 'Super Admin');
+            setDisplayName(user.displayName || 'Admin');
             setPhotoPreview(user.photoUrl || null);
         }
     }, [user, db]);

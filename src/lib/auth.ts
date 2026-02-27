@@ -36,7 +36,7 @@ export async function signUp(email: string, password: string): Promise<{ success
 
     if (adminSnapshot.empty) {
       role = 'admin';
-      displayName = 'Super Admin';
+      displayName = 'Admin';
     } else {
       const staffRef = collection(db, 'staff');
       const teacherQuery = query(staffRef, where('email', '==', email.toLowerCase()), limit(1));
