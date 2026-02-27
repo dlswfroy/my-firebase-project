@@ -16,7 +16,7 @@ import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Student, studentFromDoc } from '@/lib/student-data';
 import { useToast } from '@/hooks/use-toast';
-import { MessageSquare, Send, Users, Smartphone, History, Clock, Trash2 } from 'lucide-react';
+import { MessageSquare, Send, Users, Smartphone, History, Clock, Trash2, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { logMessage, getMessageLogs, MessageLog, deleteMessageLog } from '@/lib/messaging-data';
 import { format } from 'date-fns';
@@ -113,6 +113,15 @@ export default function MessagingPage() {
         } catch (e) {
             window.open(smsUrl, '_blank');
         }
+    };
+
+    const handleMakeCall = (mobile: string) => {
+        const cleanNumber = mobile.replace(/[^\d+]/g, '');
+        if (!cleanNumber) {
+            toast({ variant: 'destructive', title: 'মোবাইল নম্বর নেই' });
+            return;
+        }
+        window.location.href = `tel:${cleanNumber}`;
     };
 
     const handleLogAndSimulateMessage = async (type: 'all' | 'class' | 'individual' | 'absent', recipientsCount: number) => {
@@ -226,7 +235,7 @@ export default function MessagingPage() {
                             <CardTitle className="flex items-center gap-2 text-2xl font-bold">
                                 <MessageSquare className="h-6 w-6 text-primary" /> মেসেজ সেন্টার
                             </CardTitle>
-                            <CardDescription>শিক্ষার্থী ও অভিভাবকদের কাছে সরাসরি মেসেজ পাঠান</CardDescription>
+                            <CardDescription>শিক্ষার্থী ও অভিভাবকদের কাছে সরাসরি মেসেজ পাঠান বা কল করুন</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Tabs defaultValue="bulk" onValueChange={handleTabChange}>
@@ -320,7 +329,7 @@ export default function MessagingPage() {
                                                             <TableHead>রোল</TableHead>
                                                             <TableHead>নাম</TableHead>
                                                             <TableHead>মোবাইল</TableHead>
-                                                            <TableHead className="text-right">সরাসরি</TableHead>
+                                                            <TableHead className="text-right">একশন</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
@@ -336,14 +345,26 @@ export default function MessagingPage() {
                                                                 <TableCell>{s.studentNameBn}</TableCell>
                                                                 <TableCell className="text-xs text-muted-foreground">{s.guardianMobile || '-'}</TableCell>
                                                                 <TableCell className="text-right" onClick={e => e.stopPropagation()}>
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="icon" 
-                                                                        onClick={() => handleSendDirectSMS(s.guardianMobile || s.studentMobile || '', messageContent)}
-                                                                        disabled={!messageContent.trim() || (!s.guardianMobile && !s.studentMobile)}
-                                                                    >
-                                                                        <Smartphone className="h-4 w-4 text-blue-600" />
-                                                                    </Button>
+                                                                    <div className="flex justify-end gap-2">
+                                                                        <Button 
+                                                                            variant="ghost" 
+                                                                            size="icon" 
+                                                                            onClick={() => handleMakeCall(s.guardianMobile || s.studentMobile || '')}
+                                                                            disabled={!s.guardianMobile && !s.studentMobile}
+                                                                            title="কল করুন"
+                                                                        >
+                                                                            <Phone className="h-4 w-4 text-green-600" />
+                                                                        </Button>
+                                                                        <Button 
+                                                                            variant="ghost" 
+                                                                            size="icon" 
+                                                                            onClick={() => handleSendDirectSMS(s.guardianMobile || s.studentMobile || '', messageContent)}
+                                                                            disabled={!messageContent.trim() || (!s.guardianMobile && !s.studentMobile)}
+                                                                            title="মেসেজ পাঠান"
+                                                                        >
+                                                                            <Smartphone className="h-4 w-4 text-blue-600" />
+                                                                        </Button>
+                                                                    </div>
                                                                 </TableCell>
                                                             </TableRow>
                                                         ))}
@@ -403,15 +424,26 @@ export default function MessagingPage() {
                                                                 <TableCell>{s.studentNameBn}</TableCell>
                                                                 <TableCell className="text-xs">{s.guardianMobile || '-'}</TableCell>
                                                                 <TableCell className="text-right">
-                                                                    <Button 
-                                                                        variant="outline" 
-                                                                        size="sm" 
-                                                                        className="h-7 px-2 text-[10px]"
-                                                                        onClick={() => handleSendDirectSMS(s.guardianMobile || s.studentMobile || '', messageContent)}
-                                                                        disabled={!messageContent.trim() || (!s.guardianMobile && !s.studentMobile)}
-                                                                    >
-                                                                        <Smartphone className="h-3 w-3 mr-1" /> সিম থেকে পাঠান
-                                                                    </Button>
+                                                                    <div className="flex justify-end gap-2">
+                                                                        <Button 
+                                                                            variant="outline" 
+                                                                            size="sm" 
+                                                                            className="h-7 px-2 text-[10px]"
+                                                                            onClick={() => handleMakeCall(s.guardianMobile || s.studentMobile || '')}
+                                                                            disabled={!s.guardianMobile && !s.studentMobile}
+                                                                        >
+                                                                            <Phone className="h-3 w-3 mr-1" /> কল করুন
+                                                                        </Button>
+                                                                        <Button 
+                                                                            variant="outline" 
+                                                                            size="sm" 
+                                                                            className="h-7 px-2 text-[10px]"
+                                                                            onClick={() => handleSendDirectSMS(s.guardianMobile || s.studentMobile || '', messageContent)}
+                                                                            disabled={!messageContent.trim() || (!s.guardianMobile && !s.studentMobile)}
+                                                                        >
+                                                                            <Smartphone className="h-3 w-3 mr-1" /> সিম থেকে পাঠান
+                                                                        </Button>
+                                                                    </div>
                                                                 </TableCell>
                                                             </TableRow>
                                                         ))}
