@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { isHoliday, Holiday } from '@/lib/holiday-data';
+import { cn } from '@/lib/utils';
 
 
 const parseTeacherName = (cell: string): string => {
@@ -76,11 +77,11 @@ const LiveRoutineCard = () => {
         const currentDayName = dayMap[now.getDay()];
 
         if (activeHoliday) {
-            return { status: `আজ ${activeHoliday.description}।`, runningClasses: [] };
+            return { status: `আজ ${activeHoliday.description}।`, runningClasses: [], isSpecialStatus: true };
         }
         
         if (currentDayName === 'শুক্রবার' || currentDayName === 'শনিবার') {
-            return { status: 'আজ সাপ্তাহিক ছুটি।', runningClasses: [] };
+            return { status: 'আজ সাপ্তাহিক ছুটি।', runningClasses: [], isSpecialStatus: true };
         }
 
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -95,7 +96,7 @@ const LiveRoutineCard = () => {
 
             if(currentMinutes >= startMinutes && currentMinutes < endMinutes) {
                 if (period.name === 'বিরতি') {
-                    return { status: 'এখন টিফিনের বিরতি চলছে।', runningClasses: [] };
+                    return { status: 'এখন টিফিনের বিরতি চলছে।', runningClasses: [], isSpecialStatus: false };
                 }
                 if (i < 3) periodIndex = i;
                 if (i > 3) periodIndex = i - 1;
@@ -104,7 +105,7 @@ const LiveRoutineCard = () => {
         }
         
         if (periodIndex === -1) {
-             return { status: 'এখন কোনো ক্লাস চলছে না।', runningClasses: [] };
+             return { status: 'এখন কোনো ক্লাস চলছে না।', runningClasses: [], isSpecialStatus: false };
         }
 
         const runningClasses = fullRoutine
@@ -131,10 +132,10 @@ const LiveRoutineCard = () => {
             status = 'এখন কোনো ক্লাস চলছে না।';
         }
 
-        return { status, runningClasses };
+        return { status, runningClasses, isSpecialStatus: false };
     };
 
-    const { status, runningClasses } = getCurrentPeriodInfo();
+    const { status, runningClasses, isSpecialStatus } = getCurrentPeriodInfo();
 
     return (
         <Card className="lg:col-span-2">
@@ -157,7 +158,7 @@ const LiveRoutineCard = () => {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>সময়</TableHead>
-                                <TableHead>শিক্ষক</TableHead>
+                                <TableHead>শিক্ষকর</TableHead>
                                 <TableHead>শ্রেণি</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -172,8 +173,13 @@ const LiveRoutineCard = () => {
                         </TableBody>
                     </Table>
                 ) : (
-                    <div className="flex items-center justify-center h-24">
-                        <p className="text-muted-foreground">{status}</p>
+                    <div className="flex items-center justify-center h-32 text-center">
+                        <p className={cn(
+                            "text-muted-foreground transition-all duration-500",
+                            isSpecialStatus ? "text-red-600 font-black text-3xl drop-shadow-sm" : "text-lg"
+                        )}>
+                            {status}
+                        </p>
                     </div>
                 )}
             </CardContent>
