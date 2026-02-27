@@ -18,7 +18,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 export interface MessageLog {
   id: string;
   recipientsCount: number;
-  type: 'all' | 'class' | 'individual' | 'absent';
+  type: 'all' | 'class' | 'individual' | 'absent' | 'call';
   className?: string;
   content: string;
   sentAt: Date;
@@ -31,6 +31,7 @@ export type NewMessageLog = Omit<MessageLog, 'id' | 'sentAt'>;
 const MESSAGES_COLLECTION = 'messageLogs';
 
 export const logMessage = async (db: Firestore, logData: NewMessageLog) => {
+  // Use doc(collection) without ID to let Firestore generate a unique ID
   const docRef = doc(collection(db, MESSAGES_COLLECTION));
   const dataToSave = {
     ...logData,

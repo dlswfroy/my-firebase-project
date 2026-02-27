@@ -24,6 +24,7 @@ import { bn } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { cn } from '@/lib/utils';
 
 export default function MessagingPage() {
     const db = useFirestore();
@@ -115,13 +116,32 @@ export default function MessagingPage() {
         }
     };
 
-    const handleMakeCall = (mobile: string) => {
+    const handleMakeCall = async (student: Student) => {
+        const mobile = student.guardianMobile || student.studentMobile || '';
         const cleanNumber = mobile.replace(/[^\d+]/g, '');
         if (!cleanNumber) {
             toast({ variant: 'destructive', title: 'মোবাইল নম্বর নেই' });
             return;
         }
+
+        // Open dialer first
         window.location.href = `tel:${cleanNumber}`;
+
+        // Then log the call record in history
+        if (db && user) {
+            try {
+                await logMessage(db, {
+                    recipientsCount: 1,
+                    type: 'call',
+                    content: `${student.studentNameBn} (রোল: ${student.roll.toLocaleString('bn-BD')}) - মোবাইল: ${mobile} - কল করা হয়েছে`,
+                    senderUid: user.uid,
+                    senderName: user.displayName || user.email || 'Admin'
+                });
+                fetchLogs();
+            } catch (e) {
+                console.error("Failed to log call:", e);
+            }
+        }
     };
 
     const handleLogAndSimulateMessage = async (type: 'all' | 'class' | 'individual' | 'absent', recipientsCount: number) => {
@@ -349,7 +369,7 @@ export default function MessagingPage() {
                                                                         <Button 
                                                                             variant="ghost" 
                                                                             size="icon" 
-                                                                            onClick={() => handleMakeCall(s.guardianMobile || s.studentMobile || '')}
+                                                                            onClick={() => handleMakeCall(s)}
                                                                             disabled={!s.guardianMobile && !s.studentMobile}
                                                                             title="কল করুন"
                                                                         >
@@ -429,7 +449,7 @@ export default function MessagingPage() {
                                                                             variant="outline" 
                                                                             size="sm" 
                                                                             className="h-7 px-2 text-[10px]"
-                                                                            onClick={() => handleMakeCall(s.guardianMobile || s.studentMobile || '')}
+                                                                            onClick={() => handleMakeCall(s)}
                                                                             disabled={!s.guardianMobile && !s.studentMobile}
                                                                         >
                                                                             <Phone className="h-3 w-3 mr-1" /> কল করুন
@@ -476,7 +496,7 @@ export default function MessagingPage() {
                     <Card className="md:col-span-1 lg:col-span-1 border-primary/20 shadow-lg">
                         <CardHeader className="bg-primary/5 rounded-t-lg">
                             <CardTitle className="flex items-center gap-2 text-lg font-bold">
-                                <History className="h-5 w-5 text-primary" /> মেসেজ হিস্ট্রি
+                                <History className="h-5 w-5 text-primary" /> মেসেজ ও কল হিস্ট্রি
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
@@ -488,14 +508,20 @@ export default function MessagingPage() {
                                         <Skeleton className="h-20 w-full" />
                                     </div>
                                 ) : messageLogs.length === 0 ? (
-                                    <p className="p-8 text-center text-sm text-muted-foreground italic">এখনও কোনো মেসেজ পাঠানো হয়নি।</p>
+                                    <p className="p-8 text-center text-sm text-muted-foreground italic">এখনও কোনো রেকর্ড নেই।</p>
                                 ) : (
                                     <div className="divide-y">
                                         {messageLogs.map(log => (
                                             <div key={log.id} className="p-4 hover:bg-primary/5 transition-colors relative group">
                                                 <div className="flex justify-between items-start mb-2">
-                                                    <Badge variant="secondary" className="text-[10px] py-0 px-2 h-5">
-                                                        {log.type === 'all' ? 'সকল' : log.type === 'class' ? 'শ্রেণি' : log.type === 'individual' ? 'একক' : 'অনুপস্থিত'}
+                                                    <Badge 
+                                                        variant={log.type === 'call' ? 'outline' : 'secondary'} 
+                                                        className={cn(
+                                                            "text-[10px] py-0 px-2 h-5",
+                                                            log.type === 'call' && "border-green-500 text-green-700 bg-green-50"
+                                                        )}
+                                                    >
+                                                        {log.type === 'all' ? 'সকল' : log.type === 'class' ? 'শ্রেণি' : log.type === 'individual' ? 'একক' : log.type === 'absent' ? 'অনুপস্থিত' : 'কল'}
                                                     </Badge>
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-[10px] text-muted-foreground flex items-center bg-muted px-1.5 py-0.5 rounded">
@@ -513,7 +539,7 @@ export default function MessagingPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            এই মেসেজ রেকর্ডটি স্থায়ীভাবে মুছে ফেলা হবে।
+                                                                            এই রেকর্ডটি স্থায়ীভাবে মুছে ফেলা হবে।
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
@@ -527,7 +553,7 @@ export default function MessagingPage() {
                                                 </div>
                                                 <p className="text-sm font-medium line-clamp-3 mb-2 text-foreground">{log.content}</p>
                                                 <div className="flex justify-between text-[10px] font-semibold text-muted-foreground pt-2 border-t border-dashed">
-                                                    <span>প্রাপক: {log.recipientsCount.toLocaleString('bn-BD')} জন</span>
+                                                    <span>{log.type === 'call' ? 'কল সম্পন্ন' : `প্রাপক: ${log.recipientsCount.toLocaleString('bn-BD')} জন`}</span>
                                                     <span>প্রেরক: {log.senderName}</span>
                                                 </div>
                                             </div>
