@@ -41,6 +41,7 @@ service cloud.firestore {
     match /messageLogs/{id} {
       allow read: if isAuthed() && (isAdmin() || isTeacher());
       allow create: if isAuthed() && hasPermission('manage:messaging');
+      allow update: if isAuthed() && hasPermission('manage:messaging');
       allow delete: if isAdmin();
     }
 
